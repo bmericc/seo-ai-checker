@@ -28,4 +28,32 @@ final class Domain
 
         return $host !== null && $host !== false ? self::normalize($host) : null;
     }
+
+    /**
+     * Kullanicinin form alanina "example.com", "www.example.com" veya
+     * "https://example.com/yol" gibi serbest metin olarak yazdigi bir
+     * degerden gecerli bir host cikarir.
+     */
+    public static function fromFreeText(string $input): ?string
+    {
+        $input = trim($input);
+        if ($input === '') {
+            return null;
+        }
+
+        if (!str_contains($input, '://')) {
+            $input = 'https://' . $input;
+        }
+
+        $host = parse_url($input, PHP_URL_HOST);
+        if ($host === null || $host === false || $host === '') {
+            return null;
+        }
+
+        if (!preg_match('/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$/i', $host)) {
+            return null;
+        }
+
+        return self::normalize($host);
+    }
 }

@@ -1,15 +1,22 @@
 {
     "name": "bahrimeric/seo-ai-checker",
-    "description": "Web scraping ile Google SERP siralama, AI Overview gorunurlugu ve on-page SEO kontrolu yapan bagimsiz CLI araci",
+    "description": "Web scraping ile Google SERP siralama, AI Overview gorunurlugu, on-page SEO ve Lighthouse (PageSpeed Insights) kontrolu yapan bagimsiz arac (CLI + web arayuzu)",
     "type": "project",
     "license": "GPL-3.0-or-later",
     "require": {
         "php": "^8.1",
         "ext-mbstring": "*",
+        "ext-pdo": "*",
         "guzzlehttp/guzzle": "^7.8",
+        "league/oauth2-client": "^2.7",
+        "league/oauth2-google": "^4.0",
+        "php-di/php-di": "^7.0",
+        "slim/psr7": "^1.6",
+        "slim/slim": "^4.12",
+        "slim/twig-view": "^3.3",
         "symfony/console": "^7.0",
-        "symfony/dom-crawler": "^7.0",
         "symfony/css-selector": "^7.0",
+        "symfony/dom-crawler": "^7.0",
         "vlucas/phpdotenv": "^5.6"
     },
     "autoload": {

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SEO / AI Overview Checker{% endblock %}</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header class="topbar">
+    <a href="/" class="brand">SEO / AI Overview Checker</a>
+    {% if current_user_email %}
+        <div class="topbar-user">
+            <span>{{ current_user_name }} ({{ current_user_email }})</span>
+            <a href="/logout">Cikis</a>
+        </div>
+    {% endif %}
+</header>
+<main class="container">
+    {% if flash %}
+        <div class="flash flash-{{ flash.type }}">{{ flash.message }}</div>
+    {% endif %}
+    {% block content %}{% endblock %}
+</main>
+</body>
+</html>
