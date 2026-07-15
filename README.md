@@ -3,9 +3,10 @@
 Web scraping ile Google arama sonuçlarında (SERP) sıralama takibi, Google
 **AI Overview** kutusunda görünürlük kontrolü, temel **on-page SEO** analizi
 ve **Lighthouse** (Google PageSpeed Insights) skorlarını bir araya getiren
-bağımsız bir PHP aracı. Hem tek seferlik kontroller için bir **CLI**, hem de
-uzak bir sunucuda barındırılıp geçmişi veritabanında tutan, Google hesabıyla
-korunan bir **web arayüzü** olarak kullanılabilir.
+bir **Laravel** uygulaması. Hem tek seferlik kontroller için bir **Artisan
+CLI komutu** (`php artisan seo:check`), hem de uzak bir sunucuda barındırılıp
+geçmişi veritabanında tutan, Google hesabıyla korunan bir **web arayüzü**
+olarak kullanılabilir.
 
 ## Özellikler
 
@@ -24,16 +25,17 @@ korunan bir **web arayüzü** olarak kullanılabilir.
    kurulumu **gerekmez**; denetim Google'ın kendi sunucularında çalışır.
 5. **Web arayüzü** — domain/anahtar kelime ekleyip "Kontrol Et" ile tüm
    kontrolleri tek seferde çalıştırabileceğiniz, sonuçları ve geçmişi
-   SQLite/MySQL'de saklayan bir panel. Erişim, Google OAuth ile giriş yapıp
-   izinli e-posta listesinde olma şartına bağlıdır.
+   veritabanında (SQLite varsayılan, MySQL de desteklenir) saklayan bir
+   panel. Erişim, Google OAuth ile giriş yapıp izinli e-posta listesinde
+   olma şartına bağlıdır.
 
 ## Önemli sınırlamalar ve yasal uyarı
 
 - **Doğrudan HTTP scraping** kullanılır (SERP API'si değil). Bu yaklaşım
   bilinçli olarak tercih edilmiştir; ancak Google, otomatik istekleri sıkça
   CAPTCHA/"unusual traffic" sayfasıyla veya JavaScript doğrulaması isteyen
-  bir yönlendirmeyle (`/httpservice/retry/enablejs`) engelleyebilir. Araç bu
-  durumları tespit edip "engellendi" olarak raporlar; sonuç alamıyorsanız
+  bir yönlendirmeyle (`/httpservice/retry/enablejs`) engelleyebilir. Uygulama
+  bu durumları tespit edip "engellendi" olarak raporlar; sonuç alamıyorsanız
   önce bunu kontrol edin.
 - **AI Overview genellikle istemci tarafında (JavaScript ile) render edilir**
   ve hesap/konum/cihaza göre değişebilir. Bu araç yalnızca statik HTML
@@ -42,11 +44,11 @@ korunan bir **web arayüzü** olarak kullanılabilir.
   yakalanamayabilir.
 - Google'ın SERP HTML yapısı sık değişir; ayrıştırma mantığı genel
   sezgisel (heuristic) kurallara dayanır ve zamanla güncellenmesi
-  gerekebilir (bkz. `config/ai_overview_markers.php` ve
-  `config/ai_overview_selectors.php`).
+  gerekebilir (bkz. `config/seo.php` içindeki `ai_overview_markers` ve
+  `ai_overview_selectors`).
 - Bu aracı yalnızca **kendi sitelerinizi/kendi izniniz olan siteleri**
-  denetlemek için, makul istek sıklığıyla (`--delay` / `REQUEST_DELAY_MS`)
-  kullanın. Google'ın hizmet şartlarını ve robots.txt kurallarını göz önünde
+  denetlemek için, makul istek sıklığıyla (`REQUEST_DELAY_MS`) kullanın.
+  Google'ın hizmet şartlarını ve robots.txt kurallarını göz önünde
   bulundurun; yoğun veya toplu (mass) scraping yapılandırmayın.
 - PageSpeed Insights API'sinin **API anahtarsız** kullanımında kota çok
   düşüktür ve hızla "Quota exceeded" hatasına düşebilirsiniz; gerçek
@@ -57,7 +59,9 @@ korunan bir **web arayüzü** olarak kullanılabilir.
 ```bash
 composer install
 cp .env.example .env
-# .env dosyasini ihtiyaciniza gore duzenleyin
+php artisan key:generate
+touch database/database.sqlite   # varsayılan SQLite için
+php artisan migrate
 ```
 
 Bu adım hem CLI hem web arayüzü için gereklidir.
@@ -66,22 +70,22 @@ Bu adım hem CLI hem web arayüzü için gereklidir.
 
 ```bash
 # Tek anahtar kelime, tek domain
-php bin/seo-check --domain=example.com --keyword="anahtar kelime"
+php artisan seo:check --domain=example.com --keyword="anahtar kelime"
 
 # Birden fazla anahtar kelime
-php bin/seo-check --domain=example.com -k "anahtar kelime 1" -k "anahtar kelime 2"
+php artisan seo:check --domain=example.com -k "anahtar kelime 1" -k "anahtar kelime 2"
 
 # Dosyadan anahtar kelime listesi (bkz. keywords.example.txt)
-php bin/seo-check --domain=example.com --keywords-file=keywords.example.txt
+php artisan seo:check --domain=example.com --keywords-file=keywords.example.txt
 
 # On-page analizi atla, sadece SERP/AI Overview kontrolü yap
-php bin/seo-check --domain=example.com --keywords-file=keywords.example.txt --skip-onpage
+php artisan seo:check --domain=example.com --keywords-file=keywords.example.txt --skip-onpage
 
 # Sonuçları JSON olarak da kaydet
-php bin/seo-check --domain=example.com --keywords-file=keywords.example.txt --json=rapor.json
+php artisan seo:check --domain=example.com --keywords-file=keywords.example.txt --json=rapor.json
 
 # Dil/bölge, gecikme ve proxy ayarları
-php bin/seo-check --domain=example.com --keyword="php nedir" --hl=en --gl=us --delay=6000 --proxy=http://127.0.0.1:8080
+php artisan seo:check --domain=example.com --keyword="php nedir" --hl=en --gl=us --delay=6000 --proxy=http://127.0.0.1:8080
 ```
 
 ### Seçenekler
@@ -93,14 +97,15 @@ php bin/seo-check --domain=example.com --keyword="php nedir" --hl=en --gl=us --d
 | `--keywords-file`, `-f` | `keyword` veya `keyword\|url` satırları içeren dosya | — |
 | `--url`, `-u` | On-page analiz için varsayılan sayfa | `https://{domain}/` |
 | `--skip-onpage` | On-page analizi devre dışı bırakır | kapalı |
-| `--hl` | Google arayüz dili | `tr` (`.env`'den) |
-| `--gl` | Google bölge kodu | `tr` (`.env`'den) |
-| `--delay` | İstekler arası bekleme (ms) | `4000` |
-| `--proxy` | HTTP proxy | — |
+| `--hl` | Google arayüz dili | `.env`'deki `GOOGLE_HL` |
+| `--gl` | Google bölge kodu | `.env`'deki `GOOGLE_GL` |
+| `--delay` | İstekler arası bekleme (ms) | `.env`'deki `REQUEST_DELAY_MS` |
+| `--proxy` | HTTP proxy | `.env`'deki `HTTP_PROXY` |
 | `--user-agent` | Özel User-Agent | Chrome masaüstü UA |
 | `--json` | Sonuçları ayrıca JSON dosyasına yazar | — |
 
-Not: CLI, Lighthouse denetimi yapmaz; bu yalnızca web arayüzünde mevcuttur.
+CLI komutu Lighthouse denetimi yapmaz; bu yalnızca web arayüzünde mevcuttur
+ve veritabanına yazmaz (tek seferlik, durum tutmayan çalıştırma).
 
 Anahtar kelime dosyasındaki satır başına isteğe bağlı `|url` kısmı,
 o anahtar kelime için on-page analizinin hangi sayfada yapılacağını
@@ -110,8 +115,8 @@ belirtmenizi sağlar (ör. o kelimeyle hedeflenen iniş sayfası).
 
 Web arayüzü, domain/anahtar kelime kayıtlarını ve her "Kontrol Et"
 çalıştırmasının sonucunu (SERP + AI Overview + on-page + Lighthouse)
-veritabanında (varsayılan: SQLite, sıfır kurulum) saklar; böylece zaman
-içindeki değişimi geçmiş olarak görebilirsiniz.
+veritabanında saklar; böylece zaman içindeki değişimi geçmiş olarak
+görebilirsiniz.
 
 ### 1. Google OAuth uygulaması oluşturun
 
@@ -123,25 +128,28 @@ e-posta allowlist ile korunur (basit şifre yerine).
 2. **Authorized redirect URI** olarak sunucunuzun adresini ekleyin, örn:
    `https://sizin-sunucunuz.com/auth/google/callback`
 3. Oluşan **Client ID** ve **Client Secret** değerlerini `.env` dosyasına
-   yazın (bkz. aşağıdaki tablo).
+   yazın (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`).
 4. `ALLOWED_GOOGLE_EMAILS` içine panele giriş yapabilecek Google
    e-postalarını virgülle ayırarak yazın. **Bu liste boşsa kimse giriş
-   yapamaz** (varsayılan olarak erişim kapalıdır, güvenli taraf budur).
+   yapamaz** (varsayılan olarak erişim kapalıdır, güvenli taraf budur); bir
+   e-posta listeden çıkarılırsa, o kullanıcının açık oturumu da bir sonraki
+   istekte otomatik sonlandırılır.
 
 ### 2. `.env` ayarları (web'e özel)
 
 | Değişken | Açıklama |
 |---|---|
-| `APP_DEBUG` | `true` ise hata detaylarını tarayıcıda gösterir (yalnızca gelistirmede acin) |
-| `DB_DRIVER`, `DB_PATH` veya `DB_HOST`/`DB_NAME`/`DB_USER`/`DB_PASS` | SQLite (varsayılan) veya MySQL |
-| `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET` / `GOOGLE_OAUTH_REDIRECT_URI` | Google OAuth uygulama bilgileri |
+| `APP_URL` | Panelin herkese açık adresi |
+| `DB_CONNECTION`, `DB_DATABASE`/`DB_HOST`/... | SQLite (varsayılan) veya MySQL/PostgreSQL |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_REDIRECT_URI` | Google OAuth uygulama bilgileri |
 | `ALLOWED_GOOGLE_EMAILS` | Giriş izni verilen e-postalar (virgülle ayrılmış) |
 | `PSI_API_KEY` | (opsiyonel ama önerilir) PageSpeed Insights API anahtarı |
 | `PSI_STRATEGY` | `mobile` veya `desktop` |
 
 ### 3. Sunucuya deploy
 
-Belge kökünü (document root) `public/` klasörüne yönlendirin. Örnek Nginx:
+Belge kökünü (document root) `public/` klasörüne yönlendirin — standart bir
+Laravel deploy'u. Örnek Nginx:
 
 ```nginx
 server {
@@ -151,32 +159,38 @@ server {
     index index.php;
 
     location / {
-        try_files $uri /index.php$is_args$args;
+        try_files $uri $uri/ /index.php?$query_string;
     }
 
     location ~ \.php$ {
         include fastcgi_params;
-        fastcgi_pass unix:/run/php/php8.1-fpm.sock;
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
         # Kontrol calistirmalari (SERP+on-page+Lighthouse) 60 saniyeyi
         # bulabilir; varsayilan zaman asimini artirin:
         fastcgi_read_timeout 180;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
     }
 }
 ```
 
 Notlar:
 
-- `public/` **dışındaki** hiçbir klasör (`src/`, `config/`, `.env`, veritabanı
-  dosyası) web sunucusundan doğrudan erişilebilir olmamalı — yalnızca
-  `public/` document root olarak ayarlanmalı.
+- `public/` **dışındaki** hiçbir klasör (`app/`, `config/`, `.env`,
+  veritabanı dosyası) web sunucusundan doğrudan erişilebilir olmamalı —
+  yalnızca `public/` document root olarak ayarlanmalı.
 - Google OAuth, üretimde **HTTPS** gerektirir (redirect URI `https://` ile
   başlamalı); `localhost` istisnası yalnızca yerel geliştirmede geçerlidir.
 - PHP `max_execution_time` değerini (php.ini veya php-fpm pool ayarı) en az
   120 saniyeye çıkarın; "Kontrol Et" tek istekte SERP + on-page + Lighthouse
   taramasını sırayla çalıştırdığı için 20-60 saniye sürebilir.
-- Veritabanı dosyası (`database/*.sqlite`) ve `.env` dosyasının yazılabilir
-  ve web sunucusu tarafından **servis edilemez** olduğundan emin olun.
+- Standart Laravel prod adımları: `composer install --no-dev --optimize-autoloader`,
+  `php artisan migrate --force`, `php artisan config:cache`, `php artisan route:cache`,
+  `storage/` ve `bootstrap/cache/` dizinlerinin web sunucusu tarafından
+  yazılabilir olması.
 
 ### 4. Kullanım
 
@@ -193,16 +207,16 @@ Notlar:
 
 ## AI Overview tespiti nasıl çalışır?
 
-`config/ai_overview_markers.php` içindeki metin ifadeleri (ör. "AI overview",
-"Yapay zeka genel bakışı") sayfa metninde aranır. Eşleşme bulunursa, en
-yakın üst kapsayıcı (ancestor) element içindeki linkler taranarak kaynak
-domainler çıkarılmaya çalışılır. Google markup'ı değiştikçe bu ifadeler ve
-gerekirse `config/ai_overview_selectors.php` içindeki CSS seçiciler
-güncellenmelidir.
+`config/seo.php` içindeki `ai_overview_markers` metin ifadeleri (ör.
+"AI overview", "Yapay zeka genel bakışı") sayfa metninde aranır. Eşleşme
+bulunursa, en yakın üst kapsayıcı (ancestor) element içindeki linkler
+taranarak kaynak domainler çıkarılmaya çalışılır. Google markup'ı
+değiştikçe bu ifadeler ve gerekirse `ai_overview_selectors` içindeki CSS
+seçiciler güncellenmelidir.
 
 ## Lighthouse entegrasyonu nasıl çalışır?
 
-`SeoAiChecker\Lighthouse\PageSpeedInsightsClient`, Google'ın
+`App\Services\Lighthouse\PageSpeedInsightsClient`, Google'ın
 [PageSpeed Insights v5 API](https://developers.google.com/speed/docs/insights/v5/get-started)'sine
 istek atar; bu API, Lighthouse denetimini Google'ın sunucularında çalıştırıp
 sonucu JSON olarak döner. Bu sayede kendi sunucunuzda Node.js/headless
@@ -212,16 +226,38 @@ skorlarını verir.
 
 ## Veritabanı şeması
 
-Web arayüzü üç tablo kullanır: `domains`, `keywords` ve her "Kontrol Et"
-çalıştırmasının tam sonucunu (SERP, AI Overview, on-page, Lighthouse) satır
-olarak tutan `checks`. Şema, ilk çalıştırmada (`config/container.php` →
-`buildPdo()`) otomatik oluşturulur; elle migration çalıştırmanız gerekmez.
+- `domains` — takip edilen domainler
+- `keywords` — bir domaine bağlı anahtar kelimeler (opsiyonel özel URL ile)
+- `checks` — her "Kontrol Et" çalıştırmasının tam sonucu (SERP, AI Overview,
+  on-page, Lighthouse — JSON kolonlar Eloquent tarafından otomatik
+  array'e çevrilir)
+
+Migration'lar `database/migrations/` altında; kurulumda `php artisan migrate`
+ile oluşturulur.
+
+## Mimari notlar
+
+- `App\Services\Serp\GoogleSerpScraper` — Google SERP scraping + AI Overview
+  tespiti (framework'ten bağımsız, Guzzle + Symfony DomCrawler kullanır).
+- `App\Services\OnPage\OnPageSeoAnalyzer` — hedef sayfa on-page analizi.
+- `App\Services\Lighthouse\PageSpeedInsightsClient` — PSI API istemcisi.
+- `App\Services\CheckRunner` — yukarıdaki üçünü birleştirip bir `Keyword`
+  modeli için `Check` kaydı oluşturan orkestrasyon servisi (web arayüzü
+  tarafından kullanılır).
+- `App\Console\Commands\SeoCheckCommand` — aynı Serp/OnPage servislerini
+  veritabanı olmadan tek seferlik CLI çalıştırması için kullanır.
+- Google OAuth: `App\Http\Controllers\Auth\GoogleController` (Socialite) +
+  `App\Http\Middleware\EnsureGoogleEmailAllowed` (allowlist'ten çıkarılan
+  kullanıcıların oturumunu anında sonlandırır).
 
 ## Geliştirme
 
 ```bash
-find src config public -name '*.php' -exec php -l {} \;
+composer install
+cp .env.example .env
+php artisan key:generate
+touch database/database.sqlite
+php artisan migrate
 
-# Yerel test sunucusu
-php -S 127.0.0.1:8000 -t public
+php artisan serve
 ```

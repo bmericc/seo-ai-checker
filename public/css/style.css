@@ -91,7 +91,7 @@ input[type="text"], input[type="url"] {
     color: var(--fg);
 }
 
-button {
+button, .btn-google {
     padding: 0.45rem 0.9rem;
     border: 1px solid var(--accent);
     background: var(--accent);
@@ -99,12 +99,23 @@ button {
     border-radius: 6px;
     cursor: pointer;
     font-size: 0.9rem;
+    display: inline-block;
+    text-decoration: none;
 }
 
 button.btn-danger {
     background: transparent;
     color: var(--error);
     border-color: var(--error);
+}
+
+button.link-button {
+    background: none;
+    border: none;
+    color: var(--accent);
+    padding: 0;
+    font-size: inherit;
+    text-decoration: underline;
 }
 
 .actions { display: flex; gap: 0.5rem; }
@@ -143,3 +154,10 @@ button.btn-danger {
 
 details { margin: 0.5rem 0; }
 summary { cursor: pointer; color: var(--accent); }
+
+.login-box {
+    max-width: 420px;
+    margin: 4rem auto;
+    text-align: center;
+}
+.login-box .btn-google { margin-top: 1rem; }

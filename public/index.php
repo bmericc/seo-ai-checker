@@ -1,41 +1,20 @@
 <?php
 
-declare(strict_types=1);
+use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
 
-use DI\ContainerBuilder;
-use SeoAiChecker\Web\Auth\AuthMiddleware;
-use SeoAiChecker\Web\Auth\CsrfMiddleware;
-use Slim\Factory\AppFactory;
+define('LARAVEL_START', microtime(true));
 
-require __DIR__ . '/../vendor/autoload.php';
-
-Dotenv\Dotenv::createImmutable(dirname(__DIR__))->safeLoad();
-
-session_start([
-    'cookie_httponly' => true,
-    'cookie_samesite' => 'Lax',
-]);
-
-if (!isset($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+// Determine if the application is in maintenance mode...
+if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
+    require $maintenance;
 }
 
-$builder = new ContainerBuilder();
-$builder->addDefinitions(require __DIR__ . '/../config/container.php');
-$container = $builder->build();
+// Register the Composer autoloader...
+require __DIR__.'/../vendor/autoload.php';
 
-AppFactory::setContainer($container);
-$app = AppFactory::create();
+// Bootstrap Laravel and handle the request...
+/** @var Application $app */
+$app = require_once __DIR__.'/../bootstrap/app.php';
 
-$app->add(CsrfMiddleware::class);
-$app->add(AuthMiddleware::class);
-$app->addRoutingMiddleware();
-$app->addErrorMiddleware(
-    displayErrorDetails: (bool) ($container->get('settings')['app']['debug']),
-    logErrors: true,
-    logErrorDetails: true,
-);
-
-(require __DIR__ . '/../config/routes.php')($app);
-
-$app->run();
+$app->handleRequest(Request::capture());
