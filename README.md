@@ -3,10 +3,9 @@
 Web scraping ile Google arama sonuçlarında (SERP) sıralama takibi, Google
 **AI Overview** kutusunda görünürlük kontrolü, temel **on-page SEO** analizi
 ve **Lighthouse** (Google PageSpeed Insights) skorlarını bir araya getiren
-bir **Laravel** uygulaması. Hem tek seferlik kontroller için bir **Artisan
-CLI komutu** (`php artisan seo:check`), hem de uzak bir sunucuda barındırılıp
-geçmişi veritabanında tutan, Google hesabıyla korunan bir **web arayüzü**
-olarak kullanılabilir.
+bir **Laravel** uygulaması. Uzak bir sunucuda (veya Docker ile yerelde)
+barındırılıp geçmişi veritabanında tutan, Google hesabıyla korunan bir
+**web arayüzü** olarak kullanılır.
 
 ## Özellikler
 
@@ -54,64 +53,68 @@ olarak kullanılabilir.
   düşüktür ve hızla "Quota exceeded" hatasına düşebilirsiniz; gerçek
   kullanım için `PSI_API_KEY` almanız önerilir (bkz. aşağı).
 
-## Kurulum (ortak adımlar)
+## Proje yapısı
+
+```
+.
+├── docker/                # Dockerfile (PHP-FPM) ve nginx konfigürasyonu
+├── docker-compose.yml
+└── www/                   # Laravel uygulamasının tamamı (document root: www/public)
+    ├── app/
+    ├── config/
+    ├── database/
+    ├── public/
+    ├── resources/
+    ├── routes/
+    └── ...
+```
+
+Uygulamanın tüm kaynak kodu `www/` klasörü altındadır; `docker-compose.yml`
+ve `docker/` yalnızca çalıştırma ortamına aittir.
+
+## Docker ile çalıştırma (önerilen)
+
+Gereksinim: Docker + Docker Compose.
 
 ```bash
+cp www/.env.example www/.env
+
+docker compose build
+docker compose up -d
+
+docker compose exec app php artisan key:generate
+touch www/database/database.sqlite   # SQLite icin veritabani dosyasi
+docker compose exec app php artisan migrate
+```
+
+Panel varsayılan olarak `http://localhost:8080` adresinde çalışır (port,
+`docker-compose.yml` içindeki `webserver` servisinden değiştirilebilir).
+
+Servisler:
+
+- `app` — PHP 8.4-FPM (composer bağımlılıkları image build sırasında kurulur;
+  `composer.lock` içindeki kilitli Symfony 8.x paketleri PHP 8.4+ gerektiriyor).
+- `webserver` — Nginx, `docker/nginx/default.conf` ile `www/public`'i document
+  root olarak sunar, PHP isteklerini `app` servisine fastcgi ile iletir.
+
+Kod değişiklikleri için `www/` klasörü container'a bind-mount edilir; PHP
+tarafında dosya değişikliği yeniden build gerektirmez. `composer.json` veya
+`composer.lock` değiştiğinde image'ı yeniden build edin
+(`docker compose build app`).
+
+## Kurulum (Docker olmadan, manuel)
+
+```bash
+cd www
 composer install
 cp .env.example .env
 php artisan key:generate
 touch database/database.sqlite   # varsayılan SQLite için
 php artisan migrate
+php artisan serve
 ```
 
-Bu adım hem CLI hem web arayüzü için gereklidir.
-
-## CLI Kullanımı
-
-```bash
-# Tek anahtar kelime, tek domain
-php artisan seo:check --domain=example.com --keyword="anahtar kelime"
-
-# Birden fazla anahtar kelime
-php artisan seo:check --domain=example.com -k "anahtar kelime 1" -k "anahtar kelime 2"
-
-# Dosyadan anahtar kelime listesi (bkz. keywords.example.txt)
-php artisan seo:check --domain=example.com --keywords-file=keywords.example.txt
-
-# On-page analizi atla, sadece SERP/AI Overview kontrolü yap
-php artisan seo:check --domain=example.com --keywords-file=keywords.example.txt --skip-onpage
-
-# Sonuçları JSON olarak da kaydet
-php artisan seo:check --domain=example.com --keywords-file=keywords.example.txt --json=rapor.json
-
-# Dil/bölge, gecikme ve proxy ayarları
-php artisan seo:check --domain=example.com --keyword="php nedir" --hl=en --gl=us --delay=6000 --proxy=http://127.0.0.1:8080
-```
-
-### Seçenekler
-
-| Seçenek | Açıklama | Varsayılan |
-|---|---|---|
-| `--domain`, `-d` | Takip edilen domain (zorunlu) | — |
-| `--keyword`, `-k` | Kontrol edilecek anahtar kelime (tekrarlanabilir) | — |
-| `--keywords-file`, `-f` | `keyword` veya `keyword\|url` satırları içeren dosya | — |
-| `--url`, `-u` | On-page analiz için varsayılan sayfa | `https://{domain}/` |
-| `--skip-onpage` | On-page analizi devre dışı bırakır | kapalı |
-| `--hl` | Google arayüz dili | `.env`'deki `GOOGLE_HL` |
-| `--gl` | Google bölge kodu | `.env`'deki `GOOGLE_GL` |
-| `--delay` | İstekler arası bekleme (ms) | `.env`'deki `REQUEST_DELAY_MS` |
-| `--proxy` | HTTP proxy | `.env`'deki `HTTP_PROXY` |
-| `--user-agent` | Özel User-Agent | Chrome masaüstü UA |
-| `--json` | Sonuçları ayrıca JSON dosyasına yazar | — |
-
-CLI komutu Lighthouse denetimi yapmaz; bu yalnızca web arayüzünde mevcuttur
-ve veritabanına yazmaz (tek seferlik, durum tutmayan çalıştırma).
-
-Anahtar kelime dosyasındaki satır başına isteğe bağlı `|url` kısmı,
-o anahtar kelime için on-page analizinin hangi sayfada yapılacağını
-belirtmenizi sağlar (ör. o kelimeyle hedeflenen iniş sayfası).
-
-## Web Arayüzü (uzak sunucuda barındırma)
+## Web Arayüzü
 
 Web arayüzü, domain/anahtar kelime kayıtlarını ve her "Kontrol Et"
 çalıştırmasının sonucunu (SERP + AI Overview + on-page + Lighthouse)
@@ -127,7 +130,7 @@ e-posta allowlist ile korunur (basit şifre yerine).
    sayfasında yeni bir **OAuth client ID** oluşturun, tür: **Web application**.
 2. **Authorized redirect URI** olarak sunucunuzun adresini ekleyin, örn:
    `https://sizin-sunucunuz.com/auth/google/callback`
-3. Oluşan **Client ID** ve **Client Secret** değerlerini `.env` dosyasına
+3. Oluşan **Client ID** ve **Client Secret** değerlerini `www/.env` dosyasına
    yazın (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`).
 4. `ALLOWED_GOOGLE_EMAILS` içine panele giriş yapabilecek Google
    e-postalarını virgülle ayırarak yazın. **Bu liste boşsa kimse giriş
@@ -146,16 +149,16 @@ e-posta allowlist ile korunur (basit şifre yerine).
 | `PSI_API_KEY` | (opsiyonel ama önerilir) PageSpeed Insights API anahtarı |
 | `PSI_STRATEGY` | `mobile` veya `desktop` |
 
-### 3. Sunucuya deploy
+### 3. Sunucuya deploy (Docker olmadan)
 
-Belge kökünü (document root) `public/` klasörüne yönlendirin — standart bir
-Laravel deploy'u. Örnek Nginx:
+Belge kökünü (document root) `www/public/` klasörüne yönlendirin. Örnek
+Nginx:
 
 ```nginx
 server {
     listen 443 ssl;
     server_name sizin-sunucunuz.com;
-    root /path/to/seo-ai-checker/public;
+    root /path/to/seo-ai-checker/www/public;
     index index.php;
 
     location / {
@@ -164,7 +167,7 @@ server {
 
     location ~ \.php$ {
         include fastcgi_params;
-        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
         fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
         # Kontrol calistirmalari (SERP+on-page+Lighthouse) 60 saniyeyi
         # bulabilir; varsayilan zaman asimini artirin:
@@ -179,9 +182,9 @@ server {
 
 Notlar:
 
-- `public/` **dışındaki** hiçbir klasör (`app/`, `config/`, `.env`,
-  veritabanı dosyası) web sunucusundan doğrudan erişilebilir olmamalı —
-  yalnızca `public/` document root olarak ayarlanmalı.
+- `www/public/` **dışındaki** hiçbir klasör (`www/app/`, `www/config/`,
+  `www/.env`, veritabanı dosyası) web sunucusundan doğrudan erişilebilir
+  olmamalı — yalnızca `www/public/` document root olarak ayarlanmalı.
 - Google OAuth, üretimde **HTTPS** gerektirir (redirect URI `https://` ile
   başlamalı); `localhost` istisnası yalnızca yerel geliştirmede geçerlidir.
 - PHP `max_execution_time` değerini (php.ini veya php-fpm pool ayarı) en az
@@ -232,8 +235,8 @@ skorlarını verir.
   on-page, Lighthouse — JSON kolonlar Eloquent tarafından otomatik
   array'e çevrilir)
 
-Migration'lar `database/migrations/` altında; kurulumda `php artisan migrate`
-ile oluşturulur.
+Migration'lar `www/database/migrations/` altında; kurulumda
+`php artisan migrate` ile oluşturulur.
 
 ## Mimari notlar
 
@@ -244,15 +247,16 @@ ile oluşturulur.
 - `App\Services\CheckRunner` — yukarıdaki üçünü birleştirip bir `Keyword`
   modeli için `Check` kaydı oluşturan orkestrasyon servisi (web arayüzü
   tarafından kullanılır).
-- `App\Console\Commands\SeoCheckCommand` — aynı Serp/OnPage servislerini
-  veritabanı olmadan tek seferlik CLI çalıştırması için kullanır.
 - Google OAuth: `App\Http\Controllers\Auth\GoogleController` (Socialite) +
   `App\Http\Middleware\EnsureGoogleEmailAllowed` (allowlist'ten çıkarılan
   kullanıcıların oturumunu anında sonlandırır).
 
 ## Geliştirme
 
+Docker olmadan yerel geliştirme için (bkz. yukarıdaki "Kurulum" adımları):
+
 ```bash
+cd www
 composer install
 cp .env.example .env
 php artisan key:generate
@@ -260,4 +264,13 @@ touch database/database.sqlite
 php artisan migrate
 
 php artisan serve
+```
+
+Testler:
+
+```bash
+cd www
+composer test
+# veya Docker uzerinden:
+docker compose exec app php artisan test
 ```

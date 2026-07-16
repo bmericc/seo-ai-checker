@@ -23,6 +23,10 @@ jobs:
 
     name: PHP ${{ matrix.php }}
 
+    defaults:
+      run:
+        working-directory: www
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
