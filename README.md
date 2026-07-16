@@ -57,9 +57,11 @@ barındırılıp geçmişi veritabanında tutan, Google hesabıyla korunan bir
 
 ```
 .
-├── docker/                # Dockerfile (PHP-FPM) ve nginx konfigürasyonu
-├── docker-compose.yml
-└── www/                   # Laravel uygulamasının tamamı (document root: www/public)
+├── docker/                     # Dockerfile (PHP-FPM) ve nginx konfigürasyonu
+├── docker-compose.yml          # Dev
+├── docker-compose.prod.yml     # Prod (dev ile ayni yapida, ayri servis/volume adlari)
+├── .env.example                # docker-compose (dev+prod) icin ortam degiskeni sablonu
+└── www/                        # Laravel uygulamasinin tamami (document root: www/public)
     ├── app/
     ├── config/
     ├── database/
@@ -69,26 +71,39 @@ barındırılıp geçmişi veritabanında tutan, Google hesabıyla korunan bir
     └── ...
 ```
 
-Uygulamanın tüm kaynak kodu `www/` klasörü altındadır; `docker-compose.yml`
+Uygulamanın tüm kaynak kodu `www/` klasörü altındadır; `docker-compose*.yml`
 ve `docker/` yalnızca çalıştırma ortamına aittir.
 
-## Docker ile çalıştırma (önerilen)
+**Önemli:** Docker altında Laravel, `www/.env` dosyasını **okumaz** —
+konfigürasyon `docker-compose.yml`/`docker-compose.prod.yml` içindeki
+`environment:` bloğu üzerinden repo kökündeki `.env` (dev) veya `.env.prod`
+(prod) dosyasından gerçek ortam değişkeni olarak enjekte edilir.
+`www/.env.example`, yalnızca aşağıdaki "Docker olmadan, manuel" kurulum
+yolu için geçerlidir.
+
+## Docker ile çalıştırma — dev (önerilen)
 
 Gereksinim: Docker + Docker Compose.
 
 ```bash
-cp www/.env.example www/.env
+cp .env.example .env
 
 docker compose build
+docker compose run --rm app php artisan key:generate --show
+# ciktiyi kopyalayip .env dosyasindaki APP_KEY= satirina yapistirin
+
 docker compose up -d
 
-docker compose exec app php artisan key:generate
 touch www/database/database.sqlite   # SQLite icin veritabani dosyasi
+touch www/.env                       # bos dosya; sadece dotenv'in "dosya yok"
+                                      # test uyarisini sessize alir, ICERIGI
+                                      # KULLANILMAZ (gercek config yukaridaki
+                                      # .env'den environment: ile gelir)
 docker compose exec app php artisan migrate
 ```
 
-Panel varsayılan olarak `http://localhost:8080` adresinde çalışır (port,
-`docker-compose.yml` içindeki `webserver` servisinden değiştirilebilir).
+Panel varsayılan olarak `http://localhost:8080` adresinde çalışır
+(`.env` içindeki `WEB_PORT` ile değiştirilebilir).
 
 Servisler:
 
@@ -100,7 +115,56 @@ Servisler:
 Kod değişiklikleri için `www/` klasörü container'a bind-mount edilir; PHP
 tarafında dosya değişikliği yeniden build gerektirmez. `composer.json` veya
 `composer.lock` değiştiğinde image'ı yeniden build edin
-(`docker compose build app`).
+(`docker compose build app`). `.env`'de bir değeri değiştirdiğinizde
+`docker compose up -d` yeterlidir (Compose değişen `environment:` değerleri
+için container'ı otomatik yeniden oluşturur).
+
+## Docker ile çalıştırma — production
+
+`docker-compose.prod.yml`, dev ile birebir aynı yapıdadır (aynı servis
+isimleri, aynı env değişkenleri); farkı: `composer install --no-dev` ile
+build edilir, `restart: unless-stopped` içerir ve ayrı volume adları
+kullanır (aynı host üzerinde dev ile çakışmadan yan yana durabilir).
+
+```bash
+cp .env.example .env.prod
+# .env.prod dosyasini prod degerleriyle doldurun:
+#   APP_ENV=production, APP_DEBUG=false, gercek APP_URL/GOOGLE_REDIRECT_URI,
+#   PSI_API_KEY, ALLOWED_GOOGLE_EMAILS, WEB_PORT=80 (veya reverse proxy'nizin
+#   yonlendirdigi port), vb.
+
+docker compose -f docker-compose.prod.yml --env-file .env.prod -p seo-ai-checker-prod build
+
+docker compose -f docker-compose.prod.yml --env-file .env.prod -p seo-ai-checker-prod \
+  run --rm app php artisan key:generate --show
+# ciktiyi .env.prod dosyasindaki APP_KEY= satirina yapistirin
+
+docker compose -f docker-compose.prod.yml --env-file .env.prod -p seo-ai-checker-prod up -d
+
+touch www/database/database.sqlite
+touch www/.env   # bkz. yukaridaki not; icerigi kullanilmaz
+
+docker compose -f docker-compose.prod.yml --env-file .env.prod -p seo-ai-checker-prod \
+  exec app php artisan migrate --force
+```
+
+`-p seo-ai-checker-prod` proje adı, dev stack'iyle (varsayılan proje adı
+dizin adından türetilir) aynı ağ/volume isimlerinin çakışmasını önler.
+
+Sunucuda **git tabanlı deploy** için tipik akış:
+
+```bash
+git pull
+docker compose -f docker-compose.prod.yml --env-file .env.prod -p seo-ai-checker-prod \
+  up -d --build
+docker compose -f docker-compose.prod.yml --env-file .env.prod -p seo-ai-checker-prod \
+  exec app php artisan migrate --force
+```
+
+`www/` bind-mount edildiği için `--build` yalnızca `composer.json`/`composer.lock`
+veya `docker/` değiştiğinde gerçekten yeniden build tetikler; kod-only
+değişikliklerde de `up -d --build` çalıştırmak güvenlidir (gereksiz build
+Docker layer cache'i sayesinde hızlı geçer).
 
 ## Kurulum (Docker olmadan, manuel)
 
@@ -130,8 +194,9 @@ e-posta allowlist ile korunur (basit şifre yerine).
    sayfasında yeni bir **OAuth client ID** oluşturun, tür: **Web application**.
 2. **Authorized redirect URI** olarak sunucunuzun adresini ekleyin, örn:
    `https://sizin-sunucunuz.com/auth/google/callback`
-3. Oluşan **Client ID** ve **Client Secret** değerlerini `www/.env` dosyasına
-   yazın (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`).
+3. Oluşan **Client ID** ve **Client Secret** değerlerini ilgili `.env`
+   dosyasına yazın (Docker: repo kökündeki `.env`/`.env.prod`; manuel kurulum:
+   `www/.env`) — `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`.
 4. `ALLOWED_GOOGLE_EMAILS` içine panele giriş yapabilecek Google
    e-postalarını virgülle ayırarak yazın. **Bu liste boşsa kimse giriş
    yapamaz** (varsayılan olarak erişim kapalıdır, güvenli taraf budur); bir

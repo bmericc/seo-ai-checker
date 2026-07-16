@@ -3,6 +3,9 @@ services:
     build:
       context: .
       dockerfile: docker/php/Dockerfile
+      args:
+        COMPOSER_INSTALL_FLAGS: --no-dev
+    restart: unless-stopped
     environment:
       APP_NAME: ${APP_NAME}
       APP_ENV: ${APP_ENV}
@@ -35,13 +38,14 @@ services:
       ALLOWED_GOOGLE_EMAILS: ${ALLOWED_GOOGLE_EMAILS}
     volumes:
       - ./www:/var/www/html
-      - vendor:/var/www/html/vendor
-      - bootstrap_cache:/var/www/html/bootstrap/cache
+      - vendor_prod:/var/www/html/vendor
+      - bootstrap_cache_prod:/var/www/html/bootstrap/cache
 
   webserver:
     image: nginx:1.27-alpine
+    restart: unless-stopped
     ports:
-      - "${WEB_PORT:-8080}:80"
+      - "${WEB_PORT:-80}:80"
     volumes:
       - ./www/public:/var/www/html/public:ro
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
@@ -49,5 +53,5 @@ services:
       - app
 
 volumes:
-  vendor:
-  bootstrap_cache:
+  vendor_prod:
+  bootstrap_cache_prod:
