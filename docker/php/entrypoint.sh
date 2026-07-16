@@ -8,7 +8,15 @@ set -e
 # sahiplikten bagimsiz sekilde chown/chmod yapabilir. chown SART: dosya
 # root:root sahipliginde olusturulursa, chmod 664 "other" grubuna sadece
 # okuma hakki birakir ve www-data (php-fpm worker) yine yazamaz.
+#
+# DIZIN de chown edilmeli: SQLite her yazma isleminde ayni dizinde
+# gecici bir "-journal"/"-wal" dosyasi olusturur; sadece .sqlite dosyasi
+# yazilabilir olsa bile dizin www-data'ya kapaliysa "attempt to write a
+# readonly database" hatasi devam eder (sessions tablosuna hicbir yazma
+# gerceklesmez, bu da oturumlarin/OAuth "state" kontrolunun her istekte
+# sessizce sifirlanmasina yol acar).
 mkdir -p database
+chown www-data:www-data database
 touch database/database.sqlite
 chown www-data:www-data database/database.sqlite
 chmod 664 database/database.sqlite
