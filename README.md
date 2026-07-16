@@ -59,7 +59,7 @@ barındırılıp geçmişi veritabanında tutan, Google hesabıyla korunan bir
 .
 ├── docker/              # Dockerfile (PHP-FPM) ve nginx konfigürasyonu
 ├── docker-compose.yml   # Tek dosya; dev/prod ayrimi --env-file ile yapilir
-├── .env.example         # docker-compose icin ortam degiskeni sablonu
+├── .env.docker.example  # docker-compose icin ortam degiskeni sablonu
 └── www/                 # Laravel uygulamasinin tamami (document root: www/public)
     ├── app/
     ├── config/
@@ -89,7 +89,7 @@ aynıdır (`vendor`, `bootstrap_cache`, vs.) — ayrım tamamen hangi
 Gereksinim: Docker + Docker Compose.
 
 ```bash
-cp .env.example .env
+cp .env.docker.example .env
 
 docker compose build
 docker compose run --rm app php artisan key:generate --show
@@ -134,7 +134,7 @@ Aynı `docker-compose.yml`, farklı bir `--env-file` ile çalıştırılır.
 | `WEB_PORT` | `8080` | `80` (veya reverse proxy'nizin yönlendirdiği port) |
 
 ```bash
-cp .env.example .env.prod
+cp .env.docker.example .env.prod
 # .env.prod dosyasini prod degerleriyle doldurun (yukaridaki 3 degisken +
 # APP_ENV=production, APP_DEBUG=false, gercek APP_URL/GOOGLE_REDIRECT_URI,
 # PSI_API_KEY, ALLOWED_GOOGLE_EMAILS, vb.)
