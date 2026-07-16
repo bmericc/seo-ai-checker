@@ -14,6 +14,14 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->appendToGroup('web', EnsureGoogleEmailAllowed::class);
+
+        // Uygulama her zaman bir reverse proxy'nin (kendi nginx servisimiz,
+        // istege bagli olarak onunde nginx-proxy-manager) arkasinda calisir;
+        // proxy IP'si sabit/bilinen olmadigindan hepsi guvenilir sayilir.
+        // Bu olmadan Laravel gercek istegin HTTPS oldugunu/gercek host'unu
+        // bilemez (isSecure(), url() vb. yanlis sonuc doner) ve bu da OAuth
+        // "state" dogrulamasi gibi oturuma bagli akislari kirabilir.
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
