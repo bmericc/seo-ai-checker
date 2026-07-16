@@ -34,7 +34,7 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}
-      ALLOWED_GOOGLE_EMAILS: ${ALLOWED_GOOGLE_EMAILS}
+      ADMIN_EMAILS: ${ADMIN_EMAILS}
     volumes:
       - ./www:/var/www/html
       - vendor:/var/www/html/vendor
