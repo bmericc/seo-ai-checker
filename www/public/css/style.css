@@ -161,3 +161,20 @@ summary { cursor: pointer; color: var(--accent); }
     text-align: center;
 }
 .login-box .btn-google { margin-top: 1rem; }
+
+.footer {
+    display: flex;
+    gap: 1.25rem;
+    justify-content: center;
+    padding: 1.5rem;
+    margin-top: 2rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.85rem;
+}
+.footer a { color: var(--muted); }
+
+.legal { max-width: 760px; }
+.legal h2 { margin-top: 2rem; }
+.legal p, .legal li { line-height: 1.6; }
+.legal ul, .legal ol { padding-left: 1.25rem; }
+.legal .updated-at { margin-top: -0.5rem; }

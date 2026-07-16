@@ -88,6 +88,16 @@ aynıdır (`vendor`, `bootstrap_cache`, vs.) — ayrım tamamen hangi
 
 Gereksinim: Docker + Docker Compose.
 
+`webserver` servisi, `docker-compose.yml`'de tanımlı `proxy` adlı bir
+external Docker network'üne de bağlanır (bkz. aşağıdaki "nginx-proxy-manager
+arkasında çalıştırma"); bu network'ü kullanmasanız bile **bir kez**
+oluşturmanız gerekir, aksi halde `docker compose up` network bulunamadı
+hatası verir:
+
+```bash
+docker network create npm_proxy   # veya .env'deki PROXY_NETWORK ne ise
+```
+
 ```bash
 cp .env.docker.example .env
 
@@ -97,13 +107,25 @@ docker compose run --rm app php artisan key:generate --show
 
 docker compose up -d
 
-touch www/database/database.sqlite   # SQLite icin veritabani dosyasi
-touch www/.env                       # bos dosya; sadece dotenv'in "dosya yok"
-                                      # test uyarisini sessize alir, ICERIGI
-                                      # KULLANILMAZ (gercek config yukaridaki
-                                      # .env'den environment: ile gelir)
+touch www/.env    # bos dosya; sadece dotenv'in "dosya yok" test uyarisini
+                  # sessize alir, ICERIGI KULLANILMAZ (gercek config
+                  # yukaridaki .env'den environment: ile gelir)
+
 docker compose exec app php artisan migrate
 ```
+
+**Yazma izinleri hakkında:** `storage/`, `bootstrap/cache/` ve `vendor/`
+her ikisi de ayrı Docker volume'lardır (bkz. aşağıdaki `volumes:`), bu
+yüzden host'taki dosya sahipliğinden etkilenmezler — image build sırasında
+`www-data` kullanıcısına chown edilmiş haliyle kalırlar. `database.sqlite`
+ise `www/database/` içinde (migrations ile aynı yerde) kalması gerektiği
+için volume'a alınamaz; bunun yerine `docker/php/entrypoint.sh`, container
+her başladığında dosyayı oluşturup `www-data` için yazılabilir hale getirir
+— elle `touch`/`chmod` gerekmez. (Bu otomasyon olmadan, `www/` bind-mount
+edildiği için gerçek Linux sunucularda host kullanıcısına ait dosyalar
+`www-data`'ya kapalı kalır ve uygulama loglayamadan çıplak 500 döner —
+macOS/Windows'ta Docker Desktop'ın dosya paylaşımı bunu gizlediği için
+yerel geliştirmede fark edilmeyebilir.)
 
 Panel varsayılan olarak `http://localhost:8080` adresinde çalışır
 (`.env` içindeki `WEB_PORT` ile değiştirilebilir).
@@ -145,7 +167,6 @@ docker compose --env-file .env.prod run --rm app php artisan key:generate --show
 
 docker compose --env-file .env.prod up -d
 
-touch www/database/database.sqlite
 touch www/.env   # bkz. yukaridaki not; icerigi kullanilmaz
 
 docker compose --env-file .env.prod exec app php artisan migrate --force
@@ -169,6 +190,42 @@ Docker layer cache'i sayesinde hızlı geçer).
 arar, bu da dev için zaten doğru davranıştır; ama aynı dizinde hem `.env`
 hem `.env.prod` varsa prod komutlarında `--env-file .env.prod`'u atlamayın,
 aksi halde sessizce dev ayarlarıyla çalışır.
+
+## nginx-proxy-manager (veya başka bir reverse proxy) arkasında çalıştırma
+
+`webserver` servisi, host portuna ek olarak `PROXY_NETWORK`/`APP_HOSTNAME`
+(`.env`/`.env.prod`) ile ayarlanan external bir Docker network'üne de
+bağlanır; bu sayede NPM, host portunu hiç kullanmadan doğrudan Docker
+network'ü üzerinden container'a ulaşabilir.
+
+1. NPM'i çalıştıran docker-compose'da (NPM'in kendi kurulumu) kullanılan
+   external network'ün adını öğrenin (yoksa bir tane oluşturun ve NPM'in
+   kendi compose dosyasında da aynı adı `external: true` ile kullanın):
+   ```bash
+   docker network create npm_proxy
+   ```
+2. `.env.prod` içinde:
+   ```
+   PROXY_NETWORK=npm_proxy      # NPM ile paylaşılan network adı
+   APP_HOSTNAME=seo-ai-checker  # NPM'in "Forward Hostname/IP" alanına yazacağınız isim
+   ```
+3. `docker compose --env-file .env.prod up -d` (yeniden) çalıştırıldığında
+   `webserver` otomatik olarak bu network'e katılır ve `APP_HOSTNAME`
+   üzerinden erişilebilir hale gelir (network içindeki diğer container'lardan
+   `getent hosts seo-ai-checker` ile doğrulayabilirsiniz).
+4. NPM arayüzünde yeni bir **Proxy Host** ekleyin:
+   - **Domain Names**: gerçek alan adınız (ör. `seo.example.com`)
+   - **Forward Hostname / IP**: `APP_HOSTNAME` değeriniz (ör. `seo-ai-checker`)
+   - **Forward Port**: `80` (nginx container'ının iç portu — `.env.prod`'daki
+     `WEB_PORT` değil, o yalnızca host'a doğrudan port yayınlamak
+     istediğinizde kullanılır)
+   - **SSL**: Let's Encrypt sertifikası talep edin, "Force SSL" açın.
+   - **Advanced** sekmesine, "Kontrol Et" çalıştırmasının (SERP+on-page+
+     Lighthouse) 60 saniyeyi bulabilmesi nedeniyle şu satırı ekleyin
+     (NPM'in kendi varsayılan proxy timeout'u bunu kesebilir):
+     ```
+     proxy_read_timeout 180s;
+     ```
 
 ## Kurulum (Docker olmadan, manuel)
 

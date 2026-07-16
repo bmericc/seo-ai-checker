@@ -1,6 +1,6 @@
 FROM php:8.4-fpm-alpine
 
-# Prod imajinda "--no-dev" gecirilir (docker-compose.prod.yml), dev deps
+# Prod'da COMPOSER_INSTALL_FLAGS=--no-dev gecirilir (.env.prod), dev deps
 # (phpunit, pint, pail...) imaja dahil edilmez.
 ARG COMPOSER_INSTALL_FLAGS=""
 
@@ -34,4 +34,8 @@ COPY www/ .
 RUN composer dump-autoload --optimize ${COMPOSER_INSTALL_FLAGS} \
     && chown -R www-data:www-data storage bootstrap/cache
 
+COPY docker/php/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT ["entrypoint.sh"]
 CMD ["php-fpm"]

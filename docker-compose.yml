@@ -40,18 +40,32 @@ services:
       - ./www:/var/www/html
       - vendor:/var/www/html/vendor
       - bootstrap_cache:/var/www/html/bootstrap/cache
+      - storage:/var/www/html/storage
 
   webserver:
     image: nginx:1.27-alpine
     restart: ${RESTART_POLICY:-no}
+    hostname: ${APP_HOSTNAME:-seo-ai-checker}
     ports:
       - "${WEB_PORT:-8080}:80"
     volumes:
       - ./www/public:/var/www/html/public:ro
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      default: {}
+      proxy:
+        aliases:
+          - ${APP_HOSTNAME:-seo-ai-checker}
     depends_on:
       - app
 
 volumes:
   vendor:
   bootstrap_cache:
+  storage:
+
+networks:
+  default: {}
+  proxy:
+    external: true
+    name: ${PROXY_NETWORK:-npm_proxy}

@@ -34,5 +34,9 @@
     @endif
     @yield('content')
 </main>
+<footer class="footer">
+    <a href="{{ route('privacy-policy') }}">Gizlilik Politikası</a>
+    <a href="{{ route('terms-of-service') }}">Kullanım Koşulları</a>
+</footer>
 </body>
 </html>
