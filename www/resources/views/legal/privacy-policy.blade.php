@@ -10,10 +10,10 @@
         <p>
             Bu Gizlilik Politikası, <strong>{{ config('app.name') }}</strong>
             ("panel", "hizmet") tarafından toplanan ve işlenen kişisel
-            verileri açıklar. Panel, herkese açık bir ürün değildir; yalnızca
-            site sahibi tarafından önceden izin verilen (allowlist'e eklenen)
-            Google hesaplarının erişebildiği, sınırlı erişimli bir SEO takip
-            aracıdır.
+            verileri açıklar. Herhangi bir Google hesabı giriş yapıp bir
+            hesap oluşturabilir; ancak yeni hesaplar bir admin onaylayana
+            kadar panelin işlevlerine (domain/anahtar kelime yönetimi)
+            erişemez.
         </p>
 
         <h2>1. Kim veri işliyor?</h2>
@@ -42,11 +42,17 @@
                 çerezler pazarlama veya izleme amaçlı değildir.
             </li>
             <li>
+                <strong>Hesap onay durumu</strong> — hesabınızın bir admin
+                tarafından onaylanıp onaylanmadığı ve admin yetkiniz olup
+                olmadığı bilgisi.
+            </li>
+            <li>
                 <strong>Panelde oluşturduğunuz kayıtlar</strong> — Eklediğiniz
                 domain'ler, anahtar kelimeler ve her "Kontrol Et"
                 çalıştırmasının sonucu (Google arama sıralaması, AI Overview
                 durumu, on-page SEO analizi, Lighthouse skorları) veritabanında
-                saklanır.
+                saklanır. Bu kayıtlar tüm onaylı kullanıcılar arasında
+                paylaşılır (kullanıcıya özel değildir).
             </li>
         </ul>
         <p>
@@ -87,20 +93,20 @@
 
         <h2>5. Veri saklama süresi</h2>
         <p>
-            Hesap ve kayıt verileri, siz veya panel yöneticisi silene kadar
-            saklanır. Bir domain veya anahtar kelime kaydını sildiğinizde,
-            ona bağlı tüm kontrol geçmişi de kalıcı olarak silinir.
-            Google hesabınız erişim listesinden (allowlist) çıkarılırsa
-            oturumunuz anında sonlandırılır; ancak önceden oluşturulmuş
-            hesap/kayıt verilerinin tamamen silinmesi için panel yöneticisiyle
-            iletişime geçmeniz gerekir.
+            Hesap ve kayıt verileri, siz veya bir admin silene kadar saklanır.
+            Bir domain veya anahtar kelime kaydını sildiğinizde, ona bağlı tüm
+            kontrol geçmişi de kalıcı olarak silinir. Hesabınızın onayı bir
+            admin tarafından kaldırılırsa panele erişiminiz anında
+            sonlandırılır; ancak hesap kaydınızın tamamen silinmesi için
+            admin ile iletişime geçmeniz gerekir.
         </p>
 
         <h2>6. Veri güvenliği</h2>
         <p>
-            Erişim, yalnızca izin verilen Google hesaplarıyla ve HTTPS
-            üzerinden yapılan girişle sınırlıdır. Uygulama kodu ve
-            veritabanı, herkese açık olmayan bir sunucu ortamında barındırılır.
+            Panelin işlevlerine erişim, yalnızca bir admin tarafından
+            onaylanmış hesaplarla ve HTTPS üzerinden yapılan girişle
+            sınırlıdır. Uygulama kodu ve veritabanı, herkese açık olmayan
+            bir sunucu ortamında barındırılır.
         </p>
 
         <h2>7. Haklarınız</h2>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DomainController;
@@ -28,6 +29,10 @@ Route::post('/logout', function () {
 
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
+Route::get('/pending-approval', function () {
+    return view('pending-approval');
+})->middleware('auth')->name('pending-approval');
+
 Route::middleware('auth')->group(function () {
     Route::post('/domains', [DomainController::class, 'store'])->name('domains.store');
     Route::get('/domains/{domain}', [DomainController::class, 'show'])->name('domains.show');
@@ -37,4 +42,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/keywords/{keyword}', [KeywordController::class, 'show'])->name('keywords.show');
     Route::post('/keywords/{keyword}/check', [KeywordController::class, 'check'])->name('keywords.check');
     Route::delete('/keywords/{keyword}', [KeywordController::class, 'destroy'])->name('keywords.destroy');
+});
+
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
+    Route::patch('/users/{user}/approve', [AdminUserController::class, 'approve'])->name('users.approve');
+    Route::patch('/users/{user}/revoke', [AdminUserController::class, 'revoke'])->name('users.revoke');
+    Route::patch('/users/{user}/toggle-admin', [AdminUserController::class, 'toggleAdmin'])->name('users.toggle-admin');
+    Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
 });

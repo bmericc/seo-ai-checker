@@ -25,11 +25,12 @@
 
         <h2>2. Erişim</h2>
         <p>
-            Panel herkese açık değildir; erişim yalnızca site sahibi
-            tarafından önceden onaylanmış (allowlist'e eklenmiş) Google
-            hesaplarıyla mümkündür. Site sahibi, herhangi bir zamanda ve
-            gerekçe belirtmeksizin bir hesabın erişimini iptal edebilir; bu
-            durumda ilgili hesabın açık oturumu anında sonlandırılır.
+            Herhangi bir Google hesabı giriş yapıp bir hesap oluşturabilir;
+            ancak yeni hesaplar bir admin onaylayana kadar panelin
+            işlevlerine erişemez. Bir admin, herhangi bir zamanda ve
+            gerekçe belirtmeksizin bir hesabın onayını kaldırabilir veya
+            hesabı silebilir; bu durumda ilgili hesabın erişimi anında
+            sonlandırılır.
         </p>
 
         <h2>3. Kabul edilebilir kullanım</h2>

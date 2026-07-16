@@ -31,9 +31,9 @@ class GoogleController extends Controller
 
         $email = strtolower((string) $googleUser->getEmail());
 
-        if ($email === '' || !$this->isAllowed($email)) {
+        if ($email === '') {
             return response()->view('auth.error', [
-                'message' => sprintf('%s adresine bu panele erisim izni verilmemis.', $email ?: '(bilinmiyor)'),
+                'message' => 'Google hesabinizdan e-posta adresi alinamadi.',
             ], 403);
         }
 
@@ -42,17 +42,22 @@ class GoogleController extends Controller
             ['name' => $googleUser->getName() ?: $email],
         );
 
+        if ($this->isBootstrapAdmin($email) && (!$user->is_admin || !$user->isApproved())) {
+            $user->forceFill([
+                'is_admin' => true,
+                'approved_at' => $user->approved_at ?? now(),
+            ])->save();
+        }
+
         Auth::login($user, remember: true);
         request()->session()->regenerate();
 
         return redirect()->intended('/');
     }
 
-    private function isAllowed(string $email): bool
+    private function isBootstrapAdmin(string $email): bool
     {
-        $allowed = config('seo.allowed_google_emails', []);
-
-        foreach ($allowed as $candidate) {
+        foreach (config('seo.bootstrap_admin_emails', []) as $candidate) {
             if (strtolower($candidate) === $email) {
                 return true;
             }

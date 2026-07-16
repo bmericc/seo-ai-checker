@@ -1,6 +1,7 @@
 <?php
 
-use App\Http\Middleware\EnsureGoogleEmailAllowed;
+use App\Http\Middleware\EnsureUserApproved;
+use App\Http\Middleware\EnsureUserIsAdmin;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -13,7 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->appendToGroup('web', EnsureGoogleEmailAllowed::class);
+        $middleware->appendToGroup('web', EnsureUserApproved::class);
+        $middleware->alias(['admin' => EnsureUserIsAdmin::class]);
 
         // Ayri bir /login sayfasi yok; ana sayfa (/) zaten girissiz de
         // erisilebilir ve ayni Google ile giris CTA'sini gosteriyor.

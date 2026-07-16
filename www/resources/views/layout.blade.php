@@ -11,6 +11,9 @@
     <a href="{{ route('dashboard') }}" class="brand">{{ config('app.name') }}</a>
     @auth
         <div class="topbar-user">
+            @if (auth()->user()->is_admin)
+                <a href="{{ route('admin.users.index') }}">Kullanıcılar</a>
+            @endif
             <span>{{ auth()->user()->name }} ({{ auth()->user()->email }})</span>
             <form method="post" action="{{ route('logout') }}">
                 @csrf

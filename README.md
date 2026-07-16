@@ -161,7 +161,7 @@ Aynı `docker-compose.yml`, farklı bir `--env-file` ile çalıştırılır.
 cp .env.docker.example .env.prod
 # .env.prod dosyasini prod degerleriyle doldurun (yukaridaki 3 degisken +
 # APP_ENV=production, APP_DEBUG=false, gercek APP_URL/GOOGLE_REDIRECT_URI,
-# PSI_API_KEY, ALLOWED_GOOGLE_EMAILS, vb.)
+# PSI_API_KEY, ADMIN_EMAILS, vb.)
 
 docker compose --env-file .env.prod build
 docker compose --env-file .env.prod up -d
@@ -248,8 +248,10 @@ görebilirsiniz.
 
 ### 1. Google OAuth uygulaması oluşturun
 
-Panel herkese açık bir sunucuda çalışacağı için erişim, Google ile giriş +
-e-posta allowlist ile korunur (basit şifre yerine).
+Herhangi bir Google hesabı giriş yapıp panelde bir hesap oluşturabilir;
+ancak yeni hesaplar bir **admin onaylayana kadar** panele erişemez (bkz.
+"Kullanıcı yönetimi ve admin paneli" bölümü) — basit şifre yerine Google
+ile kimlik doğrulama + admin onayı kullanılır.
 
 1. [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials)
    sayfasında yeni bir **OAuth client ID** oluşturun, tür: **Web application**.
@@ -258,11 +260,11 @@ e-posta allowlist ile korunur (basit şifre yerine).
 3. Oluşan **Client ID** ve **Client Secret** değerlerini ilgili `.env`
    dosyasına yazın (Docker: repo kökündeki `.env`/`.env.prod`; manuel kurulum:
    `www/.env`) — `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`.
-4. `ALLOWED_GOOGLE_EMAILS` içine panele giriş yapabilecek Google
-   e-postalarını virgülle ayırarak yazın. **Bu liste boşsa kimse giriş
-   yapamaz** (varsayılan olarak erişim kapalıdır, güvenli taraf budur); bir
-   e-posta listeden çıkarılırsa, o kullanıcının açık oturumu da bir sonraki
-   istekte otomatik sonlandırılır.
+4. `ADMIN_EMAILS` içine kendi Google e-postanızı yazın. Bu e-posta(lar) ilk
+   giriş yaptığında **otomatik olarak admin + onaylı** sayılır; böylece ilk
+   kurulumda kendinize erişim açmış olursunuz. Sonraki tüm kullanıcı
+   onayları/admin atamaları `/admin/users` panelinden yapılır, `.env`
+   düzenlemeye gerek kalmaz.
 
 ### 2. `.env` ayarları (web'e özel)
 
@@ -271,7 +273,7 @@ e-posta allowlist ile korunur (basit şifre yerine).
 | `APP_URL` | Panelin herkese açık adresi |
 | `DB_CONNECTION`, `DB_DATABASE`/`DB_HOST`/... | SQLite (varsayılan) veya MySQL/PostgreSQL |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_REDIRECT_URI` | Google OAuth uygulama bilgileri |
-| `ALLOWED_GOOGLE_EMAILS` | Giriş izni verilen e-postalar (virgülle ayrılmış) |
+| `ADMIN_EMAILS` | İlk girişte otomatik admin+onaylı sayılacak e-postalar (virgülle ayrılmış) |
 | `PSI_API_KEY` | (opsiyonel ama önerilir) PageSpeed Insights API anahtarı |
 | `PSI_STRATEGY` | `mobile` veya `desktop` |
 
@@ -324,8 +326,9 @@ Notlar:
 ### 4. Kullanım
 
 1. `https://sizin-sunucunuz.com/` adresine gidin, "Google ile giriş yap"
-   akışına yönlendirilirsiniz (yalnızca `ALLOWED_GOOGLE_EMAILS` içindeki
-   hesaplar kabul edilir).
+   ile giriş yapın. `ADMIN_EMAILS` içindeki bir hesapsanız direkt panele
+   düşersiniz; değilseniz hesabınız oluşturulur ama bir admin onaylayana
+   kadar "onay bekliyor" sayfasını görürsünüz.
 2. Bir domain ekleyin, ardından o domain için anahtar kelime(ler) ekleyin
    (isteğe bağlı olarak her kelime için ayrı bir hedef sayfa URL'si
    belirtebilirsiniz).
@@ -373,9 +376,26 @@ Migration'lar `www/database/migrations/` altında; kurulumda
 - `App\Services\CheckRunner` — yukarıdaki üçünü birleştirip bir `Keyword`
   modeli için `Check` kaydı oluşturan orkestrasyon servisi (web arayüzü
   tarafından kullanılır).
-- Google OAuth: `App\Http\Controllers\Auth\GoogleController` (Socialite) +
-  `App\Http\Middleware\EnsureGoogleEmailAllowed` (allowlist'ten çıkarılan
-  kullanıcıların oturumunu anında sonlandırır).
+- Google OAuth: `App\Http\Controllers\Auth\GoogleController` (Socialite),
+  herhangi bir Google hesabı için `User` kaydı oluşturur/bulur.
+- `App\Http\Middleware\EnsureUserApproved` — `approved_at` boş olan
+  (onaylanmamış) kullanıcıları `/pending-approval` sayfasına yönlendirir;
+  `App\Http\Middleware\EnsureUserIsAdmin` — `/admin/*` rotalarını
+  `is_admin` olmayan kullanıcılara kapatır.
+
+## Kullanıcı yönetimi ve admin paneli
+
+- Herhangi bir Google hesabı giriş yapıp bir `User` kaydı oluşturabilir;
+  varsayılan olarak `approved_at` boştur (onay bekliyor) ve panele erişemez.
+- `.env`/`.env.prod` içindeki `ADMIN_EMAILS` listesindeki e-postalar ilk
+  giriş yaptıklarında otomatik olarak `is_admin=true` + onaylı sayılır
+  (ilk kurulumda kendinize erişim açmak için).
+- Admin kullanıcılar `/admin/users` sayfasından (üst menüdeki "Kullanıcılar"
+  linki) diğer kullanıcıları onaylayabilir, onayını kaldırabilir, admin
+  yapabilir/admin'likten çıkarabilir veya silebilir. Bir admin kendi
+  hesabı üzerinde bu işlemleri yapamaz (yanlışlıkla kendini kilitlememesi
+  için); `ADMIN_EMAILS`'teki bir hesap için bu zaten sorun değildir, çünkü
+  her girişte otomatik olarak admin+onaylı olarak yeniden ayarlanır.
 
 ## Geliştirme
 

@@ -57,12 +57,16 @@ return [
     |--------------------------------------------------------------------------
     | Erisim kontrolu
     |--------------------------------------------------------------------------
-    | Panele giris yapabilecek Google e-postalari. Bos birakilirsa hic kimse
-    | giris yapamaz (varsayilan olarak erisim kapalidir).
+    | Herhangi bir Google hesabi giris yapip kayit olusturabilir, ancak yeni
+    | hesaplar admin onaylayana kadar panele erisemez (bkz. EnsureUserApproved
+    | middleware'i ve /admin/users paneli). Buradaki e-postalar ilk giris
+    | yaptiklarinda OTOMATIK olarak admin + onayli sayilir - yeni bir sunucu
+    | kurulumunda kendinize erisim acmak icin kullanilir; sonrasinda kullanici
+    | yonetimi /admin/users uzerinden yapilir.
     */
-    'allowed_google_emails' => array_values(array_filter(array_map(
+    'bootstrap_admin_emails' => array_values(array_filter(array_map(
         'trim',
-        explode(',', env('ALLOWED_GOOGLE_EMAILS', ''))
+        explode(',', env('ADMIN_EMAILS', ''))
     ))),
 
 ];
