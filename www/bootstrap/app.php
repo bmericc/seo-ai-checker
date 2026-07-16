@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->appendToGroup('web', EnsureGoogleEmailAllowed::class);
 
+        // Ayri bir /login sayfasi yok; ana sayfa (/) zaten girissiz de
+        // erisilebilir ve ayni Google ile giris CTA'sini gosteriyor.
+        $middleware->redirectGuestsTo('/');
+
         // Uygulama her zaman bir reverse proxy'nin (kendi nginx servisimiz,
         // istege bagli olarak onunde nginx-proxy-manager) arkasinda calisir;
         // proxy IP'si sabit/bilinen olmadigindan hepsi guvenilir sayilir.

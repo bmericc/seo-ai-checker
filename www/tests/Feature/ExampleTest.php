@@ -18,21 +18,15 @@ class ExampleTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_login_page_is_accessible(): void
-    {
-        $response = $this->get('/login');
-
-        $response->assertStatus(200);
-    }
-
     /**
      * Panel islevleri (domain/anahtar kelime yonetimi) girissiz erisime
-     * kapali kalmali.
+     * kapali kalmali; ayri bir /login sayfasi olmadigindan ana sayfaya
+     * yonlendirilmeli.
      */
-    public function test_guests_are_redirected_to_login_for_protected_routes(): void
+    public function test_guests_are_redirected_home_for_protected_routes(): void
     {
         $response = $this->get('/domains/1');
 
-        $response->assertRedirect('/login');
+        $response->assertRedirect('/');
     }
 }

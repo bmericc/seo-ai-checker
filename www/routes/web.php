@@ -7,14 +7,6 @@ use App\Http\Controllers\KeywordController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/login', function () {
-    if (Auth::check()) {
-        return redirect()->route('dashboard');
-    }
-
-    return view('home');
-})->name('login');
-
 Route::get('/privacy-policy', function () {
     return view('legal.privacy-policy');
 })->name('privacy-policy');
@@ -31,7 +23,7 @@ Route::post('/logout', function () {
     request()->session()->invalidate();
     request()->session()->regenerateToken();
 
-    return redirect()->route('login');
+    return redirect('/');
 })->middleware('auth')->name('logout');
 
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');

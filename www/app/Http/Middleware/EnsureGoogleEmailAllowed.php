@@ -30,7 +30,7 @@ class EnsureGoogleEmailAllowed
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
 
-                return redirect('/login');
+                return redirect('/');
             }
         }
 
