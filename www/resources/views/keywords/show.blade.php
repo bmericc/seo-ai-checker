@@ -98,6 +98,29 @@
                         <span class="badge">Best Practices {{ $check->lighthouse_best_practices ?? '-' }}</span>
                     @endif
                 </div>
+
+                @if ($check->lighthouse_raw)
+                    @php $metrics = $check->lighthouseMetrics(); @endphp
+                    <details>
+                        <summary>Lighthouse detayi (Core Web Vitals + ham veri)</summary>
+                        @if (!empty($metrics))
+                            <table>
+                                <thead><tr><th>Metrik</th><th>Deger</th></tr></thead>
+                                <tbody>
+                                @foreach ($metrics as $metric)
+                                    <tr>
+                                        <td>{{ $metric['label'] }}</td>
+                                        <td>{{ $metric['displayValue'] ?? '-' }}</td>
+                                    </tr>
+                                @endforeach
+                                </tbody>
+                            </table>
+                        @endif
+                        <p>
+                            <a href="{{ route('checks.lighthouse-raw', $check) }}">Ham PSI JSON verisini indir</a>
+                        </p>
+                    </details>
+                @endif
             </div>
         @endforeach
     @endif

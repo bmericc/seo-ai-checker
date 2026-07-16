@@ -83,6 +83,7 @@ final class CheckRunner
             'lighthouse_accessibility' => $lighthouse->accessibilityScore,
             'lighthouse_best_practices' => $lighthouse->bestPracticesScore,
             'lighthouse_error' => $lighthouse->error,
+            'lighthouse_raw' => $lighthouse->raw,
         ]);
     }
 

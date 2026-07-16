@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Services\Lighthouse\LighthouseResult;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -26,6 +27,7 @@ class Check extends Model
         'lighthouse_accessibility',
         'lighthouse_best_practices',
         'lighthouse_error',
+        'lighthouse_raw',
     ];
 
     protected $casts = [
@@ -35,10 +37,19 @@ class Check extends Model
         'ai_overview_cited_domains' => 'array',
         'ai_overview_target_cited' => 'boolean',
         'onpage' => 'array',
+        'lighthouse_raw' => 'array',
     ];
 
     public function keyword(): BelongsTo
     {
         return $this->belongsTo(Keyword::class);
+    }
+
+    /**
+     * @return array<string, array{label: string, displayValue: ?string, score: ?float}>
+     */
+    public function lighthouseMetrics(): array
+    {
+        return LighthouseResult::metricsFromRaw($this->lighthouse_raw);
     }
 }

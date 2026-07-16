@@ -67,6 +67,7 @@ final class PageSpeedInsightsClient
             seoScore: $this->scoreOf($categories, 'seo'),
             accessibilityScore: $this->scoreOf($categories, 'accessibility'),
             bestPracticesScore: $this->scoreOf($categories, 'best-practices'),
+            raw: $data,
         );
     }
 

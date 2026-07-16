@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DomainController;
 use App\Http\Controllers\KeywordController;
+use App\Models\Check;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -42,6 +43,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/keywords/{keyword}', [KeywordController::class, 'show'])->name('keywords.show');
     Route::post('/keywords/{keyword}/check', [KeywordController::class, 'check'])->name('keywords.check');
     Route::delete('/keywords/{keyword}', [KeywordController::class, 'destroy'])->name('keywords.destroy');
+
+    Route::get('/checks/{check}/lighthouse.json', function (Check $check) {
+        abort_if($check->lighthouse_raw === null, 404);
+
+        return response()->json($check->lighthouse_raw)
+            ->header('Content-Disposition', sprintf('attachment; filename="lighthouse-check-%d.json"', $check->id));
+    })->name('checks.lighthouse-raw');
 });
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
