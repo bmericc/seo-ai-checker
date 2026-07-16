@@ -57,11 +57,10 @@ barındırılıp geçmişi veritabanında tutan, Google hesabıyla korunan bir
 
 ```
 .
-├── docker/                     # Dockerfile (PHP-FPM) ve nginx konfigürasyonu
-├── docker-compose.yml          # Dev
-├── docker-compose.prod.yml     # Prod (dev ile ayni yapida, ayri servis/volume adlari)
-├── .env.example                # docker-compose (dev+prod) icin ortam degiskeni sablonu
-└── www/                        # Laravel uygulamasinin tamami (document root: www/public)
+├── docker/              # Dockerfile (PHP-FPM) ve nginx konfigürasyonu
+├── docker-compose.yml   # Tek dosya; dev/prod ayrimi --env-file ile yapilir
+├── .env.example         # docker-compose icin ortam degiskeni sablonu
+└── www/                 # Laravel uygulamasinin tamami (document root: www/public)
     ├── app/
     ├── config/
     ├── database/
@@ -71,15 +70,19 @@ barındırılıp geçmişi veritabanında tutan, Google hesabıyla korunan bir
     └── ...
 ```
 
-Uygulamanın tüm kaynak kodu `www/` klasörü altındadır; `docker-compose*.yml`
+Uygulamanın tüm kaynak kodu `www/` klasörü altındadır; `docker-compose.yml`
 ve `docker/` yalnızca çalıştırma ortamına aittir.
 
 **Önemli:** Docker altında Laravel, `www/.env` dosyasını **okumaz** —
-konfigürasyon `docker-compose.yml`/`docker-compose.prod.yml` içindeki
-`environment:` bloğu üzerinden repo kökündeki `.env` (dev) veya `.env.prod`
-(prod) dosyasından gerçek ortam değişkeni olarak enjekte edilir.
-`www/.env.example`, yalnızca aşağıdaki "Docker olmadan, manuel" kurulum
-yolu için geçerlidir.
+konfigürasyon `docker-compose.yml` içindeki `environment:` bloğu üzerinden,
+`--env-file` ile verilen dosyadan (dev: `.env`, prod: `.env.prod`) gerçek
+ortam değişkeni olarak enjekte edilir. `www/.env.example`, yalnızca
+aşağıdaki "Docker olmadan, manuel" kurulum yolu için geçerlidir.
+
+Dev ve prod'un **aynı cihazda aynı anda çalışması beklenmediği** için
+`docker-compose.yml` tek dosyadır ve volume/servis adları kasıtlı olarak
+aynıdır (`vendor`, `bootstrap_cache`, vs.) — ayrım tamamen hangi
+`--env-file`'ın verildiğine bağlıdır.
 
 ## Docker ile çalıştırma — dev (önerilen)
 
@@ -121,50 +124,51 @@ için container'ı otomatik yeniden oluşturur).
 
 ## Docker ile çalıştırma — production
 
-`docker-compose.prod.yml`, dev ile birebir aynı yapıdadır (aynı servis
-isimleri, aynı env değişkenleri); farkı: `composer install --no-dev` ile
-build edilir, `restart: unless-stopped` içerir ve ayrı volume adları
-kullanır (aynı host üzerinde dev ile çakışmadan yan yana durabilir).
+Aynı `docker-compose.yml`, farklı bir `--env-file` ile çalıştırılır.
+`.env.prod`'da ayarlanan üç değişken davranışı değiştirir:
+
+| Değişken | Dev (`.env`) | Prod (`.env.prod`) |
+|---|---|---|
+| `COMPOSER_INSTALL_FLAGS` | boş (dev bağımlılıkları da kurulur) | `--no-dev` |
+| `RESTART_POLICY` | `no` | `unless-stopped` |
+| `WEB_PORT` | `8080` | `80` (veya reverse proxy'nizin yönlendirdiği port) |
 
 ```bash
 cp .env.example .env.prod
-# .env.prod dosyasini prod degerleriyle doldurun:
-#   APP_ENV=production, APP_DEBUG=false, gercek APP_URL/GOOGLE_REDIRECT_URI,
-#   PSI_API_KEY, ALLOWED_GOOGLE_EMAILS, WEB_PORT=80 (veya reverse proxy'nizin
-#   yonlendirdigi port), vb.
+# .env.prod dosyasini prod degerleriyle doldurun (yukaridaki 3 degisken +
+# APP_ENV=production, APP_DEBUG=false, gercek APP_URL/GOOGLE_REDIRECT_URI,
+# PSI_API_KEY, ALLOWED_GOOGLE_EMAILS, vb.)
 
-docker compose -f docker-compose.prod.yml --env-file .env.prod -p seo-ai-checker-prod build
-
-docker compose -f docker-compose.prod.yml --env-file .env.prod -p seo-ai-checker-prod \
-  run --rm app php artisan key:generate --show
+docker compose --env-file .env.prod build
+docker compose --env-file .env.prod run --rm app php artisan key:generate --show
 # ciktiyi .env.prod dosyasindaki APP_KEY= satirina yapistirin
 
-docker compose -f docker-compose.prod.yml --env-file .env.prod -p seo-ai-checker-prod up -d
+docker compose --env-file .env.prod up -d
 
 touch www/database/database.sqlite
 touch www/.env   # bkz. yukaridaki not; icerigi kullanilmaz
 
-docker compose -f docker-compose.prod.yml --env-file .env.prod -p seo-ai-checker-prod \
-  exec app php artisan migrate --force
+docker compose --env-file .env.prod exec app php artisan migrate --force
 ```
-
-`-p seo-ai-checker-prod` proje adı, dev stack'iyle (varsayılan proje adı
-dizin adından türetilir) aynı ağ/volume isimlerinin çakışmasını önler.
 
 Sunucuda **git tabanlı deploy** için tipik akış:
 
 ```bash
 git pull
-docker compose -f docker-compose.prod.yml --env-file .env.prod -p seo-ai-checker-prod \
-  up -d --build
-docker compose -f docker-compose.prod.yml --env-file .env.prod -p seo-ai-checker-prod \
-  exec app php artisan migrate --force
+docker compose --env-file .env.prod up -d --build
+docker compose --env-file .env.prod exec app php artisan migrate --force
 ```
 
 `www/` bind-mount edildiği için `--build` yalnızca `composer.json`/`composer.lock`
 veya `docker/` değiştiğinde gerçekten yeniden build tetikler; kod-only
 değişikliklerde de `up -d --build` çalıştırmak güvenlidir (gereksiz build
 Docker layer cache'i sayesinde hızlı geçer).
+
+`.env`'i **her zaman** `--env-file` ile açıkça belirtin (dev'de bile) —
+`docker compose` bayrak verilmezse otomatik olarak `.env` adlı dosyayı
+arar, bu da dev için zaten doğru davranıştır; ama aynı dizinde hem `.env`
+hem `.env.prod` varsa prod komutlarında `--env-file .env.prod`'u atlamayın,
+aksi halde sessizce dev ayarlarıyla çalışır.
 
 ## Kurulum (Docker olmadan, manuel)
 

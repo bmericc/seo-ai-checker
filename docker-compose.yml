@@ -3,6 +3,9 @@ services:
     build:
       context: .
       dockerfile: docker/php/Dockerfile
+      args:
+        COMPOSER_INSTALL_FLAGS: ${COMPOSER_INSTALL_FLAGS:-}
+    restart: ${RESTART_POLICY:-no}
     environment:
       APP_NAME: ${APP_NAME}
       APP_ENV: ${APP_ENV}
@@ -40,6 +43,7 @@ services:
 
   webserver:
     image: nginx:1.27-alpine
+    restart: ${RESTART_POLICY:-no}
     ports:
       - "${WEB_PORT:-8080}:80"
     volumes:
