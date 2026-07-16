@@ -102,17 +102,19 @@ docker network create npm_proxy   # veya .env'deki PROXY_NETWORK ne ise
 cp .env.docker.example .env
 
 docker compose build
-docker compose run --rm app php artisan key:generate --show
-# ciktiyi kopyalayip .env dosyasindaki APP_KEY= satirina yapistirin
-
 docker compose up -d
-
-touch www/.env    # bos dosya; sadece dotenv'in "dosya yok" test uyarisini
-                  # sessize alir, ICERIGI KULLANILMAZ (gercek config
-                  # yukaridaki .env'den environment: ile gelir)
 
 docker compose exec app php artisan migrate
 ```
+
+`APP_KEY` için elle bir şey yapmanıza gerek yok — `docker-compose.yml`'de
+tanımlı **değildir**; `docker/php/entrypoint.sh`, container ilk kez
+başladığında `www/.env`'de bir anahtar yoksa otomatik üretip orada kalıcı
+olarak saklar. Sonraki her yeniden başlatmada/oluşturmada aynı anahtar
+kullanılmaya devam eder (aksi halde her restart'ta oturumlar geçersiz
+kalırdı). Belirli bir anahtar kullanmak isterseniz (ör. eski bir kurulumdan
+taşıma), `www/.env` içindeki `APP_KEY=` satırını elle düzenleyip container'ı
+yeniden başlatın.
 
 **Yazma izinleri hakkında:** `storage/`, `bootstrap/cache/` ve `vendor/`
 her ikisi de ayrı Docker volume'lardır (bkz. aşağıdaki `volumes:`), bu
@@ -162,15 +164,13 @@ cp .env.docker.example .env.prod
 # PSI_API_KEY, ALLOWED_GOOGLE_EMAILS, vb.)
 
 docker compose --env-file .env.prod build
-docker compose --env-file .env.prod run --rm app php artisan key:generate --show
-# ciktiyi .env.prod dosyasindaki APP_KEY= satirina yapistirin
-
 docker compose --env-file .env.prod up -d
-
-touch www/.env   # bkz. yukaridaki not; icerigi kullanilmaz
 
 docker compose --env-file .env.prod exec app php artisan migrate --force
 ```
+
+`APP_KEY` burada da elle üretilmez — bkz. yukarıdaki dev bölümündeki not
+(`www/.env`'de otomatik oluşturulup kalıcı olarak saklanır).
 
 Sunucuda **git tabanlı deploy** için tipik akış:
 

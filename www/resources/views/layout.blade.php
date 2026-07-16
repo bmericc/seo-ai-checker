@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'SEO / AI Overview Checker')</title>
+    <title>@yield('title', config('app.name'))</title>
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 </head>
 <body>
 <header class="topbar">
-    <a href="{{ route('dashboard') }}" class="brand">SEO / AI Overview Checker</a>
+    <a href="{{ route('dashboard') }}" class="brand">{{ config('app.name') }}</a>
     @auth
         <div class="topbar-user">
             <span>{{ auth()->user()->name }} ({{ auth()->user()->email }})</span>

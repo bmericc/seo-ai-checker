@@ -12,7 +12,7 @@ Route::get('/login', function () {
         return redirect()->route('dashboard');
     }
 
-    return view('auth.login');
+    return view('home');
 })->name('login');
 
 Route::get('/privacy-policy', function () {
@@ -34,9 +34,9 @@ Route::post('/logout', function () {
     return redirect()->route('login');
 })->middleware('auth')->name('logout');
 
-Route::middleware('auth')->group(function () {
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
+Route::middleware('auth')->group(function () {
     Route::post('/domains', [DomainController::class, 'store'])->name('domains.store');
     Route::get('/domains/{domain}', [DomainController::class, 'show'])->name('domains.show');
     Route::delete('/domains/{domain}', [DomainController::class, 'destroy'])->name('domains.destroy');

@@ -162,6 +162,12 @@ summary { cursor: pointer; color: var(--accent); }
 }
 .login-box .btn-google { margin-top: 1rem; }
 
+.home-hero { max-width: 720px; margin: 2rem auto; }
+.home-hero .lead { font-size: 1.05rem; line-height: 1.6; }
+.home-hero .home-features { padding-left: 1.25rem; margin: 1.5rem 0; }
+.home-hero .home-features li { line-height: 1.6; margin-bottom: 0.5rem; }
+.home-hero .btn-google { margin-top: 0.5rem; }
+
 .footer {
     display: flex;
     gap: 1.25rem;
