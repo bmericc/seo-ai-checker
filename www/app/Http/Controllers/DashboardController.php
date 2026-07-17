@@ -18,6 +18,7 @@ class DashboardController extends Controller
 
         $domains = Domain::query()
             ->withCount('keywords')
+            ->with('latestDomainCheck')
             ->orderBy('domain')
             ->get();
 

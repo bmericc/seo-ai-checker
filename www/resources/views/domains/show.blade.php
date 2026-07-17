@@ -31,42 +31,11 @@
             </p>
 
             @if ($domain->latestDomainCheck)
-                @php
-                    $domainCheck = $domain->latestDomainCheck;
-                    $blockedCrawlers = collect($domainCheck->ai_crawlers['crawlers'] ?? [])->filter(fn ($c) => !$c['allowed']);
-                @endphp
+                @php($domainCheck = $domain->latestDomainCheck)
 
                 <div class="text-secondary small mb-2">Son kontrol: {{ $domainCheck->created_at->format('Y-m-d H:i:s') }}</div>
                 <div class="mb-3">
-                    @if (!($domainCheck->ai_crawlers['found'] ?? false))
-                        <span class="badge bg-secondary-lt">robots.txt yok — hepsi açık</span>
-                    @elseif ($blockedCrawlers->isEmpty())
-                        <span class="badge bg-success-lt">AI crawler'lar: hepsi açık</span>
-                    @else
-                        <span class="badge bg-warning-lt">AI crawler'lar: {{ $blockedCrawlers->count() }} engelli</span>
-                    @endif
-
-                    @if ($domainCheck->sitemap['found'] ?? false)
-                        @if ($domainCheck->sitemap['is_valid_xml'] ?? false)
-                            <span class="badge bg-success-lt">Sitemap: geçerli</span>
-                        @else
-                            <span class="badge bg-warning-lt">Sitemap: geçersiz XML</span>
-                        @endif
-                    @else
-                        <span class="badge bg-warning-lt">Sitemap yok</span>
-                    @endif
-
-                    @if ($domainCheck->llms_txt['found'] ?? false)
-                        <span class="badge bg-success-lt">llms.txt var</span>
-                    @else
-                        <span class="badge bg-secondary-lt">llms.txt yok</span>
-                    @endif
-
-                    @if ($domainCheck->security_headers['http_redirects_to_https'] ?? false)
-                        <span class="badge bg-success-lt">HTTPS zorunlu</span>
-                    @else
-                        <span class="badge bg-warning-lt">HTTPS yönlendirmesi yok</span>
-                    @endif
+                    @include('domains._check-badges', ['domainCheck' => $domainCheck])
                 </div>
 
                 <div class="accordion" id="site-check-accordion">

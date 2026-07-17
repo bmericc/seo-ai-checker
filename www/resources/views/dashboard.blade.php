@@ -28,6 +28,7 @@
                     <thead>
                         <tr>
                             <th>Domain</th>
+                            <th>Site Kontrolü</th>
                             <th>Anahtar kelime sayısı</th>
                             <th>Eklenme</th>
                             <th class="w-1"></th>
@@ -37,6 +38,13 @@
                         @foreach ($domains as $domain)
                             <tr>
                                 <td><a href="{{ route('domains.show', $domain) }}" class="fw-medium">{{ $domain->domain }}</a></td>
+                                <td>
+                                    @if ($domain->latestDomainCheck)
+                                        @include('domains._check-badges', ['domainCheck' => $domain->latestDomainCheck])
+                                    @else
+                                        <span class="text-secondary">-</span>
+                                    @endif
+                                </td>
                                 <td><span class="badge bg-azure-lt">{{ $domain->keywords_count }}</span></td>
                                 <td class="text-secondary">{{ $domain->created_at?->format('Y-m-d H:i') }}</td>
                                 <td>
