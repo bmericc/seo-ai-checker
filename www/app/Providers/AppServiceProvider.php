@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Services\Lighthouse\PageSpeedInsightsClient;
 use App\Services\OnPage\OnPageSeoAnalyzer;
+use App\Services\Robots\RobotsTxtChecker;
 use App\Services\Serp\GoogleSerpScraper;
 use App\Support\HttpClientFactory;
 use GuzzleHttp\Client;
@@ -35,6 +36,8 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(OnPageSeoAnalyzer::class, fn ($app) => new OnPageSeoAnalyzer($app->make(Client::class)));
+
+        $this->app->singleton(RobotsTxtChecker::class, fn ($app) => new RobotsTxtChecker($app->make(Client::class)));
 
         $this->app->singleton(PageSpeedInsightsClient::class, function () {
             $lh = config('seo.lighthouse');

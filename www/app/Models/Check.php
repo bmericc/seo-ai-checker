@@ -28,6 +28,7 @@ class Check extends Model
         'lighthouse_best_practices',
         'lighthouse_error',
         'lighthouse_raw',
+        'ai_crawlers',
     ];
 
     protected $casts = [
@@ -38,6 +39,7 @@ class Check extends Model
         'ai_overview_target_cited' => 'boolean',
         'onpage' => 'array',
         'lighthouse_raw' => 'array',
+        'ai_crawlers' => 'array',
     ];
 
     public function keyword(): BelongsTo

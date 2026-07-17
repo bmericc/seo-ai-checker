@@ -121,6 +121,47 @@
                         </p>
                     </details>
                 @endif
+
+                @if ($check->ai_crawlers)
+                    @php
+                        $blockedCrawlers = collect($check->ai_crawlers['crawlers'] ?? [])->filter(fn ($c) => !$c['allowed']);
+                    @endphp
+                    <details>
+                        <summary>
+                            AI crawler erisimi (robots.txt)
+                            @if (!($check->ai_crawlers['found'] ?? false))
+                                <span class="badge">robots.txt yok - hepsi acik</span>
+                            @elseif ($blockedCrawlers->isEmpty())
+                                <span class="badge badge-ok">Hepsi acik</span>
+                            @else
+                                <span class="badge badge-warn">{{ $blockedCrawlers->count() }} crawler engelli</span>
+                            @endif
+                        </summary>
+                        @if ($check->ai_crawlers['found'] ?? false)
+                            <table>
+                                <thead><tr><th>Crawler</th><th>Kim</th><th>Durum</th></tr></thead>
+                                <tbody>
+                                @foreach ($check->ai_crawlers['crawlers'] as $token => $info)
+                                    <tr>
+                                        <td>{{ $token }}</td>
+                                        <td>{{ $info['label'] }}</td>
+                                        <td>
+                                            @if ($info['allowed'])
+                                                <span class="badge badge-ok">Acik</span>
+                                            @else
+                                                <span class="badge badge-warn">Engelli</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                                </tbody>
+                            </table>
+                            <p class="muted">Kaynak: <a href="{{ $check->ai_crawlers['url'] }}" target="_blank" rel="noopener">{{ $check->ai_crawlers['url'] }}</a></p>
+                        @else
+                            <p class="muted">robots.txt bulunamadi ({{ $check->ai_crawlers['url'] }}) - varsayilan olarak tum crawler'lar icin acik kabul edilir.</p>
+                        @endif
+                    </details>
+                @endif
             </div>
         @endforeach
     @endif
