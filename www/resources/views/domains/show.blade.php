@@ -5,7 +5,12 @@
 @section('page-pretitle')
     <a href="{{ route('dashboard') }}" class="text-secondary">&larr; Domainler</a>
 @endsection
-@section('page-title', $domain->domain)
+@section('page-title')
+    {{ $domain->domain }}
+    @if (auth()->user()->is_admin)
+        <span class="badge bg-secondary-lt ms-2">Sahibi: {{ $domain->user?->email ?? '—' }}</span>
+    @endif
+@endsection
 @section('page-actions')
     <form method="post" action="{{ route('domains.check', $domain) }}" class="d-inline">
         @csrf

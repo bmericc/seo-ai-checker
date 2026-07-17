@@ -23,7 +23,10 @@ class DomainController extends Controller
             return back()->with('flash', ['type' => 'error', 'message' => 'Gecerli bir domain girin (ornek: example.com).']);
         }
 
-        $existing = Domain::query()->where('domain', $domain)->first();
+        $existing = Domain::query()
+            ->where('domain', $domain)
+            ->where('user_id', $request->user()->id)
+            ->first();
         if ($existing !== null) {
             return redirect()
                 ->route('domains.show', $existing)
@@ -45,6 +48,7 @@ class DomainController extends Controller
             'keywords' => fn ($q) => $q->orderBy('keyword'),
             'keywords.latestCheck',
             'latestDomainCheck',
+            'user',
         ]);
 
         return view('domains.show', ['domain' => $domain]);
