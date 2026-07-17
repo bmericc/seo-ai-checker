@@ -1,11 +1,12 @@
 @extends('layout')
 
 @section('title', 'Gizlilik Politikası')
+@section('page-title', 'Gizlilik Politikası')
 
 @section('content')
-    <div class="legal">
-        <h1>Gizlilik Politikası</h1>
-        <p class="muted updated-at">Son güncelleme: 16 Temmuz 2026</p>
+    <div class="card">
+    <div class="card-body legal">
+        <p class="text-secondary updated-at">Son güncelleme: 16 Temmuz 2026</p>
 
         <p>
             Bu Gizlilik Politikası, <strong>{{ config('app.name') }}</strong>
@@ -120,5 +121,6 @@
             Bu politika zaman zaman güncellenebilir; önemli değişiklikler bu
             sayfada yayınlanır.
         </p>
+    </div>
     </div>
 @endsection

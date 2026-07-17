@@ -1,11 +1,12 @@
 @extends('layout')
 
 @section('title', 'Kullanım Koşulları')
+@section('page-title', 'Kullanım Koşulları')
 
 @section('content')
-    <div class="legal">
-        <h1>Kullanım Koşulları</h1>
-        <p class="muted updated-at">Son güncelleme: 16 Temmuz 2026</p>
+    <div class="card">
+    <div class="card-body legal">
+        <p class="text-secondary updated-at">Son güncelleme: 16 Temmuz 2026</p>
 
         <p>
             Bu Kullanım Koşulları, <strong>{{ config('app.name') }}</strong>
@@ -112,5 +113,6 @@
             @endif
             iletişime geçebilirsiniz.
         </p>
+    </div>
     </div>
 @endsection
