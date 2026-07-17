@@ -25,12 +25,19 @@ return new class extends Migration
                 ->whereNull('user_id')
                 ->update(['user_id' => $fallbackUserId]);
         }
+
+        Schema::table('domains', function (Blueprint $table) {
+            $table->dropUnique(['domain']);
+            $table->unique(['domain', 'user_id']);
+        });
     }
 
     public function down(): void
     {
         Schema::table('domains', function (Blueprint $table) {
+            $table->dropUnique(['domain', 'user_id']);
             $table->dropConstrainedForeignId('user_id');
+            $table->unique(['domain']);
         });
     }
 };

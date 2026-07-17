@@ -28,6 +28,9 @@
                     <thead>
                         <tr>
                             <th>Domain</th>
+                            @if (auth()->user()->is_admin)
+                                <th>Sahibi</th>
+                            @endif
                             <th>Site Kontrolü</th>
                             <th>Anahtar kelime sayısı</th>
                             <th>Eklenme</th>
@@ -38,6 +41,9 @@
                         @foreach ($domains as $domain)
                             <tr>
                                 <td><a href="{{ route('domains.show', $domain) }}" class="fw-medium">{{ $domain->domain }}</a></td>
+                                @if (auth()->user()->is_admin)
+                                    <td class="text-secondary">{{ $domain->user?->email ?? '—' }}</td>
+                                @endif
                                 <td>
                                     @if ($domain->latestDomainCheck)
                                         @include('domains._check-badges', ['domainCheck' => $domain->latestDomainCheck])
