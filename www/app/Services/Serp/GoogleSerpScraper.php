@@ -29,6 +29,7 @@ final class GoogleSerpScraper
 
     public function __construct(
         private readonly Client $client,
+        private readonly ?GoogleRequestThrottle $requestThrottle = null,
         private readonly string $hl = 'tr',
         private readonly string $gl = 'tr',
         private readonly int $numResults = 20,
@@ -41,6 +42,8 @@ final class GoogleSerpScraper
 
     public function search(string $keyword): SerpResult
     {
+        $this->requestThrottle?->throttle();
+
         $url = 'https://www.google.com/search?' . http_build_query([
             'q' => $keyword,
             'hl' => $this->hl,

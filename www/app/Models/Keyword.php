@@ -32,4 +32,9 @@ class Keyword extends Model
     {
         return $this->url ?: sprintf('https://%s/', $this->domain->domain);
     }
+
+    public function isVisibleTo(?User $user): bool
+    {
+        return $this->domain->isVisibleTo($user);
+    }
 }
