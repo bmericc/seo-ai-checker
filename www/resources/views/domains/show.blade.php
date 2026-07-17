@@ -171,6 +171,86 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ac-canonical">
+                                Kanonik host
+                            </button>
+                        </h2>
+                        <div id="ac-canonical" class="accordion-collapse collapse" data-bs-parent="#site-check-accordion">
+                            <div class="accordion-body">
+                                @if ($domainCheck->canonical_host['redirected'] ?? false)
+                                    <p class="mb-0">
+                                        <code>{{ $domainCheck->canonical_host['original_host'] }}</code>,
+                                        HTTP {{ $domainCheck->canonical_host['redirect_status'] }} ile
+                                        <code>{{ $domainCheck->canonical_host['canonical_host'] }}</code>
+                                        adresine yönleniyor. Gerçek trafik (ve CrUX verisi) bu host altında toplanır;
+                                        site-geneli kontroller (ve CrUX sorgusu) bu adrese göre yapılır.
+                                    </p>
+                                @else
+                                    <p class="text-secondary mb-0">
+                                        <code>{{ $domainCheck->canonical_host['original_host'] ?? $domain->domain }}</code>
+                                        kalıcı bir yönlendirme yapmıyor — bu host kanonik kabul edildi.
+                                    </p>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ac-crux">
+                                CrUX (gerçek kullanıcı verisi)
+                            </button>
+                        </h2>
+                        <div id="ac-crux" class="accordion-collapse collapse" data-bs-parent="#site-check-accordion">
+                            <div class="accordion-body">
+                                @if (!($domainCheck->crux['configured'] ?? false))
+                                    <p class="text-secondary mb-0">
+                                        CrUX API anahtarı tanımlı değil (<code>CRUX_API_KEY</code> veya <code>PSI_API_KEY</code>).
+                                    </p>
+                                @elseif (!($domainCheck->crux['found'] ?? false))
+                                    <p class="text-secondary mb-0">
+                                        <code>{{ $domainCheck->crux['origin'] ?? '' }}</code> için CrUX verisi bulunamadı
+                                        (yeterli gerçek kullanıcı trafiği olmayabilir).
+                                        @if ($domainCheck->crux['error'] ?? null)
+                                            <span class="text-danger">{{ $domainCheck->crux['error'] }}</span>
+                                        @endif
+                                    </p>
+                                @else
+                                    <div class="table-responsive">
+                                        <table class="table table-vcenter">
+                                            <thead><tr><th>Metrik</th><th>p75</th><th>Değerlendirme</th></tr></thead>
+                                            <tbody>
+                                            @foreach ($domainCheck->crux['metrics'] as $metric)
+                                                <tr>
+                                                    <td>{{ $metric['label'] }}</td>
+                                                    <td>{{ $metric['p75'] }}</td>
+                                                    <td>
+                                                        @if ($metric['rating'] === 'good')
+                                                            <span class="badge bg-success-lt">iyi</span>
+                                                        @elseif ($metric['rating'] === 'needs_improvement')
+                                                            <span class="badge bg-warning-lt">geliştirilmeli</span>
+                                                        @else
+                                                            <span class="badge bg-danger-lt">zayıf</span>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <p class="text-secondary mb-0">
+                                        Köken: <code>{{ $domainCheck->crux['origin'] }}</code>
+                                        @if ($domainCheck->crux['collection_period'] ?? null)
+                                            &middot; Veri periyodu: {{ $domainCheck->crux['collection_period'] }}
+                                        @endif
+                                    </p>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
                 </div>
             @else
                 <p class="text-secondary mb-0">Henüz site kontrolü çalıştırılmadı.</p>

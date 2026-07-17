@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Services\CanonicalHost\CanonicalHostChecker;
+use App\Services\Crux\CrUxChecker;
 use App\Services\Lighthouse\PageSpeedInsightsClient;
 use App\Services\Llms\LlmsTxtChecker;
 use App\Services\OnPage\OnPageSeoAnalyzer;
@@ -59,6 +61,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(LlmsTxtChecker::class, fn ($app) => new LlmsTxtChecker($app->make(Client::class)));
 
         $this->app->singleton(SecurityHeadersChecker::class, fn ($app) => new SecurityHeadersChecker($app->make(Client::class)));
+
+        $this->app->singleton(CanonicalHostChecker::class, fn ($app) => new CanonicalHostChecker($app->make(Client::class)));
+
+        $this->app->singleton(CrUxChecker::class, fn ($app) => new CrUxChecker($app->make(Client::class), config('seo.crux.api_key')));
 
         $this->app->singleton(PageSpeedInsightsClient::class, function () {
             $lh = config('seo.lighthouse');

@@ -55,6 +55,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Chrome UX Report (CrUX) - gercek kullanici Core Web Vitals verisi
+    |--------------------------------------------------------------------------
+    | PSI_API_KEY ile ayni Google Cloud projesinde "Chrome UX Report API"
+    | etkinlestirilmisse ayni anahtar burada da kullanilabilir; ayri bir
+    | anahtar tanimlamak isterseniz CRUX_API_KEY ile ayarlayin.
+    */
+    'crux' => [
+        'api_key' => env('CRUX_API_KEY', env('PSI_API_KEY')),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Erisim kontrolu
     |--------------------------------------------------------------------------
     | Herhangi bir Google hesabi giris yapip kayit olusturabilir, ancak yeni

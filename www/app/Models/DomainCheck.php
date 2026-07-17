@@ -15,6 +15,8 @@ class DomainCheck extends Model
         'sitemap',
         'llms_txt',
         'security_headers',
+        'canonical_host',
+        'crux',
     ];
 
     protected $casts = [
@@ -22,6 +24,8 @@ class DomainCheck extends Model
         'sitemap' => 'array',
         'llms_txt' => 'array',
         'security_headers' => 'array',
+        'canonical_host' => 'array',
+        'crux' => 'array',
     ];
 
     public function domain(): BelongsTo

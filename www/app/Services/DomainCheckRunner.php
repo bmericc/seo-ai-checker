@@ -6,6 +6,8 @@ namespace App\Services;
 
 use App\Models\Domain;
 use App\Models\DomainCheck;
+use App\Services\CanonicalHost\CanonicalHostChecker;
+use App\Services\Crux\CrUxChecker;
 use App\Services\Llms\LlmsTxtChecker;
 use App\Services\Robots\RobotsTxtChecker;
 use App\Services\Security\SecurityHeadersChecker;
@@ -24,6 +26,8 @@ final class DomainCheckRunner
         private readonly SitemapChecker $sitemapChecker,
         private readonly LlmsTxtChecker $llmsTxtChecker,
         private readonly SecurityHeadersChecker $securityHeadersChecker,
+        private readonly CanonicalHostChecker $canonicalHostChecker,
+        private readonly CrUxChecker $cruxChecker,
     ) {
     }
 
@@ -35,6 +39,9 @@ final class DomainCheckRunner
         $sitemap = $this->sitemapChecker->check($rootUrl);
         $llmsTxt = $this->llmsTxtChecker->check($rootUrl);
         $securityHeaders = $this->securityHeadersChecker->check($domain->domain);
+
+        $canonicalHost = $this->canonicalHostChecker->check($domain->domain);
+        $crux = $this->cruxChecker->check('https://' . $canonicalHost->canonicalHost);
 
         return $domain->domainChecks()->create([
             'ai_crawlers' => [
@@ -59,6 +66,20 @@ final class DomainCheckRunner
                 'reachable' => $securityHeaders->reachable,
                 'headers' => $securityHeaders->headers,
                 'http_redirects_to_https' => $securityHeaders->httpRedirectsToHttps,
+            ],
+            'canonical_host' => [
+                'original_host' => $canonicalHost->originalHost,
+                'canonical_host' => $canonicalHost->canonicalHost,
+                'redirected' => $canonicalHost->redirected,
+                'redirect_status' => $canonicalHost->redirectStatus,
+            ],
+            'crux' => [
+                'configured' => $crux->configured,
+                'found' => $crux->found,
+                'origin' => $crux->origin,
+                'metrics' => $crux->metrics,
+                'collection_period' => $crux->collectionPeriod,
+                'error' => $crux->error,
             ],
         ]);
     }

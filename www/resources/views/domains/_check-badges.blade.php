@@ -31,3 +31,22 @@
 @else
     <span class="badge bg-warning-lt">HTTPS yönlendirmesi yok</span>
 @endif
+
+@if ($domainCheck->canonical_host['redirected'] ?? false)
+    <span class="badge bg-azure-lt">Kanonik: {{ $domainCheck->canonical_host['canonical_host'] }}</span>
+@endif
+
+@if ($domainCheck->crux['configured'] ?? false)
+    @if ($domainCheck->crux['found'] ?? false)
+        @php($cruxRatings = collect($domainCheck->crux['metrics'])->pluck('rating'))
+        @if ($cruxRatings->contains('poor'))
+            <span class="badge bg-danger-lt">CrUX: zayıf</span>
+        @elseif ($cruxRatings->contains('needs_improvement'))
+            <span class="badge bg-warning-lt">CrUX: geliştirilmeli</span>
+        @else
+            <span class="badge bg-success-lt">CrUX: iyi</span>
+        @endif
+    @else
+        <span class="badge bg-secondary-lt">CrUX: veri yok</span>
+    @endif
+@endif
