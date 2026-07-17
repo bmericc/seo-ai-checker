@@ -8,8 +8,9 @@
 
     <h2>Site Kontrolu</h2>
     <p class="muted">
-        Belirli bir anahtar kelimeye degil, domain'in tamamina ait kontroller
-        (ör. AI crawler'larin robots.txt erisimi).
+        Belirli bir anahtar kelimeye degil, domain'in tamamina ait kontroller:
+        AI crawler'larin robots.txt erisimi, sitemap.xml, llms.txt ve
+        guvenlik header'lari.
     </p>
     <form method="post" action="{{ route('domains.check', $domain) }}">
         @csrf
@@ -30,6 +31,28 @@
                     <span class="badge badge-ok">AI crawler'lar: hepsi acik</span>
                 @else
                     <span class="badge badge-warn">AI crawler'lar: {{ $blockedCrawlers->count() }} engelli</span>
+                @endif
+
+                @if ($domainCheck->sitemap['found'] ?? false)
+                    @if ($domainCheck->sitemap['is_valid_xml'] ?? false)
+                        <span class="badge badge-ok">Sitemap: gecerli</span>
+                    @else
+                        <span class="badge badge-warn">Sitemap: gecersiz XML</span>
+                    @endif
+                @else
+                    <span class="badge badge-warn">Sitemap yok</span>
+                @endif
+
+                @if ($domainCheck->llms_txt['found'] ?? false)
+                    <span class="badge badge-ok">llms.txt var</span>
+                @else
+                    <span class="badge">llms.txt yok</span>
+                @endif
+
+                @if ($domainCheck->security_headers['http_redirects_to_https'] ?? false)
+                    <span class="badge badge-ok">HTTPS zorunlu</span>
+                @else
+                    <span class="badge badge-warn">HTTPS yonlendirmesi yok</span>
                 @endif
             </div>
 
@@ -59,6 +82,71 @@
             @else
                 <p class="muted">robots.txt bulunamadi ({{ $domainCheck->ai_crawlers['url'] }}) - varsayilan olarak tum crawler'lar icin acik kabul edilir.</p>
             @endif
+
+            <details>
+                <summary>Sitemap</summary>
+                @if ($domainCheck->sitemap['found'] ?? false)
+                    @if ($domainCheck->sitemap['is_valid_xml'] ?? false)
+                        <p>
+                            {{ $domainCheck->sitemap['is_sitemap_index'] ? 'Sitemap index' : 'Sitemap' }},
+                            {{ $domainCheck->sitemap['url_count'] }}
+                            {{ $domainCheck->sitemap['is_sitemap_index'] ? 'alt-sitemap' : 'URL' }} iceriyor.
+                        </p>
+                    @else
+                        <p class="text-error">{{ $domainCheck->sitemap['error'] ?? 'Gecersiz XML.' }}</p>
+                    @endif
+                    <p class="muted"><a href="{{ $domainCheck->sitemap['url'] }}" target="_blank" rel="noopener">{{ $domainCheck->sitemap['url'] }}</a></p>
+                @else
+                    <p class="muted">{{ $domainCheck->sitemap['url'] ?? '' }} bulunamadi.</p>
+                @endif
+            </details>
+
+            <details>
+                <summary>llms.txt</summary>
+                @if ($domainCheck->llms_txt['found'] ?? false)
+                    @if ($domainCheck->llms_txt['preview'])
+                        <pre>{{ $domainCheck->llms_txt['preview'] }}</pre>
+                    @endif
+                    <p class="muted"><a href="{{ $domainCheck->llms_txt['url'] }}" target="_blank" rel="noopener">{{ $domainCheck->llms_txt['url'] }}</a></p>
+                @else
+                    <p class="muted">{{ $domainCheck->llms_txt['url'] ?? '' }} bulunamadi.</p>
+                @endif
+            </details>
+
+            <details>
+                <summary>Guvenlik header'lari</summary>
+                @if ($domainCheck->security_headers['reachable'] ?? false)
+                    <table>
+                        <thead><tr><th>Header</th><th>Deger</th></tr></thead>
+                        <tbody>
+                        @foreach ($domainCheck->security_headers['headers'] ?? [] as $name => $value)
+                            <tr>
+                                <td>{{ $name }}</td>
+                                <td>
+                                    @if ($value)
+                                        {{ $value }}
+                                    @else
+                                        <span class="badge badge-warn">yok</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                        <tr>
+                            <td>HTTP &rarr; HTTPS yonlendirme</td>
+                            <td>
+                                @if ($domainCheck->security_headers['http_redirects_to_https'] ?? false)
+                                    <span class="badge badge-ok">var</span>
+                                @else
+                                    <span class="badge badge-warn">yok</span>
+                                @endif
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                @else
+                    <p class="text-error">Domaine erisilemedi.</p>
+                @endif
+            </details>
         </div>
     @endif
 
