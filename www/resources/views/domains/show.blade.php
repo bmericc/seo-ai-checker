@@ -6,6 +6,62 @@
     <p><a href="{{ route('dashboard') }}">&larr; Domainler</a></p>
     <h1>{{ $domain->domain }}</h1>
 
+    <h2>Site Kontrolu</h2>
+    <p class="muted">
+        Belirli bir anahtar kelimeye degil, domain'in tamamina ait kontroller
+        (ör. AI crawler'larin robots.txt erisimi).
+    </p>
+    <form method="post" action="{{ route('domains.check', $domain) }}">
+        @csrf
+        <button type="submit">Site Kontrolu Yap</button>
+    </form>
+
+    @if ($domain->latestDomainCheck)
+        @php
+            $domainCheck = $domain->latestDomainCheck;
+            $blockedCrawlers = collect($domainCheck->ai_crawlers['crawlers'] ?? [])->filter(fn ($c) => !$c['allowed']);
+        @endphp
+        <div class="check-card">
+            <div class="check-card-header">
+                <strong>{{ $domainCheck->created_at->format('Y-m-d H:i:s') }}</strong>
+                @if (!($domainCheck->ai_crawlers['found'] ?? false))
+                    <span class="badge">robots.txt yok - hepsi acik</span>
+                @elseif ($blockedCrawlers->isEmpty())
+                    <span class="badge badge-ok">AI crawler'lar: hepsi acik</span>
+                @else
+                    <span class="badge badge-warn">AI crawler'lar: {{ $blockedCrawlers->count() }} engelli</span>
+                @endif
+            </div>
+
+            @if ($domainCheck->ai_crawlers['found'] ?? false)
+                <details open>
+                    <summary>AI crawler erisimi (robots.txt)</summary>
+                    <table>
+                        <thead><tr><th>Crawler</th><th>Kim</th><th>Durum</th></tr></thead>
+                        <tbody>
+                        @foreach ($domainCheck->ai_crawlers['crawlers'] as $token => $info)
+                            <tr>
+                                <td>{{ $token }}</td>
+                                <td>{{ $info['label'] }}</td>
+                                <td>
+                                    @if ($info['allowed'])
+                                        <span class="badge badge-ok">Acik</span>
+                                    @else
+                                        <span class="badge badge-warn">Engelli</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                    <p class="muted">Kaynak: <a href="{{ $domainCheck->ai_crawlers['url'] }}" target="_blank" rel="noopener">{{ $domainCheck->ai_crawlers['url'] }}</a></p>
+                </details>
+            @else
+                <p class="muted">robots.txt bulunamadi ({{ $domainCheck->ai_crawlers['url'] }}) - varsayilan olarak tum crawler'lar icin acik kabul edilir.</p>
+            @endif
+        </div>
+    @endif
+
     <h2>Anahtar Kelime Ekle</h2>
     <form method="post" action="{{ route('keywords.store', $domain) }}" class="stacked-form">
         @csrf

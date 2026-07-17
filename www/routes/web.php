@@ -37,6 +37,7 @@ Route::get('/pending-approval', function () {
 Route::middleware('auth')->group(function () {
     Route::post('/domains', [DomainController::class, 'store'])->name('domains.store');
     Route::get('/domains/{domain}', [DomainController::class, 'show'])->name('domains.show');
+    Route::post('/domains/{domain}/check', [DomainController::class, 'check'])->name('domains.check');
     Route::delete('/domains/{domain}', [DomainController::class, 'destroy'])->name('domains.destroy');
 
     Route::post('/domains/{domain}/keywords', [KeywordController::class, 'store'])->name('keywords.store');

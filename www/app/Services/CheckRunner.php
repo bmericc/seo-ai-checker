@@ -8,7 +8,6 @@ use App\Models\Check;
 use App\Models\Keyword;
 use App\Services\Lighthouse\PageSpeedInsightsClient;
 use App\Services\OnPage\OnPageSeoAnalyzer;
-use App\Services\Robots\RobotsTxtChecker;
 use App\Services\Serp\AiOverviewResult;
 use App\Services\Serp\GoogleSerpScraper;
 use App\Services\Serp\SerpResult;
@@ -24,7 +23,6 @@ final class CheckRunner
         private readonly GoogleSerpScraper $serpScraper,
         private readonly OnPageSeoAnalyzer $onPageAnalyzer,
         private readonly PageSpeedInsightsClient $lighthouseClient,
-        private readonly RobotsTxtChecker $robotsTxtChecker,
     ) {
     }
 
@@ -65,7 +63,6 @@ final class CheckRunner
         }
 
         $lighthouse = $this->lighthouseClient->analyze($targetUrl);
-        $robotsTxt = $this->robotsTxtChecker->check($targetUrl);
 
         return $keyword->checks()->create([
             'blocked' => $serp->blocked,
@@ -87,11 +84,6 @@ final class CheckRunner
             'lighthouse_best_practices' => $lighthouse->bestPracticesScore,
             'lighthouse_error' => $lighthouse->error,
             'lighthouse_raw' => $lighthouse->raw,
-            'ai_crawlers' => [
-                'url' => $robotsTxt->url,
-                'found' => $robotsTxt->found,
-                'crawlers' => $robotsTxt->crawlers,
-            ],
         ]);
     }
 

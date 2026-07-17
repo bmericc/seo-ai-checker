@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Domain;
+use App\Services\DomainCheckRunner;
 use App\Support\Domain as DomainHelper;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -38,9 +39,22 @@ class DomainController extends Controller
 
     public function show(Domain $domain): View
     {
-        $domain->load(['keywords' => fn ($q) => $q->orderBy('keyword'), 'keywords.latestCheck']);
+        $domain->load([
+            'keywords' => fn ($q) => $q->orderBy('keyword'),
+            'keywords.latestCheck',
+            'latestDomainCheck',
+        ]);
 
         return view('domains.show', ['domain' => $domain]);
+    }
+
+    public function check(Domain $domain, DomainCheckRunner $checkRunner): RedirectResponse
+    {
+        $checkRunner->run($domain);
+
+        return redirect()
+            ->route('domains.show', $domain)
+            ->with('flash', ['type' => 'success', 'message' => 'Site kontrolu tamamlandi.']);
     }
 
     public function destroy(Domain $domain): RedirectResponse
