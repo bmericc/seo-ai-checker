@@ -2,10 +2,13 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
+    use RefreshDatabase;
+
     /**
      * Ana sayfa girissiz de erisilebilir olmali (Google OAuth dogrulamasi
      * bunu gerektirir): login'e yonlendirmek yerine dogrudan aciklama

@@ -45,6 +45,11 @@ class Check extends Model
         return $this->belongsTo(Keyword::class);
     }
 
+    public function isVisibleTo(?User $user): bool
+    {
+        return $this->keyword->isVisibleTo($user);
+    }
+
     /**
      * @return array<string, array{label: string, displayValue: ?string, score: ?float}>
      */

@@ -15,6 +15,8 @@ class KeywordController extends Controller
 {
     public function store(Request $request, Domain $domain): RedirectResponse
     {
+        $this->ensureCanAccessDomain($request, $domain);
+
         $data = $request->validate([
             'keyword' => ['required', 'string', 'max:255'],
             'url' => ['nullable', 'url', 'max:2048'],
@@ -30,16 +32,21 @@ class KeywordController extends Controller
             ->with('flash', ['type' => 'success', 'message' => sprintf('"%s" eklendi.', trim($data['keyword']))]);
     }
 
-    public function show(Keyword $keyword): View
+    public function show(Request $request, Keyword $keyword): View
     {
+        $keyword->loadMissing('domain');
+        $this->ensureCanAccessKeyword($request, $keyword);
+
         $keyword->load(['domain', 'checks']);
 
         return view('keywords.show', ['keyword' => $keyword]);
     }
 
-    public function check(Keyword $keyword, CheckRunner $checkRunner): RedirectResponse
+    public function check(Request $request, Keyword $keyword, CheckRunner $checkRunner): RedirectResponse
     {
         $keyword->load('domain');
+        $this->ensureCanAccessKeyword($request, $keyword);
+
         $checkRunner->run($keyword);
 
         return redirect()
@@ -47,8 +54,11 @@ class KeywordController extends Controller
             ->with('flash', ['type' => 'success', 'message' => 'Kontrol tamamlandi.']);
     }
 
-    public function destroy(Keyword $keyword): RedirectResponse
+    public function destroy(Request $request, Keyword $keyword): RedirectResponse
     {
+        $keyword->loadMissing('domain');
+        $this->ensureCanAccessKeyword($request, $keyword);
+
         $domain = $keyword->domain;
         $keyword->delete();
 

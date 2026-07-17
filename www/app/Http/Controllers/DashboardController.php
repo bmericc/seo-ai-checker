@@ -16,9 +16,12 @@ class DashboardController extends Controller
             return view('home');
         }
 
+        $user = Auth::user();
+
         $domains = Domain::query()
             ->withCount('keywords')
             ->with('latestDomainCheck')
+            ->when(!$user->is_admin, fn ($query) => $query->where('user_id', $user->id))
             ->orderBy('domain')
             ->get();
 

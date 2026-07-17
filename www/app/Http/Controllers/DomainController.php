@@ -30,15 +30,17 @@ class DomainController extends Controller
                 ->with('flash', ['type' => 'error', 'message' => sprintf('%s zaten kayitli.', $domain)]);
         }
 
-        $record = Domain::query()->create(['domain' => $domain]);
+        $record = $request->user()->domains()->create(['domain' => $domain]);
 
         return redirect()
             ->route('domains.show', $record)
             ->with('flash', ['type' => 'success', 'message' => sprintf('%s eklendi.', $domain)]);
     }
 
-    public function show(Domain $domain): View
+    public function show(Request $request, Domain $domain): View
     {
+        $this->ensureCanAccessDomain($request, $domain);
+
         $domain->load([
             'keywords' => fn ($q) => $q->orderBy('keyword'),
             'keywords.latestCheck',
@@ -48,8 +50,10 @@ class DomainController extends Controller
         return view('domains.show', ['domain' => $domain]);
     }
 
-    public function check(Domain $domain, DomainCheckRunner $checkRunner): RedirectResponse
+    public function check(Request $request, Domain $domain, DomainCheckRunner $checkRunner): RedirectResponse
     {
+        $this->ensureCanAccessDomain($request, $domain);
+
         $checkRunner->run($domain);
 
         return redirect()
@@ -57,8 +61,10 @@ class DomainController extends Controller
             ->with('flash', ['type' => 'success', 'message' => 'Site kontrolu tamamlandi.']);
     }
 
-    public function destroy(Domain $domain): RedirectResponse
+    public function destroy(Request $request, Domain $domain): RedirectResponse
     {
+        $this->ensureCanAccessDomain($request, $domain);
+
         $domain->delete();
 
         return redirect()

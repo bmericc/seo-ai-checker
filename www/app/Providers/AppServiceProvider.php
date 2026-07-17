@@ -6,6 +6,7 @@ use App\Services\Lighthouse\PageSpeedInsightsClient;
 use App\Services\Llms\LlmsTxtChecker;
 use App\Services\OnPage\OnPageSeoAnalyzer;
 use App\Services\Robots\RobotsTxtChecker;
+use App\Services\Serp\GoogleRequestThrottle;
 use App\Services\Security\SecurityHeadersChecker;
 use App\Services\Serp\GoogleSerpScraper;
 use App\Services\Sitemap\SitemapChecker;
@@ -35,7 +36,18 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(GoogleSerpScraper::class, function ($app) {
             $serp = config('seo.serp');
 
-            return new GoogleSerpScraper($app->make(Client::class), $serp['hl'], $serp['gl']);
+            return new GoogleSerpScraper(
+                $app->make(Client::class),
+                $app->make(GoogleRequestThrottle::class),
+                $serp['hl'],
+                $serp['gl'],
+            );
+        });
+
+        $this->app->singleton(GoogleRequestThrottle::class, function ($app) {
+            $serp = config('seo.serp');
+
+            return new GoogleRequestThrottle($app->make('cache'), $serp['request_delay_ms']);
         });
 
         $this->app->singleton(OnPageSeoAnalyzer::class, fn ($app) => new OnPageSeoAnalyzer($app->make(Client::class)));
