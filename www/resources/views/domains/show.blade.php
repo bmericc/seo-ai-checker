@@ -388,7 +388,7 @@
                                             <select name="ga4_property_id" class="form-select">
                                                 <option value="">— Seçiniz —</option>
                                                 @foreach ($ga4Properties as $property)
-                                                    <option value="{{ $property->propertyId }}" @selected($domain->ga4_property_id === $property->propertyId)>{{ $property->label }} ({{ $property->propertyId }})</option>
+                                                    <option value="{{ $property['propertyId'] }}" @selected($domain->ga4_property_id === $property['propertyId'])>{{ $property['label'] }} ({{ $property['propertyId'] }})</option>
                                                 @endforeach
                                             </select>
                                             <small class="form-hint">Google hesabınızda bulunan property'ler listelendi.</small>

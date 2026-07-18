@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Models\Domain;
 use App\Services\DomainCheckRunner;
 use App\Services\Drift\DomainCheckDrift;
+use App\Services\Ga4\Ga4Property;
 use App\Services\Ga4\Ga4PropertyLister;
 use App\Services\Google\GoogleTokenService;
 use App\Support\Domain as DomainHelper;
@@ -160,6 +161,9 @@ class DomainController extends Controller
 
         return redirect()
             ->route('domains.show', $domain)
-            ->with('ga4Properties', $result->properties);
+            ->with('ga4Properties', array_map(
+                fn (Ga4Property $property) => ['propertyId' => $property->propertyId, 'label' => $property->label],
+                $result->properties,
+            ));
     }
 }
