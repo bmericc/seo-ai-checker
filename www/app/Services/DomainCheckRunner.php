@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Models\Domain;
 use App\Models\DomainCheck;
 use App\Services\Bing\BingBacklinksChecker;
+use App\Services\Bing\BingTokenService;
 use App\Services\CanonicalHost\CanonicalHostChecker;
 use App\Services\Crux\CrUxChecker;
 use App\Services\Ga4\Ga4Checker;
@@ -27,14 +28,14 @@ use App\Services\Sitemap\SitemapUrlSync;
  * calistirip sonucu veritabanina yazan orkestrasyon servisi. CheckRunner'in
  * domain seviyesindeki karsiligi.
  *
- * ai_crawlers/llms_txt/security_headers/canonical_host/crux/bing_backlinks
- * hangi kullanicinin sordugundan bagimsiz, domain-genelinde sabit
- * gerceklerdir - ayni domain string'ini baska bir kullanici yakin zamanda
- * kontrol ettiyse (bkz. SharedDomainCheckLookup) bu alanlar tekrar
- * taranmaz, o sonuc kopyalanir. Sitemap (SitemapUrl senkronizasyonu icin
- * URL listesi gerekir), GSC/GA4 (kullaniciya ozel OAuth/property) ve
- * anahtar kelime onerileri (kullaniciya ozel disleme listesi) bu paylasima
- * dahil degildir, her zaman taze calisir.
+ * ai_crawlers/llms_txt/security_headers/canonical_host/crux hangi
+ * kullanicinin sordugundan bagimsiz, domain-genelinde sabit gerceklerdir -
+ * ayni domain string'ini baska bir kullanici yakin zamanda kontrol ettiyse
+ * (bkz. SharedDomainCheckLookup) bu alanlar tekrar taranmaz, o sonuc
+ * kopyalanir. Sitemap (SitemapUrl senkronizasyonu icin URL listesi
+ * gerekir), GSC/GA4/Bing backlink (kullaniciya ozel OAuth) ve anahtar
+ * kelime onerileri (kullaniciya ozel disleme listesi) bu paylasima dahil
+ * degildir, her zaman taze calisir.
  */
 final class DomainCheckRunner
 {
@@ -57,6 +58,7 @@ final class DomainCheckRunner
         private readonly Ga4Checker $ga4Checker,
         private readonly BingBacklinksChecker $bingBacklinksChecker,
         private readonly GoogleTokenService $googleTokenService,
+        private readonly BingTokenService $bingTokenService,
         private readonly SitemapUrlSync $sitemapUrlSync,
         private readonly KeywordSuggester $keywordSuggester,
         private readonly SharedDomainCheckLookup $sharedDomainCheckLookup,
@@ -75,7 +77,6 @@ final class DomainCheckRunner
         $llmsTxtData = $shared?->llms_txt ?? $this->freshLlmsTxt($rootUrl);
         $securityHeadersData = $shared?->security_headers ?? $this->freshSecurityHeaders($domain->domain);
         $cruxData = $shared?->crux ?? $this->freshCrux($canonicalHost);
-        $bingBacklinksData = $shared?->bing_backlinks ?? $this->freshBingBacklinks($rootUrl);
 
         $sitemap = $this->sitemapChecker->check($rootUrl);
         if ($sitemap->found && $sitemap->isValidXml) {
@@ -87,6 +88,9 @@ final class DomainCheckRunner
         $ga4 = self::GA4_ENABLED
             ? $this->ga4Checker->check($domain->ga4_property_id, $accessToken)
             : new Ga4Result(configured: false, propertyId: $domain->ga4_property_id);
+
+        $bingAccessToken = $this->bingTokenService->getValidAccessToken($domain->user);
+        $bingBacklinksData = $this->freshBingBacklinks($rootUrl, $bingAccessToken);
 
         $excludedPhrases = [
             ...$domain->keywords()->pluck('keyword')->all(),
@@ -210,9 +214,9 @@ final class DomainCheckRunner
         ];
     }
 
-    private function freshBingBacklinks(string $rootUrl): array
+    private function freshBingBacklinks(string $rootUrl, ?string $accessToken): array
     {
-        $result = $this->bingBacklinksChecker->check($rootUrl);
+        $result = $this->bingBacklinksChecker->check($rootUrl, $accessToken);
 
         return [
             'configured' => $result->configured,

@@ -11,8 +11,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'is_admin', 'approved_at', 'google_id', 'google_access_token', 'google_refresh_token', 'google_token_expires_at'])]
-#[Hidden(['password', 'remember_token', 'google_access_token', 'google_refresh_token'])]
+#[Fillable(['name', 'email', 'password', 'is_admin', 'approved_at', 'google_id', 'google_access_token', 'google_refresh_token', 'google_token_expires_at', 'bing_access_token', 'bing_refresh_token', 'bing_token_expires_at'])]
+#[Hidden(['password', 'remember_token', 'google_access_token', 'google_refresh_token', 'bing_access_token', 'bing_refresh_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -33,6 +33,9 @@ class User extends Authenticatable
             'google_access_token' => 'encrypted',
             'google_refresh_token' => 'encrypted',
             'google_token_expires_at' => 'datetime',
+            'bing_access_token' => 'encrypted',
+            'bing_refresh_token' => 'encrypted',
+            'bing_token_expires_at' => 'datetime',
         ];
     }
 
@@ -50,6 +53,15 @@ class User extends Authenticatable
     public function hasGoogleOfflineAccess(): bool
     {
         return $this->google_refresh_token !== null;
+    }
+
+    /**
+     * Bing Webmaster backlink verisi cekmek icin kullanicinin kendi Bing
+     * hesabini baglayip baglamadigi (bkz. BingController, BingTokenService).
+     */
+    public function hasBingOfflineAccess(): bool
+    {
+        return $this->bing_refresh_token !== null;
     }
 
     public function domains(): HasMany

@@ -11,19 +11,19 @@ use PHPUnit\Framework\TestCase;
 
 class BingBacklinksCheckerTest extends TestCase
 {
-    private function checkerWithResponses(array $responses, ?string $apiKey = 'test-key'): BingBacklinksChecker
+    private function checkerWithResponses(array $responses): BingBacklinksChecker
     {
         $mock = new MockHandler($responses);
         $client = new Client(['handler' => HandlerStack::create($mock)]);
 
-        return new BingBacklinksChecker($client, $apiKey);
+        return new BingBacklinksChecker($client);
     }
 
-    public function test_missing_api_key_skips_the_request_entirely(): void
+    public function test_missing_access_token_skips_the_request_entirely(): void
     {
-        $checker = $this->checkerWithResponses([], apiKey: null);
+        $checker = $this->checkerWithResponses([]);
 
-        $result = $checker->check('https://example.com/');
+        $result = $checker->check('https://example.com/', null);
 
         $this->assertFalse($result->configured);
         $this->assertFalse($result->verified);
@@ -35,7 +35,7 @@ class BingBacklinksCheckerTest extends TestCase
             new Response(200, [], json_encode(['https://other.com/'])),
         ]);
 
-        $result = $checker->check('https://example.com/');
+        $result = $checker->check('https://example.com/', 'token');
 
         $this->assertTrue($result->configured);
         $this->assertFalse($result->verified);
@@ -55,7 +55,7 @@ class BingBacklinksCheckerTest extends TestCase
             new Response(200, [], $linksBody),
         ]);
 
-        $result = $checker->check('https://example.com/');
+        $result = $checker->check('https://example.com/', 'token');
 
         $this->assertTrue($result->verified);
         $this->assertSame('https://example.com/', $result->siteUrl);
@@ -75,7 +75,7 @@ class BingBacklinksCheckerTest extends TestCase
             new Response(200, [], $linksBody),
         ]);
 
-        $result = $checker->check('https://example.com/');
+        $result = $checker->check('https://example.com/', 'token');
 
         $this->assertTrue($result->verified);
         $this->assertSame(4, $result->totalLinks);
@@ -83,15 +83,15 @@ class BingBacklinksCheckerTest extends TestCase
 
     public function test_sites_http_error_is_reported(): void
     {
-        $body = json_encode(['Message' => 'Invalid ApiKey.']);
+        $body = json_encode(['Message' => 'Invalid Credentials.']);
 
         $checker = $this->checkerWithResponses([new Response(401, [], $body)]);
 
-        $result = $checker->check('https://example.com/');
+        $result = $checker->check('https://example.com/', 'token');
 
         $this->assertTrue($result->configured);
         $this->assertFalse($result->verified);
-        $this->assertStringContainsString('Invalid ApiKey', $result->error);
+        $this->assertStringContainsString('Invalid Credentials', $result->error);
     }
 
     public function test_network_failure_is_reported_as_an_error(): void
@@ -100,7 +100,7 @@ class BingBacklinksCheckerTest extends TestCase
             new \GuzzleHttp\Exception\ConnectException('Connection refused', new \GuzzleHttp\Psr7\Request('GET', self::class)),
         ]);
 
-        $result = $checker->check('https://example.com/');
+        $result = $checker->check('https://example.com/', 'token');
 
         $this->assertTrue($result->configured);
         $this->assertFalse($result->verified);

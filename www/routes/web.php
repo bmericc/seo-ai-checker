@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Auth\BingController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\CheckController;
 use App\Http\Controllers\DashboardController;
@@ -20,6 +21,9 @@ Route::get('/terms-of-service', function () {
 
 Route::get('/auth/google', [GoogleController::class, 'redirect'])->name('google.redirect');
 Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name('google.callback');
+
+Route::get('/auth/bing/connect', [BingController::class, 'connect'])->middleware('auth')->name('bing.connect');
+Route::get('/auth/bing/callback', [BingController::class, 'callback'])->middleware('auth')->name('bing.callback');
 
 Route::post('/logout', function () {
     Auth::logout();

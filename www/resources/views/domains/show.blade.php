@@ -401,17 +401,18 @@
                         </h2>
                         <div id="ac-bing" class="accordion-collapse collapse" data-bs-parent="#site-check-accordion">
                             <div class="accordion-body">
-                                @if (!($bingData['configured'] ?? false))
+                                @if (!auth()->user()->hasBingOfflineAccess())
                                     <p class="text-secondary mb-0">
-                                        Bing Webmaster API anahtarı tanımlı değil (<code>BING_WEBMASTER_API_KEY</code>).
+                                        Bing hesabınız bağlı değil. Backlink verisi için üstteki
+                                        "Bing hesabını bağla" bağlantısından bağlanın.
                                     </p>
                                 @elseif ($bingData['error'] ?? null)
                                     <p class="text-danger mb-0">Bing Webmaster sorgulanırken hata oluştu: {{ $bingData['error'] }}</p>
                                 @elseif (!($bingData['verified'] ?? false))
                                     <p class="text-secondary mb-0">
-                                        Bu domain, yapılandırılmış Bing Webmaster hesabında doğrulanmış bir site
-                                        olarak bulunamadı. Not: bu, genel bir backlink indeksi değildir — yalnızca
-                                        o Bing Webmaster hesabında doğrulanmış siteler için veri döner.
+                                        Bu domain, bağlı Bing hesabınızda doğrulanmış bir site olarak bulunamadı.
+                                        Not: bu, genel bir backlink indeksi değildir — yalnızca kendi Bing Webmaster
+                                        hesabınızda doğruladığınız siteler için veri döner.
                                     </p>
                                 @else
                                     <div class="table-responsive">

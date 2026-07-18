@@ -113,6 +113,13 @@
                             <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
                         </div>
                     @endif
+                    @if (!auth()->user()->hasBingOfflineAccess())
+                        <div class="alert alert-info alert-dismissible" role="alert">
+                            Kendi doğruladığınız sitelerin backlink verisini görebilmek için Bing hesabınızı bağlamanız gerekiyor.
+                            <a href="{{ route('bing.connect') }}" class="alert-link">Bing hesabını bağla</a>
+                            <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                        </div>
+                    @endif
                 @endauth
                 @if (session('flash'))
                     <div class="alert alert-{{ session('flash')['type'] === 'error' ? 'danger' : 'success' }} alert-dismissible" role="alert">

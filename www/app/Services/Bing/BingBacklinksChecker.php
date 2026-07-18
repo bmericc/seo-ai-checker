@@ -9,11 +9,10 @@ use GuzzleHttp\Exception\GuzzleException;
 
 /**
  * Bing Webmaster Tools API'sinden inbound link (backlink) verisi ceker.
- * OAuth degil, hesap-genelinde tek bir API key ile calisir (CrUX/PSI ile
- * ayni model) - bu yuzden yalnizca bu API key'in bagli oldugu Bing
- * Webmaster hesabinda ONCEDEN DOGRULANMIS siteler icin veri doner. Rakip
- * ya da genel bir backlink indeksi DEGILDIR; sadece kullanicinin kendi
- * dogruladigi siteler icin calisir.
+ * Kullaniciya ozel OAuth 2.0 access token ile calisir (bkz. BingController,
+ * BingTokenService) - bu yuzden yalnizca kendi Bing hesabini baglayan
+ * kullanicinin ONCEDEN DOGRULANMIS siteleri icin veri doner. Rakip ya da
+ * genel bir backlink indeksi DEGILDIR.
  */
 final class BingBacklinksChecker
 {
@@ -23,13 +22,12 @@ final class BingBacklinksChecker
 
     public function __construct(
         private readonly Client $client,
-        private readonly ?string $apiKey,
     ) {
     }
 
-    public function check(string $rootUrl): BingBacklinksResult
+    public function check(string $rootUrl, ?string $accessToken): BingBacklinksResult
     {
-        if ($this->apiKey === null || $this->apiKey === '') {
+        if ($accessToken === null || $accessToken === '') {
             return new BingBacklinksResult(configured: false, verified: false);
         }
 
@@ -40,7 +38,7 @@ final class BingBacklinksChecker
 
         try {
             $sitesResponse = $this->client->get(sprintf(self::BASE_URL, 'GetUserSites'), [
-                'query' => ['apikey' => $this->apiKey],
+                'headers' => ['Authorization' => 'Bearer ' . $accessToken],
                 'http_errors' => false,
             ]);
         } catch (GuzzleException $e) {
@@ -59,7 +57,8 @@ final class BingBacklinksChecker
 
         try {
             $linksResponse = $this->client->get(sprintf(self::BASE_URL, 'GetLinkCounts'), [
-                'query' => ['apikey' => $this->apiKey, 'siteUrl' => $siteUrl, 'page' => 0],
+                'headers' => ['Authorization' => 'Bearer ' . $accessToken],
+                'query' => ['siteUrl' => $siteUrl, 'page' => 0],
                 'http_errors' => false,
             ]);
         } catch (GuzzleException $e) {

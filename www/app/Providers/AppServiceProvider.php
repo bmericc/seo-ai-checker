@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Services\Bing\BingBacklinksChecker;
+use App\Services\Bing\BingTokenService;
 use App\Services\CanonicalHost\CanonicalHostChecker;
 use App\Services\Crux\CrUxChecker;
 use App\Services\Ga4\Ga4Checker;
@@ -81,7 +82,13 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->singleton(Ga4PropertyLister::class, fn ($app) => new Ga4PropertyLister($app->make(Client::class)));
 
-        $this->app->singleton(BingBacklinksChecker::class, fn ($app) => new BingBacklinksChecker($app->make(Client::class), config('seo.bing.api_key')));
+        $this->app->singleton(BingBacklinksChecker::class, fn ($app) => new BingBacklinksChecker($app->make(Client::class)));
+
+        $this->app->singleton(BingTokenService::class, fn ($app) => new BingTokenService(
+            $app->make(Client::class),
+            config('services.bing.client_id'),
+            config('services.bing.client_secret'),
+        ));
 
         $this->app->singleton(GoogleTokenService::class, fn ($app) => new GoogleTokenService(
             $app->make(Client::class),

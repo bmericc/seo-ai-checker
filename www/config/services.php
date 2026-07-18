@@ -41,4 +41,9 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'bing' => [
+        'client_id' => env('BING_CLIENT_ID'),
+        'client_secret' => env('BING_CLIENT_SECRET'),
+    ],
+
 ];
