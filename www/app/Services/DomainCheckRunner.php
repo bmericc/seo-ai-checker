@@ -39,12 +39,12 @@ use App\Services\Sitemap\SitemapUrlSync;
 final class DomainCheckRunner
 {
     /**
-     * GA4 (analytics.readonly scope) ilk asamada kasitli olarak devre disi -
-     * Google, bu "sensitive scope" icin OAuth consent screen dogrulamasinda
-     * kullanim aciklamasi + demo video istiyor (bkz. GoogleController).
-     * Dogrulama tamamlaninca burasi true yapilip scope tekrar eklenmeli.
+     * GA4 (analytics.readonly scope) Google'in dogrulama surecini
+     * bekliyor (bkz. GoogleController) - "Testing" modunda test
+     * kullanicilar icin zaten calisir, bu yuzden acik birakildi. Sorun
+     * cikarsa false yapip Ga4Checker'i devre disi birakabilirsiniz.
      */
-    private const GA4_ENABLED = false;
+    private const GA4_ENABLED = true;
 
     public function __construct(
         private readonly RobotsTxtChecker $robotsTxtChecker,

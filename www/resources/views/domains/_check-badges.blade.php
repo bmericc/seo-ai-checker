@@ -72,7 +72,7 @@
     @endif
 @endif
 
-@if (!($ga4Data['disabled'] ?? false) && !empty($ga4Data['property_id']))
+@if (!empty($ga4Data['property_id']))
     @if ($ga4Data['error'] ?? null)
         <span class="badge bg-danger-lt">GA4: hata</span>
     @else
