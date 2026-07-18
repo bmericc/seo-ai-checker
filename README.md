@@ -1,66 +1,67 @@
+🇬🇧 English | [🇹🇷 Türkçe](README.tr.md)
+
 # SEO / AI Overview Checker
 
-Web scraping ile Google arama sonuçlarında (SERP) sıralama takibi, Google
-**AI Overview** kutusunda görünürlük kontrolü, temel **on-page SEO** analizi
-ve **Lighthouse** (Google PageSpeed Insights) skorlarını bir araya getiren
-bir **Laravel** uygulaması. Uzak bir sunucuda (veya Docker ile yerelde)
-barındırılıp geçmişi veritabanında tutan, Google hesabıyla korunan bir
-**web arayüzü** olarak kullanılır.
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
-## Özellikler
+A **Laravel** application that combines Google search results (SERP)
+ranking tracking via web scraping, visibility checks in Google's **AI
+Overview** box, basic **on-page SEO** analysis, and **Lighthouse** (Google
+PageSpeed Insights) scores. It's used as a **web dashboard**, hosted on a
+remote server (or locally with Docker), that keeps a history in a database
+and is protected by Google account login.
 
-1. **SERP sıralaması** — Google'ın ilk ~20 organik sonucunu çeker, hedef
-   domaininizin kaçıncı sırada çıktığını raporlar.
-2. **AI Overview kontrolü** — Sonuç sayfasında bir AI Overview kutusu olup
-   olmadığını, varsa kutu içinde hangi domainlerin kaynak olarak
-   gösterildiğini ve kendi domaininizin bu kaynaklar arasında olup
-   olmadığını raporlar.
-3. **On-page SEO analizi** — hedef sayfayı çekip title/meta description
-   uzunluğu, H1/H2 sayısı, kelime yoğunluğu, `alt` etiketi eksik görseller,
-   iç/dış link sayısı ve yapısal veri (JSON-LD) varlığı gibi temel
-   kontrolleri yapar.
-4. **Lighthouse (Google PageSpeed Insights API)** — performans, SEO,
-   erişilebilirlik ve best-practices skorlarını alır. Sunucuda Chrome/Node.js
-   kurulumu **gerekmez**; denetim Google'ın kendi sunucularında çalışır.
-5. **Web arayüzü** — domain/anahtar kelime ekleyip "Kontrol Et" ile tüm
-   kontrolleri tek seferde çalıştırabileceğiniz, sonuçları ve geçmişi
-   veritabanında (SQLite varsayılan, MySQL de desteklenir) saklayan bir
-   panel. Erişim, Google OAuth ile giriş yapıp izinli e-posta listesinde
-   olma şartına bağlıdır.
+## Features
 
-## Önemli sınırlamalar ve yasal uyarı
+1. **SERP ranking** — fetches Google's first ~20 organic results and
+   reports where your target domain ranks.
+2. **AI Overview check** — reports whether an AI Overview box is present
+   on the results page, which domains are cited as sources inside it if
+   so, and whether your own domain is among those sources.
+3. **On-page SEO analysis** — fetches the target page and runs basic
+   checks: title/meta description length, H1/H2 count, keyword density,
+   images missing `alt` attributes, internal/external link count, and
+   presence of structured data (JSON-LD).
+4. **Lighthouse (Google PageSpeed Insights API)** — retrieves performance,
+   SEO, accessibility, and best-practices scores. **No** Chrome/Node.js
+   installation is required on the server; the audit runs on Google's own
+   infrastructure.
+5. **Web dashboard** — add a domain/keyword and run all checks at once
+   with "Check"; results and history are stored in a database (SQLite by
+   default, MySQL also supported). Access requires signing in with Google
+   OAuth and being on the allowed email list.
 
-- **Doğrudan HTTP scraping** kullanılır (SERP API'si değil). Bu yaklaşım
-  bilinçli olarak tercih edilmiştir; ancak Google, otomatik istekleri sıkça
-  CAPTCHA/"unusual traffic" sayfasıyla veya JavaScript doğrulaması isteyen
-  bir yönlendirmeyle (`/httpservice/retry/enablejs`) engelleyebilir. Uygulama
-  bu durumları tespit edip "engellendi" olarak raporlar; sonuç alamıyorsanız
-  önce bunu kontrol edin.
-- **AI Overview genellikle istemci tarafında (JavaScript ile) render edilir**
-  ve hesap/konum/cihaza göre değişebilir. Bu araç yalnızca statik HTML
-  yanıtını inceler; bu yüzden tespit **en iyi çaba (best-effort)**
-  niteliğindedir ve gerçekte görünen bir AI Overview burada
-  yakalanamayabilir.
-- Google'ın SERP HTML yapısı sık değişir; ayrıştırma mantığı genel
-  sezgisel (heuristic) kurallara dayanır ve zamanla güncellenmesi
-  gerekebilir (bkz. `config/seo.php` içindeki `ai_overview_markers` ve
-  `ai_overview_selectors`).
-- Bu aracı yalnızca **kendi sitelerinizi/kendi izniniz olan siteleri**
-  denetlemek için, makul istek sıklığıyla (`REQUEST_DELAY_MS`) kullanın.
-  Google'ın hizmet şartlarını ve robots.txt kurallarını göz önünde
-  bulundurun; yoğun veya toplu (mass) scraping yapılandırmayın.
-- PageSpeed Insights API'sinin **API anahtarsız** kullanımında kota çok
-  düşüktür ve hızla "Quota exceeded" hatasına düşebilirsiniz; gerçek
-  kullanım için `PSI_API_KEY` almanız önerilir (bkz. aşağı).
+## Important limitations and legal notice
 
-## Proje yapısı
+- Uses **direct HTTP scraping** (not a SERP API). This is a deliberate
+  design choice, but Google frequently blocks automated requests with a
+  CAPTCHA/"unusual traffic" page or a redirect requiring JavaScript
+  verification (`/httpservice/retry/enablejs`). The app detects these
+  cases and reports them as "blocked" — check this first if you're not
+  getting results.
+- **AI Overview is usually rendered client-side (via JavaScript)** and can
+  vary by account/location/device. This tool only inspects the static
+  HTML response, so detection is **best-effort**; an AI Overview that's
+  actually visible to a real user may not be captured here.
+- Google's SERP HTML structure changes frequently; the parsing logic
+  relies on general heuristic rules and may need updating over time (see
+  `ai_overview_markers` and `ai_overview_selectors` in `config/seo.php`).
+- Only use this tool to audit **your own sites, or sites you have explicit
+  permission for**, at a reasonable request rate (`REQUEST_DELAY_MS`).
+  Respect Google's terms of service and robots.txt rules; do not configure
+  it for heavy or mass scraping.
+- The PageSpeed Insights API has a very low quota when used **without an
+  API key** and you can quickly hit "Quota exceeded"; getting a
+  `PSI_API_KEY` is recommended for real usage (see below).
+
+## Project structure
 
 ```
 .
-├── docker/              # Dockerfile (PHP-FPM) ve nginx konfigürasyonu
-├── docker-compose.yml   # Tek dosya; dev/prod ayrimi --env-file ile yapilir
-├── .env.docker.example  # docker-compose icin ortam degiskeni sablonu
-└── www/                 # Laravel uygulamasinin tamami (document root: www/public)
+├── docker/              # Dockerfile (PHP-FPM) and nginx configuration
+├── docker-compose.yml   # Single file; dev/prod are separated via --env-file
+├── .env.docker.example  # Environment variable template for docker-compose
+└── www/                 # The entire Laravel application (document root: www/public)
     ├── app/
     ├── config/
     ├── database/
@@ -70,32 +71,32 @@ barındırılıp geçmişi veritabanında tutan, Google hesabıyla korunan bir
     └── ...
 ```
 
-Uygulamanın tüm kaynak kodu `www/` klasörü altındadır; `docker-compose.yml`
-ve `docker/` yalnızca çalıştırma ortamına aittir.
+All of the application's source code lives under `www/`; `docker-compose.yml`
+and `docker/` belong only to the runtime environment.
 
-**Önemli:** Docker altında Laravel, `www/.env` dosyasını **okumaz** —
-konfigürasyon `docker-compose.yml` içindeki `environment:` bloğu üzerinden,
-`--env-file` ile verilen dosyadan (dev: `.env`, prod: `.env.prod`) gerçek
-ortam değişkeni olarak enjekte edilir. `www/.env.example`, yalnızca
-aşağıdaki "Docker olmadan, manuel" kurulum yolu için geçerlidir.
+**Important:** under Docker, Laravel does **not** read `www/.env` —
+configuration is injected as real environment variables via the
+`environment:` block in `docker-compose.yml`, sourced from the file passed
+with `--env-file` (dev: `.env`, prod: `.env.prod`). `www/.env.example` only
+applies to the "manual, without Docker" setup path below.
 
-Dev ve prod'un **aynı cihazda aynı anda çalışması beklenmediği** için
-`docker-compose.yml` tek dosyadır ve volume/servis adları kasıtlı olarak
-aynıdır (`vendor`, `bootstrap_cache`, vs.) — ayrım tamamen hangi
-`--env-file`'ın verildiğine bağlıdır.
+Because dev and prod are **not expected to run on the same machine at the
+same time**, `docker-compose.yml` is a single file and volume/service names
+are deliberately identical (`vendor`, `bootstrap_cache`, etc.) — the
+separation is entirely driven by which `--env-file` is passed.
 
-## Docker ile çalıştırma — dev (önerilen)
+## Running with Docker — dev (recommended)
 
-Gereksinim: Docker + Docker Compose.
+Requirement: Docker + Docker Compose.
 
-`webserver` servisi, `docker-compose.yml`'de tanımlı `proxy` adlı bir
-external Docker network'üne de bağlanır (bkz. aşağıdaki "nginx-proxy-manager
-arkasında çalıştırma"); bu network'ü kullanmasanız bile **bir kez**
-oluşturmanız gerekir, aksi halde `docker compose up` network bulunamadı
-hatası verir:
+The `webserver` service also joins an external Docker network named
+`proxy`, defined in `docker-compose.yml` (see "Running behind
+nginx-proxy-manager" below); even if you don't use it, you need to create
+it **once**, otherwise `docker compose up` fails with a "network not
+found" error:
 
 ```bash
-docker network create npm_proxy   # veya .env'deki PROXY_NETWORK ne ise
+docker network create npm_proxy   # or whatever PROXY_NETWORK is set to in .env
 ```
 
 ```bash
@@ -107,61 +108,63 @@ docker compose up -d
 docker compose exec app php artisan migrate
 ```
 
-`APP_KEY` için elle bir şey yapmanıza gerek yok — `docker-compose.yml`'de
-tanımlı **değildir**; `docker/php/entrypoint.sh`, container ilk kez
-başladığında `www/.env`'de bir anahtar yoksa otomatik üretip orada kalıcı
-olarak saklar. Sonraki her yeniden başlatmada/oluşturmada aynı anahtar
-kullanılmaya devam eder (aksi halde her restart'ta oturumlar geçersiz
-kalırdı). Belirli bir anahtar kullanmak isterseniz (ör. eski bir kurulumdan
-taşıma), `www/.env` içindeki `APP_KEY=` satırını elle düzenleyip container'ı
-yeniden başlatın.
+You don't need to do anything manually for `APP_KEY` — it is **not**
+defined in `docker-compose.yml`; `docker/php/entrypoint.sh` generates one
+automatically the first time the container starts (if `www/.env` doesn't
+already have one) and persists it there. The same key keeps being used on
+every subsequent restart/recreation (otherwise sessions would be
+invalidated on every restart). If you want to use a specific key (e.g.
+migrating from an old setup), edit the `APP_KEY=` line in `www/.env`
+manually and restart the container.
 
-**Yazma izinleri hakkında:** `storage/`, `bootstrap/cache/` ve `vendor/`
-her ikisi de ayrı Docker volume'lardır (bkz. aşağıdaki `volumes:`), bu
-yüzden host'taki dosya sahipliğinden etkilenmezler — image build sırasında
-`www-data` kullanıcısına chown edilmiş haliyle kalırlar. `database.sqlite`
-ise `www/database/` içinde (migrations ile aynı yerde) kalması gerektiği
-için volume'a alınamaz; bunun yerine `docker/php/entrypoint.sh`, container
-her başladığında dosyayı oluşturup `www-data` için yazılabilir hale getirir
-— elle `touch`/`chmod` gerekmez. (Bu otomasyon olmadan, `www/` bind-mount
-edildiği için gerçek Linux sunucularda host kullanıcısına ait dosyalar
-`www-data`'ya kapalı kalır ve uygulama loglayamadan çıplak 500 döner —
-macOS/Windows'ta Docker Desktop'ın dosya paylaşımı bunu gizlediği için
-yerel geliştirmede fark edilmeyebilir.)
+**On write permissions:** `storage/`, `bootstrap/cache/`, and `vendor/` are
+all separate Docker volumes (see `volumes:` below), so they're unaffected
+by file ownership on the host — they stay chowned to the `www-data` user
+as set during the image build. `database.sqlite` needs to live inside
+`www/database/` (alongside the migrations) so it can't be a volume;
+instead, `docker/php/entrypoint.sh` creates the file and makes it writable
+for `www-data` every time the container starts — no manual `touch`/`chmod`
+needed. (Without this automation, since `www/` is bind-mounted, files owned
+by the host user would be inaccessible to `www-data` on real Linux
+servers, and the app would fail with a bare 500 unable to even log the
+error — this may go unnoticed in local development because Docker
+Desktop's file sharing on macOS/Windows hides the issue.)
 
-Panel varsayılan olarak `http://localhost:8080` adresinde çalışır
-(`.env` içindeki `WEB_PORT` ile değiştirilebilir).
+The dashboard runs at `http://localhost:8080` by default (change via
+`WEB_PORT` in `.env`).
 
-Servisler:
+Services:
 
-- `app` — PHP 8.4-FPM (composer bağımlılıkları image build sırasında kurulur;
-  `composer.lock` içindeki kilitli Symfony 8.x paketleri PHP 8.4+ gerektiriyor).
-- `webserver` — Nginx, `docker/nginx/default.conf` ile `www/public`'i document
-  root olarak sunar, PHP isteklerini `app` servisine fastcgi ile iletir.
+- `app` — PHP 8.4-FPM (Composer dependencies are installed during the
+  image build; the locked Symfony 8.x packages in `composer.lock` require
+  PHP 8.4+).
+- `webserver` — Nginx, serves `www/public` as the document root via
+  `docker/nginx/default.conf`, forwards PHP requests to the `app` service
+  over fastcgi.
 
-Kod değişiklikleri için `www/` klasörü container'a bind-mount edilir; PHP
-tarafında dosya değişikliği yeniden build gerektirmez. `composer.json` veya
-`composer.lock` değiştiğinde image'ı yeniden build edin
-(`docker compose build app`). `.env`'de bir değeri değiştirdiğinizde
-`docker compose up -d` yeterlidir (Compose değişen `environment:` değerleri
-için container'ı otomatik yeniden oluşturur).
+The `www/` folder is bind-mounted into the container for code changes; PHP
+file changes don't require a rebuild. Rebuild the image
+(`docker compose build app`) when `composer.json` or `composer.lock`
+changes. When you change a value in `.env`, `docker compose up -d` is
+enough (Compose automatically recreates the container for changed
+`environment:` values).
 
-## Docker ile çalıştırma — production
+## Running with Docker — production
 
-Aynı `docker-compose.yml`, farklı bir `--env-file` ile çalıştırılır.
-`.env.prod`'da ayarlanan üç değişken davranışı değiştirir:
+The same `docker-compose.yml` is run with a different `--env-file`. Three
+variables set in `.env.prod` change the behavior:
 
-| Değişken | Dev (`.env`) | Prod (`.env.prod`) |
+| Variable | Dev (`.env`) | Prod (`.env.prod`) |
 |---|---|---|
-| `COMPOSER_INSTALL_FLAGS` | boş (dev bağımlılıkları da kurulur) | `--no-dev` |
+| `COMPOSER_INSTALL_FLAGS` | empty (dev dependencies also installed) | `--no-dev` |
 | `RESTART_POLICY` | `no` | `unless-stopped` |
-| `WEB_PORT` | `8080` | `80` (veya reverse proxy'nizin yönlendirdiği port) |
+| `WEB_PORT` | `8080` | `80` (or whatever port your reverse proxy forwards to) |
 
 ```bash
 cp .env.docker.example .env.prod
-# .env.prod dosyasini prod degerleriyle doldurun (yukaridaki 3 degisken +
-# APP_ENV=production, APP_DEBUG=false, gercek APP_URL/GOOGLE_REDIRECT_URI,
-# PSI_API_KEY, ADMIN_EMAILS, vb.)
+# Fill .env.prod with production values (the 3 variables above, plus
+# APP_ENV=production, APP_DEBUG=false, the real APP_URL/GOOGLE_REDIRECT_URI,
+# PSI_API_KEY, ADMIN_EMAILS, etc.)
 
 docker compose --env-file .env.prod build
 docker compose --env-file .env.prod up -d
@@ -169,10 +172,10 @@ docker compose --env-file .env.prod up -d
 docker compose --env-file .env.prod exec app php artisan migrate --force
 ```
 
-`APP_KEY` burada da elle üretilmez — bkz. yukarıdaki dev bölümündeki not
-(`www/.env`'de otomatik oluşturulup kalıcı olarak saklanır).
+`APP_KEY` isn't generated manually here either — see the note in the dev
+section above (auto-generated and persisted in `www/.env`).
 
-Sunucuda **git tabanlı deploy** için tipik akış:
+A typical **git-based deploy** flow on the server:
 
 ```bash
 git pull
@@ -180,112 +183,112 @@ docker compose --env-file .env.prod up -d --build
 docker compose --env-file .env.prod exec app php artisan migrate --force
 ```
 
-`www/` bind-mount edildiği için `--build` yalnızca `composer.json`/`composer.lock`
-veya `docker/` değiştiğinde gerçekten yeniden build tetikler; kod-only
-değişikliklerde de `up -d --build` çalıştırmak güvenlidir (gereksiz build
-Docker layer cache'i sayesinde hızlı geçer).
+Since `www/` is bind-mounted, `--build` only actually triggers a rebuild
+when `composer.json`/`composer.lock` or `docker/` changes; it's safe to run
+`up -d --build` even for code-only changes (an unnecessary build finishes
+quickly thanks to Docker's layer cache).
 
-`.env`'i **her zaman** `--env-file` ile açıkça belirtin (dev'de bile) —
-`docker compose` bayrak verilmezse otomatik olarak `.env` adlı dosyayı
-arar, bu da dev için zaten doğru davranıştır; ama aynı dizinde hem `.env`
-hem `.env.prod` varsa prod komutlarında `--env-file .env.prod`'u atlamayın,
-aksi halde sessizce dev ayarlarıyla çalışır.
+**Always** pass `--env-file` explicitly (even in dev) — without a flag,
+`docker compose` automatically looks for a file named `.env`, which is
+already the correct behavior for dev; but if both `.env` and `.env.prod`
+exist in the same directory, don't skip `--env-file .env.prod` on
+production commands, or it will silently run with dev settings.
 
-## nginx-proxy-manager (veya başka bir reverse proxy) arkasında çalıştırma
+## Running behind nginx-proxy-manager (or another reverse proxy)
 
-`webserver` servisi, host portuna ek olarak `PROXY_NETWORK`/`APP_HOSTNAME`
-(`.env`/`.env.prod`) ile ayarlanan external bir Docker network'üne de
-bağlanır; bu sayede NPM, host portunu hiç kullanmadan doğrudan Docker
-network'ü üzerinden container'a ulaşabilir.
+In addition to the host port, the `webserver` service also joins an
+external Docker network configured via `PROXY_NETWORK`/`APP_HOSTNAME`
+(`.env`/`.env.prod`); this lets NPM reach the container directly over the
+Docker network without ever using the host port.
 
-1. NPM'i çalıştıran docker-compose'da (NPM'in kendi kurulumu) kullanılan
-   external network'ün adını öğrenin (yoksa bir tane oluşturun ve NPM'in
-   kendi compose dosyasında da aynı adı `external: true` ile kullanın):
+1. Find the name of the external network used by the docker-compose setup
+   that runs NPM (or create one, and use the same name with
+   `external: true` in NPM's own compose file):
    ```bash
    docker network create npm_proxy
    ```
-2. `.env.prod` içinde:
+2. In `.env.prod`:
    ```
-   PROXY_NETWORK=npm_proxy      # NPM ile paylaşılan network adı
-   APP_HOSTNAME=seo-ai-checker  # NPM'in "Forward Hostname/IP" alanına yazacağınız isim
+   PROXY_NETWORK=npm_proxy      # network name shared with NPM
+   APP_HOSTNAME=seo-ai-checker  # the name you'll enter in NPM's "Forward Hostname/IP" field
    ```
-3. `docker compose --env-file .env.prod up -d` (yeniden) çalıştırıldığında
-   `webserver` otomatik olarak bu network'e katılır ve `APP_HOSTNAME`
-   üzerinden erişilebilir hale gelir (network içindeki diğer container'lardan
-   `getent hosts seo-ai-checker` ile doğrulayabilirsiniz).
-4. NPM arayüzünde yeni bir **Proxy Host** ekleyin:
-   - **Domain Names**: gerçek alan adınız (ör. `seo.example.com`)
-   - **Forward Hostname / IP**: `APP_HOSTNAME` değeriniz (ör. `seo-ai-checker`)
-   - **Forward Port**: `80` (nginx container'ının iç portu — `.env.prod`'daki
-     `WEB_PORT` değil, o yalnızca host'a doğrudan port yayınlamak
-     istediğinizde kullanılır)
-   - **SSL**: Let's Encrypt sertifikası talep edin, "Force SSL" açın.
-   - **Advanced** sekmesine, "Kontrol Et" çalıştırmasının (SERP+on-page+
-     Lighthouse) 60 saniyeyi bulabilmesi nedeniyle şu satırı ekleyin
-     (NPM'in kendi varsayılan proxy timeout'u bunu kesebilir):
+3. When `docker compose --env-file .env.prod up -d` is (re)run, `webserver`
+   automatically joins this network and becomes reachable via
+   `APP_HOSTNAME` (verify from another container on the network with
+   `getent hosts seo-ai-checker`).
+4. Add a new **Proxy Host** in the NPM UI:
+   - **Domain Names**: your real domain (e.g. `seo.example.com`)
+   - **Forward Hostname / IP**: your `APP_HOSTNAME` value (e.g. `seo-ai-checker`)
+   - **Forward Port**: `80` (the nginx container's internal port — not the
+     `WEB_PORT` in `.env.prod`, which is only used when you want to
+     publish a port directly to the host)
+   - **SSL**: request a Let's Encrypt certificate, enable "Force SSL".
+   - Under the **Advanced** tab, add the following line, since a "Check"
+     run (SERP+on-page+Lighthouse) can take up to 60 seconds (NPM's default
+     proxy timeout can cut this off):
      ```
      proxy_read_timeout 180s;
      ```
 
-## Kurulum (Docker olmadan, manuel)
+## Setup (manual, without Docker)
 
 ```bash
 cd www
 composer install
 cp .env.example .env
 php artisan key:generate
-touch database/database.sqlite   # varsayılan SQLite için
+touch database/database.sqlite   # for the default SQLite setup
 php artisan migrate
 php artisan serve
 ```
 
-## Web Arayüzü
+## Web dashboard
 
-Web arayüzü, domain/anahtar kelime kayıtlarını ve her "Kontrol Et"
-çalıştırmasının sonucunu (SERP + AI Overview + on-page + Lighthouse)
-veritabanında saklar; böylece zaman içindeki değişimi geçmiş olarak
-görebilirsiniz.
+The web dashboard stores domain/keyword records and the result of every
+"Check" run (SERP + AI Overview + on-page + Lighthouse) in the database, so
+you can view changes over time as history.
 
-### 1. Google OAuth uygulaması oluşturun
+### 1. Create a Google OAuth application
 
-Herhangi bir Google hesabı giriş yapıp panelde bir hesap oluşturabilir;
-ancak yeni hesaplar bir **admin onaylayana kadar** panele erişemez (bkz.
-"Kullanıcı yönetimi ve admin paneli" bölümü) — basit şifre yerine Google
-ile kimlik doğrulama + admin onayı kullanılır.
+Any Google account can sign in and create an account in the dashboard, but
+new accounts can't access the dashboard until an **admin approves** them
+(see "User management and admin panel" below) — Google-based
+authentication + admin approval is used instead of a plain password.
 
-1. [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials)
-   sayfasında yeni bir **OAuth client ID** oluşturun, tür: **Web application**.
-2. **Authorized redirect URI** olarak sunucunuzun adresini ekleyin, örn:
-   `https://sizin-sunucunuz.com/auth/google/callback`
-3. Oluşan **Client ID** ve **Client Secret** değerlerini ilgili `.env`
-   dosyasına yazın (Docker: repo kökündeki `.env`/`.env.prod`; manuel kurulum:
-   `www/.env`) — `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`.
-4. `ADMIN_EMAILS` içine kendi Google e-postanızı yazın. Bu e-posta(lar) ilk
-   giriş yaptığında **otomatik olarak admin + onaylı** sayılır; böylece ilk
-   kurulumda kendinize erişim açmış olursunuz. Sonraki tüm kullanıcı
-   onayları/admin atamaları `/admin/users` panelinden yapılır, `.env`
-   düzenlemeye gerek kalmaz.
+1. Create a new **OAuth client ID** on the
+   [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials)
+   page, type: **Web application**.
+2. Add your server's address as the **Authorized redirect URI**, e.g.:
+   `https://your-server.com/auth/google/callback`
+3. Write the resulting **Client ID** and **Client Secret** values into the
+   relevant `.env` file (Docker: `.env`/`.env.prod` at the repo root;
+   manual setup: `www/.env`) — `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`,
+   `GOOGLE_REDIRECT_URI`.
+4. Put your own Google email into `ADMIN_EMAILS`. This email(s) are
+   **automatically treated as admin + approved** on first login, so you
+   get access to yourself on initial setup. All subsequent user
+   approvals/admin assignments are done from the `/admin/users` panel, no
+   further `.env` editing needed.
 
-### 2. `.env` ayarları (web'e özel)
+### 2. `.env` settings (web-specific)
 
-| Değişken | Açıklama |
+| Variable | Description |
 |---|---|
-| `APP_URL` | Panelin herkese açık adresi |
-| `DB_CONNECTION`, `DB_DATABASE`/`DB_HOST`/... | SQLite (varsayılan) veya MySQL/PostgreSQL |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_REDIRECT_URI` | Google OAuth uygulama bilgileri |
-| `ADMIN_EMAILS` | İlk girişte otomatik admin+onaylı sayılacak e-postalar (virgülle ayrılmış) |
-| `PSI_API_KEY` | (opsiyonel ama önerilir) PageSpeed Insights API anahtarı |
-| `PSI_STRATEGY` | `mobile` veya `desktop` |
+| `APP_URL` | The dashboard's public address |
+| `DB_CONNECTION`, `DB_DATABASE`/`DB_HOST`/... | SQLite (default) or MySQL/PostgreSQL |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_REDIRECT_URI` | Google OAuth app credentials |
+| `ADMIN_EMAILS` | Emails automatically treated as admin+approved on first login (comma-separated) |
+| `PSI_API_KEY` | (optional but recommended) PageSpeed Insights API key |
+| `PSI_STRATEGY` | `mobile` or `desktop` |
 
-### 3. Sunucuya deploy (Docker olmadan)
+### 3. Deploying to a server (without Docker)
 
-Belge kökünü (document root) `www/public/` klasörüne yönlendirin. Örnek
-Nginx:
+Point the document root at the `www/public/` folder. Example Nginx:
 
 ```nginx
 server {
     listen 443 ssl;
-    server_name sizin-sunucunuz.com;
+    server_name your-server.com;
     root /path/to/seo-ai-checker/www/public;
     index index.php;
 
@@ -297,8 +300,8 @@ server {
         include fastcgi_params;
         fastcgi_pass unix:/run/php/php8.4-fpm.sock;
         fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
-        # Kontrol calistirmalari (SERP+on-page+Lighthouse) 60 saniyeyi
-        # bulabilir; varsayilan zaman asimini artirin:
+        # A "Check" run (SERP+on-page+Lighthouse) can take up to 60 seconds;
+        # raise the default timeout:
         fastcgi_read_timeout 180;
     }
 
@@ -308,98 +311,103 @@ server {
 }
 ```
 
-Notlar:
+Notes:
 
-- `www/public/` **dışındaki** hiçbir klasör (`www/app/`, `www/config/`,
-  `www/.env`, veritabanı dosyası) web sunucusundan doğrudan erişilebilir
-  olmamalı — yalnızca `www/public/` document root olarak ayarlanmalı.
-- Google OAuth, üretimde **HTTPS** gerektirir (redirect URI `https://` ile
-  başlamalı); `localhost` istisnası yalnızca yerel geliştirmede geçerlidir.
-- PHP `max_execution_time` değerini (php.ini veya php-fpm pool ayarı) en az
-  120 saniyeye çıkarın; "Kontrol Et" tek istekte SERP + on-page + Lighthouse
-  taramasını sırayla çalıştırdığı için 20-60 saniye sürebilir.
-- Standart Laravel prod adımları: `composer install --no-dev --optimize-autoloader`,
-  `php artisan migrate --force`, `php artisan config:cache`, `php artisan route:cache`,
-  `storage/` ve `bootstrap/cache/` dizinlerinin web sunucusu tarafından
-  yazılabilir olması.
+- No folder **outside** `www/public/` (`www/app/`, `www/config/`,
+  `www/.env`, the database file) should be directly reachable from the web
+  server — only `www/public/` should be set as the document root.
+- Google OAuth requires **HTTPS** in production (the redirect URI must
+  start with `https://`); the `localhost` exception only applies to local
+  development.
+- Raise PHP's `max_execution_time` (in php.ini or the php-fpm pool config)
+  to at least 120 seconds; "Check" runs SERP + on-page + Lighthouse
+  sequentially in a single request and can take 20-60 seconds.
+- Standard Laravel production steps:
+  `composer install --no-dev --optimize-autoloader`,
+  `php artisan migrate --force`, `php artisan config:cache`,
+  `php artisan route:cache`, and making sure `storage/` and
+  `bootstrap/cache/` are writable by the web server.
 
-### 4. Kullanım
+### 4. Usage
 
-1. `https://sizin-sunucunuz.com/` adresine gidin, "Google ile giriş yap"
-   ile giriş yapın. `ADMIN_EMAILS` içindeki bir hesapsanız direkt panele
-   düşersiniz; değilseniz hesabınız oluşturulur ama bir admin onaylayana
-   kadar "onay bekliyor" sayfasını görürsünüz.
-2. Bir domain ekleyin, ardından o domain için anahtar kelime(ler) ekleyin
-   (isteğe bağlı olarak her kelime için ayrı bir hedef sayfa URL'si
-   belirtebilirsiniz).
-3. "Kontrol Et" butonuna basın; SERP sıralaması, AI Overview durumu,
-   on-page SEO ve Lighthouse skorları çalışıp veritabanına kaydedilir.
-4. Anahtar kelime detay sayfasında geçmiş kontrolleri (her çalıştırmanın
-   tam sonucu) kronolojik olarak görebilirsiniz.
+1. Go to `https://your-server.com/` and sign in with "Sign in with
+   Google". If you're one of the accounts in `ADMIN_EMAILS`, you land
+   directly in the dashboard; otherwise your account is created but you'll
+   see a "pending approval" page until an admin approves you.
+2. Add a domain, then add keyword(s) for that domain (optionally
+   specifying a separate target page URL for each keyword).
+3. Click "Check"; SERP ranking, AI Overview status, on-page SEO, and
+   Lighthouse scores are run and saved to the database.
+4. On a keyword's detail page you can see past checks (the full result of
+   every run) in chronological order.
 
-## AI Overview tespiti nasıl çalışır?
+## How AI Overview detection works
 
-`config/seo.php` içindeki `ai_overview_markers` metin ifadeleri (ör.
-"AI overview", "Yapay zeka genel bakışı") sayfa metninde aranır. Eşleşme
-bulunursa, en yakın üst kapsayıcı (ancestor) element içindeki linkler
-taranarak kaynak domainler çıkarılmaya çalışılır. Google markup'ı
-değiştikçe bu ifadeler ve gerekirse `ai_overview_selectors` içindeki CSS
-seçiciler güncellenmelidir.
+The text phrases in `ai_overview_markers` in `config/seo.php` (e.g. "AI
+overview") are searched for in the page text. If a match is found, the
+links inside the nearest ancestor container element are scanned to try to
+extract the cited source domains. As Google's markup changes, these
+phrases — and, if needed, the CSS selectors in `ai_overview_selectors` —
+need to be updated.
 
-## Lighthouse entegrasyonu nasıl çalışır?
+## How the Lighthouse integration works
 
-`App\Services\Lighthouse\PageSpeedInsightsClient`, Google'ın
-[PageSpeed Insights v5 API](https://developers.google.com/speed/docs/insights/v5/get-started)'sine
-istek atar; bu API, Lighthouse denetimini Google'ın sunucularında çalıştırıp
-sonucu JSON olarak döner. Bu sayede kendi sunucunuzda Node.js/headless
-Chrome kurmanıza gerek kalmaz. Denetim tipik olarak 15-40 saniye sürer ve
-performans/SEO/erişilebilirlik/best-practices kategorilerinin 0-100
-skorlarını verir.
+`App\Services\Lighthouse\PageSpeedInsightsClient` sends requests to
+Google's
+[PageSpeed Insights v5 API](https://developers.google.com/speed/docs/insights/v5/get-started),
+which runs the Lighthouse audit on Google's own servers and returns the
+result as JSON. This means you don't need to install Node.js/headless
+Chrome on your own server. The audit typically takes 15-40 seconds and
+returns 0-100 scores for the performance/SEO/accessibility/best-practices
+categories.
 
-## Veritabanı şeması
+## Database schema
 
-- `domains` — takip edilen domainler
-- `keywords` — bir domaine bağlı anahtar kelimeler (opsiyonel özel URL ile)
-- `checks` — her "Kontrol Et" çalıştırmasının tam sonucu (SERP, AI Overview,
-  on-page, Lighthouse — JSON kolonlar Eloquent tarafından otomatik
-  array'e çevrilir)
+- `domains` — tracked domains
+- `keywords` — keywords attached to a domain (with an optional custom URL)
+- `checks` — the full result of every "Check" run (SERP, AI Overview,
+  on-page, Lighthouse — JSON columns are automatically cast to arrays by
+  Eloquent)
 
-Migration'lar `www/database/migrations/` altında; kurulumda
-`php artisan migrate` ile oluşturulur.
+Migrations live under `www/database/migrations/`; they're created during
+setup with `php artisan migrate`.
 
-## Mimari notlar
+## Architecture notes
 
-- `App\Services\Serp\GoogleSerpScraper` — Google SERP scraping + AI Overview
-  tespiti (framework'ten bağımsız, Guzzle + Symfony DomCrawler kullanır).
-- `App\Services\OnPage\OnPageSeoAnalyzer` — hedef sayfa on-page analizi.
-- `App\Services\Lighthouse\PageSpeedInsightsClient` — PSI API istemcisi.
-- `App\Services\CheckRunner` — yukarıdaki üçünü birleştirip bir `Keyword`
-  modeli için `Check` kaydı oluşturan orkestrasyon servisi (web arayüzü
-  tarafından kullanılır).
+- `App\Services\Serp\GoogleSerpScraper` — Google SERP scraping + AI
+  Overview detection (framework-agnostic, uses Guzzle + Symfony
+  DomCrawler).
+- `App\Services\OnPage\OnPageSeoAnalyzer` — on-page analysis of the target
+  page.
+- `App\Services\Lighthouse\PageSpeedInsightsClient` — PSI API client.
+- `App\Services\CheckRunner` — the orchestration service that combines the
+  three above into a `Check` record for a `Keyword` model (used by the web
+  dashboard).
 - Google OAuth: `App\Http\Controllers\Auth\GoogleController` (Socialite),
-  herhangi bir Google hesabı için `User` kaydı oluşturur/bulur.
-- `App\Http\Middleware\EnsureUserApproved` — `approved_at` boş olan
-  (onaylanmamış) kullanıcıları `/pending-approval` sayfasına yönlendirir;
-  `App\Http\Middleware\EnsureUserIsAdmin` — `/admin/*` rotalarını
-  `is_admin` olmayan kullanıcılara kapatır.
+  creates/finds a `User` record for any Google account.
+- `App\Http\Middleware\EnsureUserApproved` — redirects users whose
+  `approved_at` is empty (not yet approved) to `/pending-approval`;
+  `App\Http\Middleware\EnsureUserIsAdmin` — blocks `/admin/*` routes for
+  users who aren't `is_admin`.
 
-## Kullanıcı yönetimi ve admin paneli
+## User management and admin panel
 
-- Herhangi bir Google hesabı giriş yapıp bir `User` kaydı oluşturabilir;
-  varsayılan olarak `approved_at` boştur (onay bekliyor) ve panele erişemez.
-- `.env`/`.env.prod` içindeki `ADMIN_EMAILS` listesindeki e-postalar ilk
-  giriş yaptıklarında otomatik olarak `is_admin=true` + onaylı sayılır
-  (ilk kurulumda kendinize erişim açmak için).
-- Admin kullanıcılar `/admin/users` sayfasından (üst menüdeki "Kullanıcılar"
-  linki) diğer kullanıcıları onaylayabilir, onayını kaldırabilir, admin
-  yapabilir/admin'likten çıkarabilir veya silebilir. Bir admin kendi
-  hesabı üzerinde bu işlemleri yapamaz (yanlışlıkla kendini kilitlememesi
-  için); `ADMIN_EMAILS`'teki bir hesap için bu zaten sorun değildir, çünkü
-  her girişte otomatik olarak admin+onaylı olarak yeniden ayarlanır.
+- Any Google account can sign in and create a `User` record; `approved_at`
+  is empty by default (pending approval) and the dashboard is inaccessible
+  until then.
+- Emails in the `ADMIN_EMAILS` list (`.env`/`.env.prod`) are automatically
+  set to `is_admin=true` + approved on their first login (to give yourself
+  access on initial setup).
+- Admin users can approve other users, revoke their approval, promote/demote
+  admin status, or delete them from the `/admin/users` page (the "Users"
+  link in the top menu). An admin cannot perform these actions on their own
+  account (to prevent accidentally locking themselves out); this isn't an
+  issue for an `ADMIN_EMAILS` account anyway, since it's automatically
+  reset to admin+approved on every login.
 
-## Geliştirme
+## Development
 
-Docker olmadan yerel geliştirme için (bkz. yukarıdaki "Kurulum" adımları):
+For local development without Docker (see the "Setup" steps above):
 
 ```bash
 cd www
@@ -412,11 +420,15 @@ php artisan migrate
 php artisan serve
 ```
 
-Testler:
+Tests:
 
 ```bash
 cd www
 composer test
-# veya Docker uzerinden:
+# or via Docker:
 docker compose exec app php artisan test
 ```
+
+## License
+
+Licensed under the [GNU General Public License v3.0 or later](LICENSE) (GPL-3.0-or-later).
