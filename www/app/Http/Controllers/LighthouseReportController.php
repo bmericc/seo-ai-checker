@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Jobs\RunSitemapUrlLighthouseCheck;
 use App\Jobs\RunSitemapUrlOnPageCheck;
 use App\Models\Domain;
+use App\Services\Sitemap\SharedSitemapUrlLookup;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,26 +35,32 @@ class LighthouseReportController extends Controller
             ->orderByDesc('lighthouse_checked_at')
             ->get();
 
-        $lighthouseChecked = $sitemapUrls->filter(fn ($u) => $u->isLighthouseChecked() && $u->lighthouse_error === null);
+        $lighthouseQueued = $sitemapUrls->filter(fn ($u) => $u->isLighthouseQueued());
+        $lighthouseNotQueued = $sitemapUrls->reject(fn ($u) => $u->isLighthouseQueued());
+        $lighthouseChecked = $lighthouseNotQueued->filter(fn ($u) => $u->isLighthouseChecked() && $u->lighthouse_error === null);
 
         $lighthouseSummary = [
             'total' => $sitemapUrls->count(),
             'checked' => $lighthouseChecked->count(),
-            'failed' => $sitemapUrls->filter(fn ($u) => $u->lighthouse_error !== null)->count(),
-            'pending' => $sitemapUrls->filter(fn ($u) => !$u->isLighthouseChecked())->count(),
+            'queued' => $lighthouseQueued->count(),
+            'failed' => $lighthouseNotQueued->filter(fn ($u) => $u->lighthouse_error !== null)->count(),
+            'pending' => $lighthouseNotQueued->filter(fn ($u) => !$u->isLighthouseChecked())->count(),
             'avg_performance' => round($lighthouseChecked->avg('lighthouse_performance') ?? 0),
             'avg_seo' => round($lighthouseChecked->avg('lighthouse_seo') ?? 0),
             'avg_accessibility' => round($lighthouseChecked->avg('lighthouse_accessibility') ?? 0),
             'avg_best_practices' => round($lighthouseChecked->avg('lighthouse_best_practices') ?? 0),
         ];
 
-        $onPageChecked = $sitemapUrls->filter(fn ($u) => $u->isOnPageChecked() && $u->onpage_error === null);
+        $onPageQueued = $sitemapUrls->filter(fn ($u) => $u->isOnPageQueued());
+        $onPageNotQueued = $sitemapUrls->reject(fn ($u) => $u->isOnPageQueued());
+        $onPageChecked = $onPageNotQueued->filter(fn ($u) => $u->isOnPageChecked() && $u->onpage_error === null);
 
         $onPageSummary = [
             'total' => $sitemapUrls->count(),
             'checked' => $onPageChecked->count(),
-            'failed' => $sitemapUrls->filter(fn ($u) => $u->onpage_error !== null)->count(),
-            'pending' => $sitemapUrls->filter(fn ($u) => !$u->isOnPageChecked())->count(),
+            'queued' => $onPageQueued->count(),
+            'failed' => $onPageNotQueued->filter(fn ($u) => $u->onpage_error !== null)->count(),
+            'pending' => $onPageNotQueued->filter(fn ($u) => !$u->isOnPageChecked())->count(),
             'missing_canonical' => $onPageChecked->filter(fn ($u) => ($u->onpage_data['canonical_status'] ?? null) === 'missing')->count(),
             'wrong_h1_count' => $onPageChecked->filter(fn ($u) => ($u->onpage_data['h1_count'] ?? 1) !== 1)->count(),
             'heading_skips' => $onPageChecked->filter(fn ($u) => $u->onpage_data['heading_hierarchy_skip'] ?? false)->count(),
@@ -72,7 +79,7 @@ class LighthouseReportController extends Controller
         ]);
     }
 
-    public function start(Request $request, Domain $domain): RedirectResponse
+    public function start(Request $request, Domain $domain, SharedSitemapUrlLookup $sharedLookup): RedirectResponse
     {
         $this->ensureCanAccessDomain($request, $domain);
 
@@ -83,21 +90,33 @@ class LighthouseReportController extends Controller
             ->limit(self::MAX_LIGHTHOUSE_URLS_PER_BATCH)
             ->get();
 
+        $siblings = $sharedLookup->siblingsByUrl($domain, $urls->pluck('url')->all());
+
+        $queued = 0;
+        $reused = 0;
         foreach ($urls as $url) {
+            $sibling = $siblings->get($url->url);
+
+            if ($sharedLookup->isLighthouseFresh($sibling)) {
+                $url->update($sharedLookup->lighthouseFields($sibling));
+                $reused++;
+                continue;
+            }
+
+            $url->update(['lighthouse_queued_at' => now()]);
             RunSitemapUrlLighthouseCheck::dispatch($url->id);
+            $queued++;
         }
 
         return redirect()
             ->route('domains.lighthouse-report', $domain)
             ->with('flash', [
                 'type' => 'success',
-                'message' => $urls->isEmpty()
-                    ? 'Taranacak yeni sayfa yok.'
-                    : sprintf('%d sayfa Lighthouse taraması için kuyruğa eklendi.', $urls->count()),
+                'message' => $this->batchMessage($queued, $reused, 'Lighthouse taraması'),
             ]);
     }
 
-    public function startOnPage(Request $request, Domain $domain): RedirectResponse
+    public function startOnPage(Request $request, Domain $domain, SharedSitemapUrlLookup $sharedLookup): RedirectResponse
     {
         $this->ensureCanAccessDomain($request, $domain);
 
@@ -108,17 +127,46 @@ class LighthouseReportController extends Controller
             ->limit(self::MAX_ONPAGE_URLS_PER_BATCH)
             ->get();
 
+        $siblings = $sharedLookup->siblingsByUrl($domain, $urls->pluck('url')->all());
+
+        $queued = 0;
+        $reused = 0;
         foreach ($urls as $url) {
+            $sibling = $siblings->get($url->url);
+
+            if ($sharedLookup->isOnPageFresh($sibling)) {
+                $url->update($sharedLookup->onPageFields($sibling));
+                $reused++;
+                continue;
+            }
+
+            $url->update(['onpage_queued_at' => now()]);
             RunSitemapUrlOnPageCheck::dispatch($url->id);
+            $queued++;
         }
 
         return redirect()
             ->route('domains.lighthouse-report', $domain)
             ->with('flash', [
                 'type' => 'success',
-                'message' => $urls->isEmpty()
-                    ? 'Taranacak yeni sayfa yok.'
-                    : sprintf('%d sayfa on-page SEO analizi için kuyruğa eklendi.', $urls->count()),
+                'message' => $this->batchMessage($queued, $reused, 'on-page SEO analizi'),
             ]);
+    }
+
+    private function batchMessage(int $queued, int $reused, string $label): string
+    {
+        if ($queued === 0 && $reused === 0) {
+            return 'Taranacak yeni sayfa yok.';
+        }
+
+        $parts = [];
+        if ($queued > 0) {
+            $parts[] = sprintf('%d sayfa %s için kuyruğa eklendi', $queued, $label);
+        }
+        if ($reused > 0) {
+            $parts[] = sprintf('%d sayfa başka bir kullanıcının taze sonucundan kopyalandı', $reused);
+        }
+
+        return implode(', ', $parts) . '.';
     }
 }

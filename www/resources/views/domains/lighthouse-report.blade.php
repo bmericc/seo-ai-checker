@@ -90,6 +90,14 @@
                     </div>
                 </div>
             </div>
+            <div class="col-6 col-md-3">
+                <div class="card card-sm">
+                    <div class="card-body text-center">
+                        <div class="text-secondary small">Kuyrukta</div>
+                        <div class="h2 mb-0 {{ $onPageSummary['queued'] > 0 ? 'text-info' : 'text-secondary' }}">{{ $onPageSummary['queued'] }}</div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="card mb-4">
@@ -122,7 +130,9 @@
                                 <td class="text-truncate" style="max-width: 320px;">
                                     <a href="{{ $url->url }}" target="_blank" rel="noopener">{{ $url->url }}</a>
                                 </td>
-                                @if ($url->onpage_error)
+                                @if ($url->isOnPageQueued())
+                                    <td colspan="6"><span class="badge bg-info-lt">kuyrukta</span></td>
+                                @elseif ($url->onpage_error)
                                     <td colspan="6">
                                         <span class="badge bg-danger-lt">hata</span>
                                         <span class="text-secondary small">{{ $url->onpage_error }}</span>
@@ -240,6 +250,14 @@
             <div class="col-6 col-md-3">
                 <div class="card card-sm">
                     <div class="card-body text-center">
+                        <div class="text-secondary small">Kuyrukta</div>
+                        <div class="h2 mb-0 {{ $lighthouseSummary['queued'] > 0 ? 'text-info' : 'text-secondary' }}">{{ $lighthouseSummary['queued'] }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card card-sm">
+                    <div class="card-body text-center">
                         <div class="text-secondary small">Hata</div>
                         <div class="h2 mb-0 {{ $lighthouseSummary['failed'] > 0 ? 'text-danger' : '' }}">{{ $lighthouseSummary['failed'] }}</div>
                     </div>
@@ -292,7 +310,9 @@
                                 <td class="text-truncate" style="max-width: 420px;">
                                     <a href="{{ $url->url }}" target="_blank" rel="noopener">{{ $url->url }}</a>
                                 </td>
-                                @if ($url->lighthouse_error)
+                                @if ($url->isLighthouseQueued())
+                                    <td colspan="4"><span class="badge bg-info-lt">kuyrukta</span></td>
+                                @elseif ($url->lighthouse_error)
                                     <td colspan="4">
                                         <span class="badge bg-danger-lt">hata</span>
                                         <span class="text-secondary small">{{ $url->lighthouse_error }}</span>

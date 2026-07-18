@@ -48,6 +48,12 @@ class LighthouseReportTest extends TestCase
         $response->assertRedirect(route('domains.lighthouse-report', $domain));
         Queue::assertPushed(RunSitemapUrlLighthouseCheck::class, 1);
         Queue::assertPushed(fn (RunSitemapUrlLighthouseCheck $job) => $job->sitemapUrlId === $active->id);
+
+        $this->assertNotNull($active->fresh()->lighthouse_queued_at);
+        $this->assertTrue($active->fresh()->isLighthouseQueued());
+
+        $reportResponse = $this->actingAs($user)->get(route('domains.lighthouse-report', $domain));
+        $reportResponse->assertSee('kuyrukta');
     }
 
     public function test_a_scan_batch_is_capped_at_the_configured_limit(): void
@@ -68,6 +74,92 @@ class LighthouseReportTest extends TestCase
         $this->actingAs($user)->post(route('domains.lighthouse-report.start', $domain));
 
         Queue::assertPushed(RunSitemapUrlLighthouseCheck::class, 50);
+    }
+
+    public function test_starting_a_scan_reuses_a_fresh_sibling_lighthouse_result_instead_of_queuing(): void
+    {
+        Queue::fake();
+
+        $userA = User::factory()->create(['approved_at' => now()]);
+        $userB = User::factory()->create(['approved_at' => now()]);
+        $domainA = Domain::query()->create(['domain' => 'example.com', 'user_id' => $userA->id]);
+        $domainB = Domain::query()->create(['domain' => 'example.com', 'user_id' => $userB->id]);
+
+        $domainA->sitemapUrls()->create([
+            'url' => 'https://example.com/a',
+            'first_seen_at' => now(),
+            'last_seen_at' => now(),
+            'lighthouse_performance' => 77,
+            'lighthouse_seo' => 88,
+            'lighthouse_checked_at' => now()->subHours(2),
+        ]);
+        $target = $domainB->sitemapUrls()->create([
+            'url' => 'https://example.com/a',
+            'first_seen_at' => now(),
+            'last_seen_at' => now(),
+        ]);
+
+        $this->actingAs($userB)->post(route('domains.lighthouse-report.start', $domainB));
+
+        Queue::assertNotPushed(RunSitemapUrlLighthouseCheck::class);
+        $this->assertSame(77, $target->fresh()->lighthouse_performance);
+        $this->assertSame(88, $target->fresh()->lighthouse_seo);
+    }
+
+    public function test_starting_a_scan_queues_when_sibling_result_is_stale(): void
+    {
+        Queue::fake();
+
+        $userA = User::factory()->create(['approved_at' => now()]);
+        $userB = User::factory()->create(['approved_at' => now()]);
+        $domainA = Domain::query()->create(['domain' => 'example.com', 'user_id' => $userA->id]);
+        $domainB = Domain::query()->create(['domain' => 'example.com', 'user_id' => $userB->id]);
+
+        $domainA->sitemapUrls()->create([
+            'url' => 'https://example.com/a',
+            'first_seen_at' => now(),
+            'last_seen_at' => now(),
+            'lighthouse_performance' => 77,
+            'lighthouse_checked_at' => now()->subHours(7),
+        ]);
+        $target = $domainB->sitemapUrls()->create([
+            'url' => 'https://example.com/a',
+            'first_seen_at' => now(),
+            'last_seen_at' => now(),
+        ]);
+
+        $this->actingAs($userB)->post(route('domains.lighthouse-report.start', $domainB));
+
+        Queue::assertPushed(RunSitemapUrlLighthouseCheck::class, 1);
+        Queue::assertPushed(fn (RunSitemapUrlLighthouseCheck $job) => $job->sitemapUrlId === $target->id);
+    }
+
+    public function test_starting_an_onpage_scan_reuses_a_fresh_sibling_result_instead_of_queuing(): void
+    {
+        Queue::fake();
+
+        $userA = User::factory()->create(['approved_at' => now()]);
+        $userB = User::factory()->create(['approved_at' => now()]);
+        $domainA = Domain::query()->create(['domain' => 'example.com', 'user_id' => $userA->id]);
+        $domainB = Domain::query()->create(['domain' => 'example.com', 'user_id' => $userB->id]);
+
+        $domainA->sitemapUrls()->create([
+            'url' => 'https://example.com/a',
+            'first_seen_at' => now(),
+            'last_seen_at' => now(),
+            'onpage_data' => ['canonical_status' => 'self'],
+            'onpage_checked_at' => now()->subHours(1),
+        ]);
+        $target = $domainB->sitemapUrls()->create([
+            'url' => 'https://example.com/a',
+            'first_seen_at' => now(),
+            'last_seen_at' => now(),
+        ]);
+
+        $this->actingAs($userB)->post(route('domains.lighthouse-report.start-onpage', $domainB));
+
+        Queue::assertNotPushed(RunSitemapUrlOnPageCheck::class);
+        $this->assertSame('self', $target->fresh()->onpage_data['canonical_status']);
     }
 
     public function test_starting_an_onpage_scan_queues_a_job_per_active_sitemap_url(): void
@@ -95,6 +187,7 @@ class LighthouseReportTest extends TestCase
         $response->assertRedirect(route('domains.lighthouse-report', $domain));
         Queue::assertPushed(RunSitemapUrlOnPageCheck::class, 1);
         Queue::assertPushed(fn (RunSitemapUrlOnPageCheck $job) => $job->sitemapUrlId === $active->id);
+        $this->assertTrue($active->fresh()->isOnPageQueued());
     }
 
     public function test_onpage_scan_batch_is_capped_at_the_configured_limit(): void
