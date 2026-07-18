@@ -228,6 +228,15 @@
                         </h2>
                         <div id="ac-crux" class="accordion-collapse collapse" data-bs-parent="#site-check-accordion">
                             <div class="accordion-body">
+                                @php
+                                    $cruxMetricDescriptions = [
+                                        'LCP' => 'Largest Contentful Paint — sayfadaki en büyük içerik öğesinin (görsel, video, blok metin) görünür hale gelme süresi. Yükleme hızını gösterir.',
+                                        'INP' => 'Interaction to Next Paint — kullanıcının tıklama/dokunma/tuş basma gibi etkileşimlerine sayfanın tepki verme süresi. Etkileşim duyarlılığını gösterir.',
+                                        'CLS' => 'Cumulative Layout Shift — sayfa yüklenirken öğelerin beklenmedik şekilde yer değiştirmesinin toplam skoru. Görsel kararlılığı gösterir.',
+                                        'FCP' => 'First Contentful Paint — tarayıcının ilk metin/görsel içeriği ekrana çizdiği an. Sayfanın "boş değil" hissini verdiği süredir.',
+                                        'TTFB' => 'Time to First Byte — tarayıcının sunucudan yanıtın ilk baytını alma süresi. Sunucu/ağ gecikmesini gösterir.',
+                                    ];
+                                @endphp
                                 @if (!($cruxData['configured'] ?? false))
                                     <p class="text-secondary mb-0">
                                         CrUX API anahtarı tanımlı değil (<code>CRUX_API_KEY</code> veya <code>PSI_API_KEY</code>).
@@ -254,7 +263,16 @@
                                             <tbody>
                                             @foreach ($cruxData['metrics'] ?? [] as $metric)
                                                 <tr>
-                                                    <td>{{ $metric['label'] }}</td>
+                                                    <td>
+                                                        <span
+                                                            @if ($cruxMetricDescriptions[$metric['label']] ?? null)
+                                                                data-bs-toggle="tooltip"
+                                                                data-bs-placement="top"
+                                                                title="{{ $cruxMetricDescriptions[$metric['label']] }}"
+                                                                style="cursor: help; border-bottom: 1px dotted currentColor;"
+                                                            @endif
+                                                        >{{ $metric['label'] }}</span>
+                                                    </td>
                                                     <td>{{ $metric['p75'] }}</td>
                                                     <td>
                                                         @if ($metric['rating'] === 'good')

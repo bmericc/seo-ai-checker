@@ -157,5 +157,12 @@
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+            new tabler.Tooltip(el);
+        });
+    });
+</script>
 </body>
 </html>
