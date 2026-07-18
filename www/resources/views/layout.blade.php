@@ -108,7 +108,7 @@
                 @auth
                     @if (!auth()->user()->hasGoogleOfflineAccess())
                         <div class="alert alert-info alert-dismissible" role="alert">
-                            Search Console ve GA4 verilerini görebilmek için Google hesabınızı yeniden bağlamanız gerekiyor.
+                            Search Console verilerini görebilmek için Google hesabınızı yeniden bağlamanız gerekiyor.
                             <a href="{{ route('google.redirect') }}" class="alert-link">Google hesabını bağla</a>
                             <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
                         </div>

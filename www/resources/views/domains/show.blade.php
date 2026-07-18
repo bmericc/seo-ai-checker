@@ -331,7 +331,13 @@
                         </h2>
                         <div id="ac-ga4" class="accordion-collapse collapse" data-bs-parent="#site-check-accordion">
                             <div class="accordion-body">
-                                @if (!auth()->user()->hasGoogleOfflineAccess())
+                                @if ($ga4Data['disabled'] ?? false)
+                                    <p class="text-secondary mb-2">
+                                        GA4 entegrasyonu şu anda devre dışı — Google'ın "analytics.readonly"
+                                        kapsamı için istediği kullanım açıklaması/demo video doğrulama süreci
+                                        tamamlanınca etkinleştirilecek. Property ID'yi şimdiden girebilirsiniz.
+                                    </p>
+                                @elseif (!auth()->user()->hasGoogleOfflineAccess())
                                     <p class="text-secondary mb-0">
                                         Google hesabınız bağlı değil. GA4 verisi için üstteki
                                         "Google hesabını bağla" bağlantısından tekrar giriş yapın.

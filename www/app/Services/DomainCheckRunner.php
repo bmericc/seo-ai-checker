@@ -10,6 +10,7 @@ use App\Services\Bing\BingBacklinksChecker;
 use App\Services\CanonicalHost\CanonicalHostChecker;
 use App\Services\Crux\CrUxChecker;
 use App\Services\Ga4\Ga4Checker;
+use App\Services\Ga4\Ga4Result;
 use App\Services\Google\GoogleTokenService;
 use App\Services\Gsc\GscChecker;
 use App\Services\Keywords\KeywordSuggester;
@@ -37,6 +38,14 @@ use App\Services\Sitemap\SitemapUrlSync;
  */
 final class DomainCheckRunner
 {
+    /**
+     * GA4 (analytics.readonly scope) ilk asamada kasitli olarak devre disi -
+     * Google, bu "sensitive scope" icin OAuth consent screen dogrulamasinda
+     * kullanim aciklamasi + demo video istiyor (bkz. GoogleController).
+     * Dogrulama tamamlaninca burasi true yapilip scope tekrar eklenmeli.
+     */
+    private const GA4_ENABLED = false;
+
     public function __construct(
         private readonly RobotsTxtChecker $robotsTxtChecker,
         private readonly SitemapChecker $sitemapChecker,
@@ -75,7 +84,9 @@ final class DomainCheckRunner
 
         $accessToken = $this->googleTokenService->getValidAccessToken($domain->user);
         $gsc = $this->gscChecker->check($rootUrl, $accessToken);
-        $ga4 = $this->ga4Checker->check($domain->ga4_property_id, $accessToken);
+        $ga4 = self::GA4_ENABLED
+            ? $this->ga4Checker->check($domain->ga4_property_id, $accessToken)
+            : new Ga4Result(configured: false, propertyId: $domain->ga4_property_id);
 
         $excludedPhrases = [
             ...$domain->keywords()->pluck('keyword')->all(),
@@ -111,6 +122,7 @@ final class DomainCheckRunner
             ],
             'ga4' => [
                 'configured' => $ga4->configured,
+                'disabled' => !self::GA4_ENABLED,
                 'property_id' => $ga4->propertyId,
                 'total_sessions' => $ga4->totalSessions,
                 'organic_sessions' => $ga4->organicSessions,

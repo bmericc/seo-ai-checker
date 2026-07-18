@@ -15,14 +15,20 @@ use Laravel\Socialite\Two\InvalidStateException;
 class GoogleController extends Controller
 {
     /**
-     * Search Console/GA4 API'lerini kullanabilmek icin standart Socialite
-     * girisine ek olarak "offline" erisim (refresh token) ve ilgili
-     * scope'lar istenir. "prompt=consent" olmadan Google, kullanici daha
-     * once onay verdiyse refresh token'i tekrar dondurmeyebilir.
+     * Search Console API'sini kullanabilmek icin standart Socialite girisine
+     * ek olarak "offline" erisim (refresh token) ve ilgili scope istenir.
+     * "prompt=consent" olmadan Google, kullanici daha once onay verdiyse
+     * refresh token'i tekrar dondurmeyebilir.
+     *
+     * analytics.readonly (GA4) scope'u ILK ASAMADA KASITLI OLARAK
+     * ISTENMIYOR: Google bu "sensitive scope" icin OAuth consent screen
+     * dogrulamasinda kullanim aciklamasi + demo video istiyor. Bu
+     * tamamlanana kadar Ga4Checker DomainCheckRunner'da devre disi
+     * birakildi (bkz. DomainCheckRunner::GA4_ENABLED) - dogrulama
+     * tamamlaninca buraya tekrar eklenmeli.
      */
     private const GOOGLE_SCOPES = [
         'https://www.googleapis.com/auth/webmasters.readonly',
-        'https://www.googleapis.com/auth/analytics.readonly',
     ];
 
     public function redirect(): RedirectResponse
