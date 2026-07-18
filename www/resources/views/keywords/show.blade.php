@@ -126,7 +126,70 @@
                                                     <tr><th>Anahtar kelime yoğunluğu</th><td>{{ $check->onpage['keyword_density_percent'] }}%</td></tr>
                                                     <tr><th>Alt etiketi eksik görsel</th><td>{{ $check->onpage['images_missing_alt'] }}</td></tr>
                                                     <tr><th>İç/dış link</th><td>{{ $check->onpage['internal_links'] }} / {{ $check->onpage['external_links'] }}</td></tr>
-                                                    <tr><th>Yapısal veri</th><td>{{ $check->onpage['has_structured_data'] ? 'var' : 'yok' }}</td></tr>
+                                                    <tr>
+                                                        <th>Canonical</th>
+                                                        <td>
+                                                            @php
+                                                                $canonicalStatus = $check->onpage['canonical_status'] ?? null;
+                                                            @endphp
+                                                            @if ($canonicalStatus === 'self')
+                                                                <span class="badge bg-success-lt">kendine işaret ediyor</span>
+                                                            @elseif ($canonicalStatus === 'different')
+                                                                <span class="badge bg-warning-lt">farklı URL'e işaret ediyor</span>
+                                                            @elseif ($canonicalStatus === 'missing')
+                                                                <span class="badge bg-warning-lt">yok</span>
+                                                            @else
+                                                                <span class="text-secondary">-</span>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Başlık hiyerarşisi</th>
+                                                        <td>
+                                                            @if (($check->onpage['h1_count'] ?? count($check->onpage['h1s'] ?? [])) !== 1)
+                                                                <span class="badge bg-warning-lt">H1 sayısı: {{ $check->onpage['h1_count'] ?? count($check->onpage['h1s'] ?? []) }}</span>
+                                                            @endif
+                                                            @if ($check->onpage['heading_hierarchy_skip'] ?? false)
+                                                                <span class="badge bg-warning-lt">seviye atlaması var</span>
+                                                            @elseif (isset($check->onpage['heading_hierarchy_skip']))
+                                                                <span class="badge bg-success-lt">sorun yok</span>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Open Graph</th>
+                                                        <td>
+                                                            @php
+                                                                $ogTags = collect($check->onpage['og_tags'] ?? [])->filter();
+                                                            @endphp
+                                                            @if ($ogTags->isEmpty())
+                                                                <span class="text-secondary">yok</span>
+                                                            @else
+                                                                @foreach ($ogTags as $key => $value)
+                                                                    <span class="badge bg-azure-lt">{{ $key }}</span>
+                                                                @endforeach
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Twitter Card</th>
+                                                        <td>{{ $check->onpage['twitter_card'] ?? '-' }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Yapısal veri (Schema.org)</th>
+                                                        <td>
+                                                            @php
+                                                                $schemaTypes = $check->onpage['schema_types'] ?? ($check->onpage['has_structured_data'] ?? false ? ['(tip tespit edilemedi)'] : []);
+                                                            @endphp
+                                                            @if (empty($schemaTypes))
+                                                                <span class="text-secondary">yok</span>
+                                                            @else
+                                                                @foreach ($schemaTypes as $type)
+                                                                    <span class="badge {{ in_array($type, $check->onpage['deprecated_schema_types'] ?? []) ? 'bg-warning-lt' : 'bg-azure-lt' }}">{{ $type }}</span>
+                                                                @endforeach
+                                                            @endif
+                                                        </td>
+                                                    </tr>
                                                 </table>
                                             </div>
                                         </div>

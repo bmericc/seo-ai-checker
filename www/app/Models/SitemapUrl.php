@@ -22,6 +22,9 @@ class SitemapUrl extends Model
         'lighthouse_raw',
         'lighthouse_error',
         'lighthouse_checked_at',
+        'onpage_data',
+        'onpage_error',
+        'onpage_checked_at',
     ];
 
     protected $casts = [
@@ -30,6 +33,8 @@ class SitemapUrl extends Model
         'removed_at' => 'datetime',
         'lighthouse_raw' => 'array',
         'lighthouse_checked_at' => 'datetime',
+        'onpage_data' => 'array',
+        'onpage_checked_at' => 'datetime',
     ];
 
     public function domain(): BelongsTo
@@ -45,5 +50,10 @@ class SitemapUrl extends Model
     public function isLighthouseChecked(): bool
     {
         return $this->lighthouse_checked_at !== null;
+    }
+
+    public function isOnPageChecked(): bool
+    {
+        return $this->onpage_checked_at !== null;
     }
 }

@@ -283,7 +283,7 @@
                         <span class="badge bg-warning-lt">{{ $sitemapUrlCounts['removed'] }} kaldırıldı</span>
                     @endif
                     <a href="{{ route('domains.lighthouse-report', $domain) }}" class="btn btn-sm btn-outline-primary">
-                        <i class="ti ti-gauge icon"></i> Lighthouse Raporu
+                        <i class="ti ti-gauge icon"></i> Sayfa Raporu
                     </a>
                 </div>
             </div>
@@ -405,7 +405,7 @@
                             @endphp
                             <tr>
                                 <td><a href="{{ route('keywords.show', $kw) }}" class="fw-medium">{{ $kw->keyword }}</a></td>
-                                <td class="text-secondary">{{ $kw->url ?: ('https://' . $domain->domain . '/') }}</td>
+                                <td class="text-secondary">{{ $kw->url ?: $domain->rootUrl() }}</td>
                                 <td>
                                     @if (!$last)
                                         <span class="text-secondary">-</span>

@@ -7,7 +7,10 @@ namespace App\Services\OnPage;
 final class OnPageSeoResult
 {
     /**
-     * @param string[] $h1s
+     * @param  string[]  $h1s
+     * @param  array<string, ?string>  $ogTags  og:title/og:description/og:image/og:type/og:url => deger (yoksa null)
+     * @param  string[]  $schemaTypes  Sayfada bulunan tum JSON-LD @type degerleri (tekil, sirali)
+     * @param  string[]  $deprecatedSchemaTypes  $schemaTypes icinde bilinen "kullanilmamasi gereken" tiplerin alt kumesi
      */
     public function __construct(
         public readonly string $url,
@@ -28,6 +31,12 @@ final class OnPageSeoResult
         public readonly int $externalLinks,
         public readonly bool $hasStructuredData,
         public readonly float $fetchTimeMs,
+        public readonly string $canonicalStatus = 'missing',
+        public readonly bool $headingHierarchySkip = false,
+        public readonly array $ogTags = [],
+        public readonly ?string $twitterCard = null,
+        public readonly array $schemaTypes = [],
+        public readonly array $deprecatedSchemaTypes = [],
     ) {
     }
 
@@ -39,5 +48,10 @@ final class OnPageSeoResult
     public function descriptionLength(): int
     {
         return $this->metaDescription !== null ? mb_strlen($this->metaDescription) : 0;
+    }
+
+    public function h1Count(): int
+    {
+        return count($this->h1s);
     }
 }

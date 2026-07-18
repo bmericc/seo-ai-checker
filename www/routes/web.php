@@ -43,6 +43,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/domains/{domain}/keyword-suggestions/dismiss', [DomainController::class, 'dismissKeywordSuggestion'])->name('domains.keyword-suggestions.dismiss');
     Route::get('/domains/{domain}/lighthouse-report', [LighthouseReportController::class, 'show'])->name('domains.lighthouse-report');
     Route::post('/domains/{domain}/lighthouse-report/start', [LighthouseReportController::class, 'start'])->name('domains.lighthouse-report.start');
+    Route::post('/domains/{domain}/lighthouse-report/start-onpage', [LighthouseReportController::class, 'startOnPage'])->name('domains.lighthouse-report.start-onpage');
 
     Route::post('/domains/{domain}/keywords', [KeywordController::class, 'store'])->name('keywords.store');
     Route::get('/keywords/{keyword}', [KeywordController::class, 'show'])->name('keywords.show');

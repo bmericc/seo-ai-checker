@@ -10,6 +10,19 @@ use Symfony\Component\DomCrawler\Crawler;
 
 final class OnPageSeoAnalyzer
 {
+    private const OG_PROPERTIES = ['og:title', 'og:description', 'og:image', 'og:type', 'og:url'];
+
+    /**
+     * Schema.org'un kendisi "deprecated" olarak isaretlemez, ancak bu tipler
+     * yaygin WordPress SEO eklentilerinin otomatik ekledigi, hicbir gercek
+     * bilgi tasimayan ve modern rich-result kilavuzlarinda onerilmeyen
+     * "sayfa iskeleti" tipleridir (header/footer/sidebar/reklam alani);
+     * SEO araclari bunlari genelde gurultu/atik isaretleme olarak flagler.
+     */
+    private const DEPRECATED_SCHEMA_TYPES = [
+        'WPHeader', 'WPFooter', 'WPSideBar', 'WPAdBlock', 'WebPageElement',
+    ];
+
     public function __construct(private readonly Client $client)
     {
     }
@@ -88,7 +101,13 @@ final class OnPageSeoAnalyzer
             }
         }
 
-        $hasStructuredData = $crawler->filter('script[type="application/ld+json"]')->count() > 0;
+        $schemaTypes = $this->schemaTypes($crawler);
+        $deprecatedSchemaTypes = array_values(array_intersect($schemaTypes, self::DEPRECATED_SCHEMA_TYPES));
+
+        $ogTags = [];
+        foreach (self::OG_PROPERTIES as $property) {
+            $ogTags[$property] = $this->metaProperty($crawler, $property);
+        }
 
         return new OnPageSeoResult(
             url: $url,
@@ -107,8 +126,14 @@ final class OnPageSeoAnalyzer
             imagesMissingAlt: $imagesMissingAlt,
             internalLinks: $internalLinks,
             externalLinks: $externalLinks,
-            hasStructuredData: $hasStructuredData,
+            hasStructuredData: $schemaTypes !== [],
             fetchTimeMs: round($fetchTimeMs, 1),
+            canonicalStatus: $this->canonicalStatus($canonical, $url),
+            headingHierarchySkip: $this->hasHeadingHierarchySkip($crawler),
+            ogTags: $ogTags,
+            twitterCard: $this->metaContent($crawler, 'twitter:card'),
+            schemaTypes: $schemaTypes,
+            deprecatedSchemaTypes: $deprecatedSchemaTypes,
         );
     }
 
@@ -128,7 +153,19 @@ final class OnPageSeoAnalyzer
 
         $content = $node->first()->attr('content');
 
-        return $content !== null ? trim($content) : null;
+        return $content !== null && trim($content) !== '' ? trim($content) : null;
+    }
+
+    private function metaProperty(Crawler $crawler, string $property): ?string
+    {
+        $node = $crawler->filter(sprintf('meta[property="%s"]', $property));
+        if ($node->count() === 0) {
+            return null;
+        }
+
+        $content = $node->first()->attr('content');
+
+        return $content !== null && trim($content) !== '' ? trim($content) : null;
     }
 
     private function linkHref(Crawler $crawler, string $rel): ?string
@@ -136,6 +173,108 @@ final class OnPageSeoAnalyzer
         $node = $crawler->filter(sprintf('link[rel="%s"]', $rel));
 
         return $node->count() > 0 ? $node->first()->attr('href') : null;
+    }
+
+    /**
+     * @return 'missing'|'self'|'different'
+     */
+    private function canonicalStatus(?string $canonical, string $pageUrl): string
+    {
+        if ($canonical === null || trim($canonical) === '') {
+            return 'missing';
+        }
+
+        $absoluteCanonical = $this->toAbsoluteUrl($canonical, $pageUrl) ?? $canonical;
+
+        return $this->normalizeUrlForComparison($absoluteCanonical) === $this->normalizeUrlForComparison($pageUrl)
+            ? 'self'
+            : 'different';
+    }
+
+    private function normalizeUrlForComparison(string $url): string
+    {
+        $parts = parse_url($url);
+        $host = strtolower($parts['host'] ?? '');
+        $path = rtrim($parts['path'] ?? '/', '/');
+
+        return $host . ($path === '' ? '/' : $path);
+    }
+
+    /**
+     * h1-h6 basliklarini dokuman sirasina gore dolasip bir seviyeden
+     * digerine (ornegin h2'den dogrudan h4'e) atlama olup olmadigini tespit
+     * eder. Geriye donus (h3 -> h2) normaldir, sadece ileri atlamalar
+     * isaretlenir.
+     */
+    private function hasHeadingHierarchySkip(Crawler $crawler): bool
+    {
+        $levels = $crawler->filter('h1, h2, h3, h4, h5, h6')->each(
+            static fn (Crawler $node) => (int) substr($node->nodeName(), 1)
+        );
+
+        $previous = null;
+        foreach ($levels as $level) {
+            if ($previous !== null && $level > $previous + 1) {
+                return true;
+            }
+            $previous = $level;
+        }
+
+        return false;
+    }
+
+    /**
+     * @return string[]
+     */
+    private function schemaTypes(Crawler $crawler): array
+    {
+        $types = [];
+
+        foreach ($crawler->filter('script[type="application/ld+json"]') as $node) {
+            $data = json_decode($node->textContent ?? '', true);
+            if (!is_array($data)) {
+                continue;
+            }
+
+            foreach ($this->extractTypesFromJsonLd($data) as $type) {
+                $types[$type] = true;
+            }
+        }
+
+        return array_keys($types);
+    }
+
+    /**
+     * @param  array<mixed>  $data
+     * @return string[]
+     */
+    private function extractTypesFromJsonLd(array $data): array
+    {
+        // JSON-LD ya tek bir nesne, ya bir nesne listesi, ya da "@graph"
+        // altinda bir nesne listesi olabilir.
+        $nodes = isset($data['@graph']) && is_array($data['@graph'])
+            ? $data['@graph']
+            : (array_is_list($data) ? $data : [$data]);
+
+        $types = [];
+        foreach ($nodes as $node) {
+            if (!is_array($node) || !isset($node['@type'])) {
+                continue;
+            }
+
+            $type = $node['@type'];
+            if (is_string($type)) {
+                $types[] = $type;
+            } elseif (is_array($type)) {
+                foreach ($type as $t) {
+                    if (is_string($t)) {
+                        $types[] = $t;
+                    }
+                }
+            }
+        }
+
+        return $types;
     }
 
     private function toAbsoluteUrl(string $href, string $baseUrl): ?string

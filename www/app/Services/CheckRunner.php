@@ -57,6 +57,12 @@ final class CheckRunner
                 'external_links' => $onPage->externalLinks,
                 'has_structured_data' => $onPage->hasStructuredData,
                 'fetch_time_ms' => $onPage->fetchTimeMs,
+                'canonical_status' => $onPage->canonicalStatus,
+                'heading_hierarchy_skip' => $onPage->headingHierarchySkip,
+                'og_tags' => $onPage->ogTags,
+                'twitter_card' => $onPage->twitterCard,
+                'schema_types' => $onPage->schemaTypes,
+                'deprecated_schema_types' => $onPage->deprecatedSchemaTypes,
             ];
         } catch (GuzzleException $e) {
             $onPageError = sprintf('On-page analiz basarisiz: %s', $e->getMessage());

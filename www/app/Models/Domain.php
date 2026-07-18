@@ -42,9 +42,21 @@ class Domain extends Model
         return $this->hasOne(DomainCheck::class)->latestOfMany();
     }
 
+    /**
+     * Girilen domain'in kok URL'i. Bilinen bir kalici (301/308) yonlendirme
+     * varsa (bkz. CanonicalHostChecker, DomainCheck.canonical_host) girilen
+     * domain yerine gercek trafigin gittigi host kullanilir - ornegin
+     * "domain.com" yerine "www.domain.com". Site kontrolu hic
+     * calistirilmadiysa (kanonik host henuz bilinmiyorsa) girilen domain'e
+     * geri doner. Sistemde "URL girilmediginde" varsayilan hedef her zaman
+     * budur (bkz. Keyword::targetUrl()).
+     */
     public function rootUrl(): string
     {
-        return sprintf('https://%s/', $this->domain);
+        $canonicalHost = $this->latestDomainCheck?->canonical_host['canonical_host'] ?? null;
+        $host = is_string($canonicalHost) && $canonicalHost !== '' ? $canonicalHost : $this->domain;
+
+        return sprintf('https://%s/', $host);
     }
 
     public function dismissKeywordSuggestion(string $phrase): void

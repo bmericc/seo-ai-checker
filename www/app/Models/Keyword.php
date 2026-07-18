@@ -30,7 +30,7 @@ class Keyword extends Model
 
     public function targetUrl(): string
     {
-        return $this->url ?: sprintf('https://%s/', $this->domain->domain);
+        return $this->url ?: $this->domain->rootUrl();
     }
 
     public function isVisibleTo(?User $user): bool
