@@ -2,8 +2,12 @@
 
 namespace App\Providers;
 
+use App\Services\Bing\BingBacklinksChecker;
 use App\Services\CanonicalHost\CanonicalHostChecker;
 use App\Services\Crux\CrUxChecker;
+use App\Services\Ga4\Ga4Checker;
+use App\Services\Google\GoogleTokenService;
+use App\Services\Gsc\GscChecker;
 use App\Services\Keywords\KeywordSuggester;
 use App\Services\Lighthouse\PageSpeedInsightsClient;
 use App\Services\Llms\LlmsTxtChecker;
@@ -12,6 +16,7 @@ use App\Services\Robots\RobotsTxtChecker;
 use App\Services\Serp\GoogleRequestThrottle;
 use App\Services\Security\SecurityHeadersChecker;
 use App\Services\Serp\GoogleSerpScraper;
+use App\Services\SharedDomainCheckLookup;
 use App\Services\Sitemap\SitemapChecker;
 use App\Services\Sitemap\SitemapUrlSync;
 use App\Support\HttpClientFactory;
@@ -68,7 +73,21 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->singleton(CrUxChecker::class, fn ($app) => new CrUxChecker($app->make(Client::class), config('seo.crux.api_key')));
 
+        $this->app->singleton(GscChecker::class, fn ($app) => new GscChecker($app->make(Client::class)));
+
+        $this->app->singleton(Ga4Checker::class, fn ($app) => new Ga4Checker($app->make(Client::class)));
+
+        $this->app->singleton(BingBacklinksChecker::class, fn ($app) => new BingBacklinksChecker($app->make(Client::class), config('seo.bing.api_key')));
+
+        $this->app->singleton(GoogleTokenService::class, fn ($app) => new GoogleTokenService(
+            $app->make(Client::class),
+            config('services.google.client_id'),
+            config('services.google.client_secret'),
+        ));
+
         $this->app->singleton(SitemapUrlSync::class, fn () => new SitemapUrlSync());
+
+        $this->app->singleton(SharedDomainCheckLookup::class, fn () => new SharedDomainCheckLookup());
 
         $this->app->singleton(KeywordSuggester::class, fn ($app) => new KeywordSuggester($app->make(Client::class)));
 

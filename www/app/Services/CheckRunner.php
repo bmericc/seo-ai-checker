@@ -63,6 +63,9 @@ final class CheckRunner
                 'twitter_card' => $onPage->twitterCard,
                 'schema_types' => $onPage->schemaTypes,
                 'deprecated_schema_types' => $onPage->deprecatedSchemaTypes,
+                'hreflang_tags' => $onPage->hreflangTags,
+                'hreflang_issues' => $onPage->hreflangIssues,
+                'image_stats' => $onPage->imageStats,
             ];
         } catch (GuzzleException $e) {
             $onPageError = sprintf('On-page analiz basarisiz: %s', $e->getMessage());

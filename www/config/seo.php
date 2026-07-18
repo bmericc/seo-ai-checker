@@ -67,6 +67,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Bing Webmaster Tools - backlink verisi
+    |--------------------------------------------------------------------------
+    | Sadece bu API key'in bagli oldugu Bing Webmaster hesabinda ONCEDEN
+    | DOGRULANMIS siteler icin veri doner - genel/rakip backlink indeksi
+    | degildir. https://www.bing.com/webmasters -> Settings -> API Access.
+    */
+    'bing' => [
+        'api_key' => env('BING_WEBMASTER_API_KEY'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Erisim kontrolu
     |--------------------------------------------------------------------------
     | Herhangi bir Google hesabi giris yapip kayit olusturabilir, ancak yeni

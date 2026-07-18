@@ -44,12 +44,26 @@
                     $securityHeaders = $domainCheck->security_headers ?? [];
                     $canonicalHostData = $domainCheck->canonical_host ?? [];
                     $cruxData = $domainCheck->crux ?? [];
+                    $gscData = $domainCheck->gsc ?? [];
+                    $ga4Data = $domainCheck->ga4 ?? [];
+                    $bingData = $domainCheck->bing_backlinks ?? [];
                 @endphp
 
                 <div class="text-secondary small mb-2">Son kontrol: {{ $domainCheck->created_at->format('Y-m-d H:i:s') }}</div>
                 <div class="mb-3">
                     @include('domains._check-badges', ['domainCheck' => $domainCheck])
                 </div>
+
+                @if (!empty($driftChanges))
+                    <div class="alert alert-warning">
+                        <div class="fw-medium mb-1">Bir önceki kontrole göre değişenler:</div>
+                        <ul class="mb-0 ps-3">
+                            @foreach ($driftChanges as $change)
+                                <li>{{ $change }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
 
                 <div class="accordion" id="site-check-accordion">
                     <div class="accordion-item">
@@ -100,9 +114,9 @@
                                 @if ($sitemapData['found'] ?? false)
                                     @if ($sitemapData['is_valid_xml'] ?? false)
                                         <p>
-                                            {{ $sitemapData['is_sitemap_index'] ? 'Sitemap index' : 'Sitemap' }},
-                                            {{ $sitemapData['url_count'] }}
-                                            {{ $sitemapData['is_sitemap_index'] ? 'alt-sitemap' : 'URL' }} içeriyor.
+                                            {{ ($sitemapData['is_sitemap_index'] ?? false) ? 'Sitemap index' : 'Sitemap' }},
+                                            {{ $sitemapData['url_count'] ?? 0 }}
+                                            {{ ($sitemapData['is_sitemap_index'] ?? false) ? 'alt-sitemap' : 'URL' }} içeriyor.
                                         </p>
                                     @else
                                         <p class="text-danger">{{ $sitemapData['error'] ?? 'Geçersiz XML.' }}</p>
@@ -261,6 +275,137 @@
                                         @if ($cruxData['collection_period'] ?? null)
                                             &middot; Veri periyodu: {{ $cruxData['collection_period'] }}
                                         @endif
+                                    </p>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ac-gsc">
+                                Search Console
+                            </button>
+                        </h2>
+                        <div id="ac-gsc" class="accordion-collapse collapse" data-bs-parent="#site-check-accordion">
+                            <div class="accordion-body">
+                                @if (!auth()->user()->hasGoogleOfflineAccess())
+                                    <p class="text-secondary mb-0">
+                                        Google hesabınız bağlı değil. Search Console verisi için üstteki
+                                        "Google hesabını bağla" bağlantısından tekrar giriş yapın.
+                                    </p>
+                                @elseif ($gscData['error'] ?? null)
+                                    <p class="text-danger mb-0">Search Console sorgulanırken hata oluştu: {{ $gscData['error'] }}</p>
+                                @elseif (!($gscData['verified'] ?? false))
+                                    <p class="text-secondary mb-0">
+                                        Bu domain, bağlı Google hesabınızın Search Console'unda doğrulanmış bir
+                                        mülk (property) olarak bulunamadı.
+                                    </p>
+                                @else
+                                    <div class="table-responsive">
+                                        <table class="table table-vcenter">
+                                            <tbody>
+                                                <tr><td>Tıklama</td><td>{{ number_format($gscData['clicks'] ?? 0) }}</td></tr>
+                                                <tr><td>Gösterim</td><td>{{ number_format($gscData['impressions'] ?? 0) }}</td></tr>
+                                                <tr><td>CTR</td><td>{{ number_format((($gscData['ctr'] ?? 0) * 100), 2) }}%</td></tr>
+                                                <tr><td>Ortalama pozisyon</td><td>{{ $gscData['average_position'] ? number_format($gscData['average_position'], 1) : '-' }}</td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <p class="text-secondary mb-0">
+                                        Mülk: <code>{{ $gscData['site_url'] }}</code>
+                                        @if (($gscData['period_start'] ?? null) && ($gscData['period_end'] ?? null))
+                                            &middot; {{ $gscData['period_start'] }} — {{ $gscData['period_end'] }}
+                                        @endif
+                                    </p>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ac-ga4">
+                                Google Analytics 4
+                            </button>
+                        </h2>
+                        <div id="ac-ga4" class="accordion-collapse collapse" data-bs-parent="#site-check-accordion">
+                            <div class="accordion-body">
+                                @if (!auth()->user()->hasGoogleOfflineAccess())
+                                    <p class="text-secondary mb-0">
+                                        Google hesabınız bağlı değil. GA4 verisi için üstteki
+                                        "Google hesabını bağla" bağlantısından tekrar giriş yapın.
+                                    </p>
+                                @elseif ($ga4Data['error'] ?? null)
+                                    <p class="text-danger mb-0">GA4 sorgulanırken hata oluştu: {{ $ga4Data['error'] }}</p>
+                                @elseif (empty($ga4Data['property_id']))
+                                    <p class="text-secondary mb-2">GA4 Property ID girilmedi.</p>
+                                @else
+                                    <div class="table-responsive">
+                                        <table class="table table-vcenter">
+                                            <tbody>
+                                                <tr><td>Toplam oturum (28 gün)</td><td>{{ number_format($ga4Data['total_sessions'] ?? 0) }}</td></tr>
+                                                <tr><td>Organik arama oturumu</td><td>{{ number_format($ga4Data['organic_sessions'] ?? 0) }}</td></tr>
+                                                <tr><td>Aktif kullanıcı</td><td>{{ number_format($ga4Data['active_users'] ?? 0) }}</td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <p class="text-secondary mb-0">Property ID: <code>{{ $ga4Data['property_id'] }}</code></p>
+                                @endif
+                                <form method="post" action="{{ route('domains.ga4-property.update', $domain) }}" class="d-flex gap-2 align-items-end mt-3">
+                                    @csrf
+                                    @method('PATCH')
+                                    <div class="flex-grow-1">
+                                        <label class="form-label">GA4 Property ID</label>
+                                        <input type="text" name="ga4_property_id" class="form-control" value="{{ $domain->ga4_property_id }}" placeholder="ör. 123456789">
+                                        <small class="form-hint">GA4 Yönetici paneli &rarr; Mülk ayarları'ndan kopyalayın.</small>
+                                    </div>
+                                    <button type="submit" class="btn btn-outline-primary">Kaydet</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ac-bing">
+                                Backlink (Bing Webmaster)
+                            </button>
+                        </h2>
+                        <div id="ac-bing" class="accordion-collapse collapse" data-bs-parent="#site-check-accordion">
+                            <div class="accordion-body">
+                                @if (!($bingData['configured'] ?? false))
+                                    <p class="text-secondary mb-0">
+                                        Bing Webmaster API anahtarı tanımlı değil (<code>BING_WEBMASTER_API_KEY</code>).
+                                    </p>
+                                @elseif ($bingData['error'] ?? null)
+                                    <p class="text-danger mb-0">Bing Webmaster sorgulanırken hata oluştu: {{ $bingData['error'] }}</p>
+                                @elseif (!($bingData['verified'] ?? false))
+                                    <p class="text-secondary mb-0">
+                                        Bu domain, yapılandırılmış Bing Webmaster hesabında doğrulanmış bir site
+                                        olarak bulunamadı. Not: bu, genel bir backlink indeksi değildir — yalnızca
+                                        o Bing Webmaster hesabında doğrulanmış siteler için veri döner.
+                                    </p>
+                                @else
+                                    <div class="table-responsive">
+                                        <table class="table table-vcenter">
+                                            <thead><tr><th>Sayfa</th><th>Inbound link sayısı</th></tr></thead>
+                                            <tbody>
+                                            @foreach ($bingData['top_pages'] ?? [] as $page)
+                                                <tr>
+                                                    <td class="text-truncate" style="max-width: 420px;">
+                                                        <a href="{{ $page['url'] }}" target="_blank" rel="noopener">{{ $page['url'] }}</a>
+                                                    </td>
+                                                    <td>{{ $page['count'] }}</td>
+                                                </tr>
+                                            @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <p class="text-secondary mb-0">
+                                        Toplam {{ number_format($bingData['total_links'] ?? 0) }} inbound link,
+                                        {{ number_format($bingData['pages_with_links'] ?? 0) }} sayfaya dağılmış.
+                                        Mülk: <code>{{ $bingData['site_url'] }}</code>
                                     </p>
                                 @endif
                             </div>

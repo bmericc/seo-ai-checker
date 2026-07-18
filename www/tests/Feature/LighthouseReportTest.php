@@ -145,6 +145,37 @@ class LighthouseReportTest extends TestCase
         $response->assertSee('WPHeader');
     }
 
+    public function test_report_page_shows_hreflang_and_image_issues(): void
+    {
+        $user = User::factory()->create(['approved_at' => now()]);
+        $domain = Domain::query()->create(['domain' => 'example.com', 'user_id' => $user->id]);
+        SitemapUrl::query()->create([
+            'domain_id' => $domain->id,
+            'url' => 'https://example.com/checked',
+            'first_seen_at' => now(),
+            'last_seen_at' => now(),
+            'onpage_data' => [
+                'canonical_status' => 'self',
+                'h1_count' => 1,
+                'heading_hierarchy_skip' => false,
+                'og_tags' => ['og:title' => 'x'],
+                'schema_types' => [],
+                'deprecated_schema_types' => [],
+                'hreflang_tags' => ['en' => 'https://example.com/checked'],
+                'hreflang_issues' => ['x-default eksik'],
+                'image_stats' => ['total' => 3, 'missing_alt' => 2, 'missing_dimensions' => 1, 'not_lazy' => 0, 'legacy_format' => 0],
+            ],
+            'onpage_checked_at' => now(),
+        ]);
+
+        $response = $this->actingAs($user)->get(route('domains.lighthouse-report', $domain));
+
+        $response->assertOk();
+        $response->assertSee('1 sorun');
+        $response->assertSee('2 alt eksik');
+        $response->assertSee('1 boyut eksik');
+    }
+
     public function test_non_admin_cannot_start_an_onpage_scan_on_another_users_domain(): void
     {
         $user = User::factory()->create(['approved_at' => now()]);

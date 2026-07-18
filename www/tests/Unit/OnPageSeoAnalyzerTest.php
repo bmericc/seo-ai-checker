@@ -118,4 +118,81 @@ class OnPageSeoAnalyzerTest extends TestCase
 
         $this->assertSame(2, $result->h1Count());
     }
+
+    public function test_valid_hreflang_set_with_self_reference_and_x_default_has_no_issues(): void
+    {
+        $analyzer = $this->analyzerWithHtml(<<<'HTML'
+            <html><head>
+                <link rel="alternate" hreflang="en" href="https://example.com/page">
+                <link rel="alternate" hreflang="tr-TR" href="https://example.com/tr/page">
+                <link rel="alternate" hreflang="x-default" href="https://example.com/page">
+            </head><body></body></html>
+            HTML);
+
+        $result = $analyzer->analyze('https://example.com/page');
+
+        $this->assertSame('https://example.com/page', $result->hreflangTags['en']);
+        $this->assertSame([], $result->hreflangIssues);
+    }
+
+    public function test_invalid_hreflang_code_is_flagged(): void
+    {
+        $analyzer = $this->analyzerWithHtml('<html><head><link rel="alternate" hreflang="turkish" href="https://example.com/tr"></head><body></body></html>');
+
+        $result = $analyzer->analyze('https://example.com/page');
+
+        $this->assertTrue(collect($result->hreflangIssues)->contains(fn ($i) => str_contains($i, 'turkish')));
+    }
+
+    public function test_duplicate_hreflang_code_is_flagged(): void
+    {
+        $analyzer = $this->analyzerWithHtml(<<<'HTML'
+            <html><head>
+                <link rel="alternate" hreflang="en" href="https://example.com/page">
+                <link rel="alternate" hreflang="en" href="https://example.com/en-gb/page">
+            </head><body></body></html>
+            HTML);
+
+        $result = $analyzer->analyze('https://example.com/page');
+
+        $this->assertTrue(collect($result->hreflangIssues)->contains(fn ($i) => str_contains($i, 'Yinelenen')));
+    }
+
+    public function test_missing_self_reference_in_hreflang_set_is_flagged(): void
+    {
+        $analyzer = $this->analyzerWithHtml('<html><head><link rel="alternate" hreflang="tr" href="https://example.com/tr/page"></head><body></body></html>');
+
+        $result = $analyzer->analyze('https://example.com/page');
+
+        $this->assertTrue(collect($result->hreflangIssues)->contains(fn ($i) => str_contains($i, 'self-reference')));
+    }
+
+    public function test_no_hreflang_tags_means_no_issues(): void
+    {
+        $analyzer = $this->analyzerWithHtml('<html><head></head><body></body></html>');
+
+        $result = $analyzer->analyze('https://example.com/page');
+
+        $this->assertSame([], $result->hreflangTags);
+        $this->assertSame([], $result->hreflangIssues);
+    }
+
+    public function test_image_stats_are_collected(): void
+    {
+        $analyzer = $this->analyzerWithHtml(<<<'HTML'
+            <html><body>
+                <img src="/a.webp" alt="ok" width="100" height="100" loading="lazy">
+                <img src="/b.jpg" width="50" height="50">
+                <img src="/c.png">
+            </body></html>
+            HTML);
+
+        $result = $analyzer->analyze('https://example.com/');
+
+        $this->assertSame(3, $result->imageStats['total']);
+        $this->assertSame(2, $result->imageStats['missing_alt']);
+        $this->assertSame(1, $result->imageStats['missing_dimensions']);
+        $this->assertSame(2, $result->imageStats['not_lazy']);
+        $this->assertSame(2, $result->imageStats['legacy_format']);
+    }
 }

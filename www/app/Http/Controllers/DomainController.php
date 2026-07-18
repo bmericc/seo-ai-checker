@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Domain;
 use App\Services\DomainCheckRunner;
+use App\Services\Drift\DomainCheckDrift;
 use App\Support\Domain as DomainHelper;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -65,10 +66,16 @@ class DomainController extends Controller
             ->limit(self::MAX_SITEMAP_URLS_DISPLAYED)
             ->get();
 
+        $recentChecks = $domain->domainChecks()->limit(2)->get();
+        $driftChanges = $recentChecks->count() === 2
+            ? (new DomainCheckDrift())->diff($recentChecks[0], $recentChecks[1])
+            : [];
+
         return view('domains.show', [
             'domain' => $domain,
             'sitemapUrls' => $sitemapUrls,
             'sitemapUrlCounts' => $sitemapUrlCounts,
+            'driftChanges' => $driftChanges,
         ]);
     }
 
@@ -105,5 +112,18 @@ class DomainController extends Controller
         return redirect()
             ->route('domains.show', $domain)
             ->with('flash', ['type' => 'success', 'message' => 'Oneri kaldirildi.']);
+    }
+
+    public function updateGa4Property(Request $request, Domain $domain): RedirectResponse
+    {
+        $this->ensureCanAccessDomain($request, $domain);
+
+        $data = $request->validate(['ga4_property_id' => ['nullable', 'string', 'max:64']]);
+
+        $domain->update(['ga4_property_id' => $data['ga4_property_id'] ?: null]);
+
+        return redirect()
+            ->route('domains.show', $domain)
+            ->with('flash', ['type' => 'success', 'message' => 'GA4 Property ID guncellendi.']);
     }
 }

@@ -14,9 +14,23 @@ use Laravel\Socialite\Two\InvalidStateException;
 
 class GoogleController extends Controller
 {
+    /**
+     * Search Console/GA4 API'lerini kullanabilmek icin standart Socialite
+     * girisine ek olarak "offline" erisim (refresh token) ve ilgili
+     * scope'lar istenir. "prompt=consent" olmadan Google, kullanici daha
+     * once onay verdiyse refresh token'i tekrar dondurmeyebilir.
+     */
+    private const GOOGLE_SCOPES = [
+        'https://www.googleapis.com/auth/webmasters.readonly',
+        'https://www.googleapis.com/auth/analytics.readonly',
+    ];
+
     public function redirect(): RedirectResponse
     {
-        return Socialite::driver('google')->redirect();
+        return Socialite::driver('google')
+            ->scopes(self::GOOGLE_SCOPES)
+            ->with(['access_type' => 'offline', 'prompt' => 'consent'])
+            ->redirect();
     }
 
     public function callback(): RedirectResponse|Response
@@ -48,6 +62,18 @@ class GoogleController extends Controller
                 'approved_at' => $user->approved_at ?? now(),
             ])->save();
         }
+
+        // Refresh token'i Google yalnizca ilk consent'te (ya da prompt=consent
+        // ile tekrar consent verildiginde) doner - donmediyse mevcut degeri
+        // koruyoruz, yoksa "Google hesabini bagla" akisi her seferinde
+        // kullaniciyi tekrar tekrar consent ekranina gonderir ama yine de
+        // eldeki refresh token'i sifirlamis oluruz.
+        $user->forceFill([
+            'google_id' => $googleUser->getId(),
+            'google_access_token' => $googleUser->token,
+            'google_refresh_token' => $googleUser->refreshToken ?: $user->google_refresh_token,
+            'google_token_expires_at' => $googleUser->expiresIn ? now()->addSeconds($googleUser->expiresIn) : $user->google_token_expires_at,
+        ])->save();
 
         Auth::login($user, remember: true);
         request()->session()->regenerate();

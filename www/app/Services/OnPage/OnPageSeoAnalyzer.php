@@ -74,9 +74,7 @@ final class OnPageSeoAnalyzer
             }
         }
 
-        $imagesMissingAlt = $crawler->filter('img')->reduce(
-            static fn (Crawler $img) => trim((string) $img->attr('alt')) === ''
-        )->count();
+        $imageStats = $this->imageStats($crawler);
 
         $pageHost = Domain::fromUrl($url);
         $internalLinks = 0;
@@ -109,6 +107,10 @@ final class OnPageSeoAnalyzer
             $ogTags[$property] = $this->metaProperty($crawler, $property);
         }
 
+        $hreflangTags = $this->hreflangTags($crawler);
+        $hreflangCodes = $this->hreflangLangCodes($crawler);
+        $hreflangIssues = $this->hreflangIssues($hreflangTags, $hreflangCodes, $url);
+
         return new OnPageSeoResult(
             url: $url,
             title: $title,
@@ -123,7 +125,7 @@ final class OnPageSeoAnalyzer
             keywordInTitle: $keywordInTitle,
             keywordInH1: $keywordInH1,
             keywordInDescription: $keywordInDescription,
-            imagesMissingAlt: $imagesMissingAlt,
+            imagesMissingAlt: $imageStats['missing_alt'],
             internalLinks: $internalLinks,
             externalLinks: $externalLinks,
             hasStructuredData: $schemaTypes !== [],
@@ -134,6 +136,9 @@ final class OnPageSeoAnalyzer
             twitterCard: $this->metaContent($crawler, 'twitter:card'),
             schemaTypes: $schemaTypes,
             deprecatedSchemaTypes: $deprecatedSchemaTypes,
+            hreflangTags: $hreflangTags,
+            hreflangIssues: $hreflangIssues,
+            imageStats: $imageStats,
         );
     }
 
@@ -275,6 +280,138 @@ final class OnPageSeoAnalyzer
         }
 
         return $types;
+    }
+
+    /**
+     * @return array<string, string> dil/bolge kodu (kucuk harf) => href (son gorulen kazanir)
+     */
+    private function hreflangTags(Crawler $crawler): array
+    {
+        $tags = [];
+        foreach ($crawler->filter('link[rel="alternate"][hreflang]') as $node) {
+            $lang = strtolower(trim((string) $node->getAttribute('hreflang')));
+            $href = trim((string) $node->getAttribute('href'));
+            if ($lang !== '' && $href !== '') {
+                $tags[$lang] = $href;
+            }
+        }
+
+        return $tags;
+    }
+
+    /**
+     * hreflangTags() ile ayni degil: yinelenen kodlari tespit edebilmek icin
+     * dedup edilmeden, dokumanda gorulen sirayla tum kodlari dondurur.
+     *
+     * @return string[]
+     */
+    private function hreflangLangCodes(Crawler $crawler): array
+    {
+        $codes = [];
+        foreach ($crawler->filter('link[rel="alternate"][hreflang]') as $node) {
+            $lang = strtolower(trim((string) $node->getAttribute('hreflang')));
+            if ($lang !== '') {
+                $codes[] = $lang;
+            }
+        }
+
+        return $codes;
+    }
+
+    /**
+     * @param  array<string, string>  $hreflangTags
+     * @param  string[]  $hreflangCodes
+     * @return string[]
+     */
+    private function hreflangIssues(array $hreflangTags, array $hreflangCodes, string $pageUrl): array
+    {
+        if ($hreflangTags === []) {
+            return [];
+        }
+
+        $issues = [];
+
+        // ISO 639-1/639-2 dil kodu, istege bagli "-BOLGE" veya "-Betimleme" eki; "x-default" ayrica kabul edilir.
+        $validPattern = '/^[a-z]{2,3}(-[a-z]{2}|-[a-z]{4})?$/i';
+        foreach (array_keys($hreflangTags) as $lang) {
+            if ($lang !== 'x-default' && !preg_match($validPattern, $lang)) {
+                $issues[] = sprintf('Geçersiz dil/bölge kodu: %s', $lang);
+            }
+        }
+
+        foreach (array_count_values($hreflangCodes) as $lang => $count) {
+            if ($count > 1) {
+                $issues[] = sprintf('Yinelenen hreflang kodu: %s (%d kez)', $lang, $count);
+            }
+        }
+
+        if (!isset($hreflangTags['x-default'])) {
+            $issues[] = "x-default eksik";
+        }
+
+        $hasSelfReference = false;
+        foreach ($hreflangTags as $lang => $href) {
+            if ($lang === 'x-default') {
+                continue;
+            }
+
+            $absoluteHref = $this->toAbsoluteUrl($href, $pageUrl) ?? $href;
+            if ($this->normalizeUrlForComparison($absoluteHref) === $this->normalizeUrlForComparison($pageUrl)) {
+                $hasSelfReference = true;
+                break;
+            }
+        }
+        if (!$hasSelfReference) {
+            $issues[] = 'Sayfa kendi hreflang kümesinde yok (self-reference eksik)';
+        }
+
+        return $issues;
+    }
+
+    /**
+     * @return array{total: int, missing_alt: int, missing_dimensions: int, not_lazy: int, legacy_format: int}
+     */
+    private function imageStats(Crawler $crawler): array
+    {
+        $legacyExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp'];
+
+        $total = 0;
+        $missingAlt = 0;
+        $missingDimensions = 0;
+        $notLazy = 0;
+        $legacyFormat = 0;
+
+        foreach ($crawler->filter('img') as $node) {
+            $total++;
+
+            if (trim((string) $node->getAttribute('alt')) === '') {
+                $missingAlt++;
+            }
+
+            $width = trim((string) $node->getAttribute('width'));
+            $height = trim((string) $node->getAttribute('height'));
+            if ($width === '' && $height === '') {
+                $missingDimensions++;
+            }
+
+            if (strtolower(trim((string) $node->getAttribute('loading'))) !== 'lazy') {
+                $notLazy++;
+            }
+
+            $src = $node->getAttribute('src') ?: $node->getAttribute('data-src') ?: '';
+            $extension = strtolower(pathinfo(parse_url($src, PHP_URL_PATH) ?: '', PATHINFO_EXTENSION));
+            if (in_array($extension, $legacyExtensions, true)) {
+                $legacyFormat++;
+            }
+        }
+
+        return [
+            'total' => $total,
+            'missing_alt' => $missingAlt,
+            'missing_dimensions' => $missingDimensions,
+            'not_lazy' => $notLazy,
+            'legacy_format' => $legacyFormat,
+        ];
     }
 
     private function toAbsoluteUrl(string $href, string $baseUrl): ?string

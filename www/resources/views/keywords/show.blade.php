@@ -190,6 +190,50 @@
                                                             @endif
                                                         </td>
                                                     </tr>
+                                                    <tr>
+                                                        <th>hreflang</th>
+                                                        <td>
+                                                            @php
+                                                                $hreflangTags = $check->onpage['hreflang_tags'] ?? [];
+                                                                $hreflangIssues = $check->onpage['hreflang_issues'] ?? [];
+                                                            @endphp
+                                                            @if (empty($hreflangTags))
+                                                                <span class="text-secondary">yok</span>
+                                                            @else
+                                                                @foreach (array_keys($hreflangTags) as $lang)
+                                                                    <span class="badge bg-azure-lt">{{ $lang }}</span>
+                                                                @endforeach
+                                                                @foreach ($hreflangIssues as $issue)
+                                                                    <div class="text-warning small">{{ $issue }}</div>
+                                                                @endforeach
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Görseller</th>
+                                                        <td>
+                                                            @php
+                                                                $imgStats = $check->onpage['image_stats'] ?? null;
+                                                            @endphp
+                                                            @if ($imgStats === null)
+                                                                <span class="text-secondary">-</span>
+                                                            @else
+                                                                {{ $imgStats['total'] }} görsel
+                                                                @if ($imgStats['missing_alt'] > 0)
+                                                                    <span class="badge bg-warning-lt">{{ $imgStats['missing_alt'] }} alt eksik</span>
+                                                                @endif
+                                                                @if ($imgStats['missing_dimensions'] > 0)
+                                                                    <span class="badge bg-warning-lt">{{ $imgStats['missing_dimensions'] }} boyut eksik</span>
+                                                                @endif
+                                                                @if ($imgStats['not_lazy'] > 0)
+                                                                    <span class="badge bg-secondary-lt">{{ $imgStats['not_lazy'] }} lazy-load değil</span>
+                                                                @endif
+                                                                @if ($imgStats['legacy_format'] > 0)
+                                                                    <span class="badge bg-secondary-lt">{{ $imgStats['legacy_format'] }} eski format (jpg/png/gif)</span>
+                                                                @endif
+                                                            @endif
+                                                        </td>
+                                                    </tr>
                                                 </table>
                                             </div>
                                         </div>

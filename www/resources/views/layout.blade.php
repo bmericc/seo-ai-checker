@@ -105,6 +105,15 @@
 
         <div class="page-body">
             <div class="container-xl">
+                @auth
+                    @if (!auth()->user()->hasGoogleOfflineAccess())
+                        <div class="alert alert-info alert-dismissible" role="alert">
+                            Search Console ve GA4 verilerini görebilmek için Google hesabınızı yeniden bağlamanız gerekiyor.
+                            <a href="{{ route('google.redirect') }}" class="alert-link">Google hesabını bağla</a>
+                            <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                        </div>
+                    @endif
+                @endauth
                 @if (session('flash'))
                     <div class="alert alert-{{ session('flash')['type'] === 'error' ? 'danger' : 'success' }} alert-dismissible" role="alert">
                         {{ session('flash')['message'] }}

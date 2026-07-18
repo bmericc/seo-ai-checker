@@ -11,6 +11,9 @@ final class OnPageSeoResult
      * @param  array<string, ?string>  $ogTags  og:title/og:description/og:image/og:type/og:url => deger (yoksa null)
      * @param  string[]  $schemaTypes  Sayfada bulunan tum JSON-LD @type degerleri (tekil, sirali)
      * @param  string[]  $deprecatedSchemaTypes  $schemaTypes icinde bilinen "kullanilmamasi gereken" tiplerin alt kumesi
+     * @param  array<string, string>  $hreflangTags  dil/bolge kodu => href
+     * @param  string[]  $hreflangIssues  tespit edilen hreflang sorunlari (okunabilir mesajlar)
+     * @param  array{total: int, missing_alt: int, missing_dimensions: int, not_lazy: int, legacy_format: int}  $imageStats
      */
     public function __construct(
         public readonly string $url,
@@ -37,6 +40,9 @@ final class OnPageSeoResult
         public readonly ?string $twitterCard = null,
         public readonly array $schemaTypes = [],
         public readonly array $deprecatedSchemaTypes = [],
+        public readonly array $hreflangTags = [],
+        public readonly array $hreflangIssues = [],
+        public readonly array $imageStats = ['total' => 0, 'missing_alt' => 0, 'missing_dimensions' => 0, 'not_lazy' => 0, 'legacy_format' => 0],
     ) {
     }
 

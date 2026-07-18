@@ -17,6 +17,9 @@ class DomainCheck extends Model
         'security_headers',
         'canonical_host',
         'crux',
+        'gsc',
+        'ga4',
+        'bing_backlinks',
         'suggested_keywords',
     ];
 
@@ -27,6 +30,9 @@ class DomainCheck extends Model
         'security_headers' => 'array',
         'canonical_host' => 'array',
         'crux' => 'array',
+        'gsc' => 'array',
+        'ga4' => 'array',
+        'bing_backlinks' => 'array',
         'suggested_keywords' => 'array',
     ];
 

@@ -58,6 +58,8 @@ class LighthouseReportController extends Controller
             'wrong_h1_count' => $onPageChecked->filter(fn ($u) => ($u->onpage_data['h1_count'] ?? 1) !== 1)->count(),
             'heading_skips' => $onPageChecked->filter(fn ($u) => $u->onpage_data['heading_hierarchy_skip'] ?? false)->count(),
             'missing_og' => $onPageChecked->filter(fn ($u) => collect($u->onpage_data['og_tags'] ?? [])->filter()->isEmpty())->count(),
+            'hreflang_issues' => $onPageChecked->filter(fn ($u) => !empty($u->onpage_data['hreflang_issues'] ?? []))->count(),
+            'image_issues' => $onPageChecked->filter(fn ($u) => (($u->onpage_data['image_stats']['missing_alt'] ?? 0) + ($u->onpage_data['image_stats']['missing_dimensions'] ?? 0)) > 0)->count(),
         ];
 
         return view('domains.lighthouse-report', [

@@ -73,7 +73,35 @@
             </div>
         </div>
 
+        <div class="row row-cards mb-4">
+            <div class="col-6 col-md-3">
+                <div class="card card-sm">
+                    <div class="card-body text-center">
+                        <div class="text-secondary small">hreflang sorunu</div>
+                        <div class="h2 mb-0 {{ $onPageSummary['hreflang_issues'] > 0 ? 'text-warning' : '' }}">{{ $onPageSummary['hreflang_issues'] }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card card-sm">
+                    <div class="card-body text-center">
+                        <div class="text-secondary small">Görsel sorunu olan sayfa</div>
+                        <div class="h2 mb-0 {{ $onPageSummary['image_issues'] > 0 ? 'text-warning' : '' }}">{{ $onPageSummary['image_issues'] }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="card-title">Sayfa listesi ({{ $sitemapUrls->count() }})</h3>
+                <div class="card-actions">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#onpage-table">
+                        Göster / gizle
+                    </button>
+                </div>
+            </div>
+            <div class="collapse" id="onpage-table">
             <div class="table-responsive">
                 <table class="table card-table table-vcenter">
                     <thead>
@@ -83,6 +111,8 @@
                             <th>H1 / Hiyerarşi</th>
                             <th>Open Graph</th>
                             <th>Schema.org</th>
+                            <th>hreflang</th>
+                            <th>Görseller</th>
                             <th>Son kontrol</th>
                         </tr>
                     </thead>
@@ -93,12 +123,12 @@
                                     <a href="{{ $url->url }}" target="_blank" rel="noopener">{{ $url->url }}</a>
                                 </td>
                                 @if ($url->onpage_error)
-                                    <td colspan="4">
+                                    <td colspan="6">
                                         <span class="badge bg-danger-lt">hata</span>
                                         <span class="text-secondary small">{{ $url->onpage_error }}</span>
                                     </td>
                                 @elseif (!$url->isOnPageChecked())
-                                    <td colspan="4"><span class="badge bg-secondary-lt">bekliyor</span></td>
+                                    <td colspan="6"><span class="badge bg-secondary-lt">bekliyor</span></td>
                                 @else
                                     @php
                                         $op = $url->onpage_data ?? [];
@@ -144,12 +174,42 @@
                                             @endforeach
                                         @endif
                                     </td>
+                                    <td>
+                                        @php
+                                            $hreflangTags = $op['hreflang_tags'] ?? [];
+                                            $hreflangIssues = $op['hreflang_issues'] ?? [];
+                                        @endphp
+                                        @if (empty($hreflangTags))
+                                            <span class="text-secondary">yok</span>
+                                        @elseif (!empty($hreflangIssues))
+                                            <span class="badge bg-warning-lt">{{ count($hreflangIssues) }} sorun</span>
+                                        @else
+                                            <span class="badge bg-success-lt">{{ count($hreflangTags) }} dil</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @php
+                                            $imgStats = $op['image_stats'] ?? null;
+                                        @endphp
+                                        @if ($imgStats === null || $imgStats['total'] === 0)
+                                            <span class="text-secondary">-</span>
+                                        @else
+                                            {{ $imgStats['total'] }}
+                                            @if ($imgStats['missing_alt'] > 0)
+                                                <span class="badge bg-warning-lt">{{ $imgStats['missing_alt'] }} alt eksik</span>
+                                            @endif
+                                            @if ($imgStats['missing_dimensions'] > 0)
+                                                <span class="badge bg-warning-lt">{{ $imgStats['missing_dimensions'] }} boyut eksik</span>
+                                            @endif
+                                        @endif
+                                    </td>
                                 @endif
                                 <td class="text-secondary">{{ $url->onpage_checked_at?->format('Y-m-d H:i') ?? '-' }}</td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
+            </div>
             </div>
         </div>
 
@@ -196,6 +256,15 @@
         </div>
 
         <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Sayfa listesi ({{ $sitemapUrls->count() }})</h3>
+                <div class="card-actions">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#lighthouse-table">
+                        Göster / gizle
+                    </button>
+                </div>
+            </div>
+            <div class="collapse" id="lighthouse-table">
             <div class="table-responsive">
                 <table class="table card-table table-vcenter">
                     <thead>
@@ -241,6 +310,7 @@
                         @endforeach
                     </tbody>
                 </table>
+            </div>
             </div>
         </div>
     @endif

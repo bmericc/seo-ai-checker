@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Domain extends Model
 {
-    protected $fillable = ['domain', 'user_id', 'dismissed_keyword_suggestions'];
+    protected $fillable = ['domain', 'user_id', 'dismissed_keyword_suggestions', 'ga4_property_id'];
 
     protected $casts = [
         'dismissed_keyword_suggestions' => 'array',
@@ -29,7 +29,11 @@ class Domain extends Model
 
     public function domainChecks(): HasMany
     {
-        return $this->hasMany(DomainCheck::class)->latest('created_at');
+        // "id" ikincil siralama olarak eklenir: created_at ayni saniyeye
+        // denk gelen ardisik kontrollerde (ornegin testlerde, ya da hizli
+        // art arda "Site Kontrolu Yap" tiklamalarinda) tek basina
+        // created_at siralamasi belirsiz kalabilir.
+        return $this->hasMany(DomainCheck::class)->orderByDesc('created_at')->orderByDesc('id');
     }
 
     public function sitemapUrls(): HasMany

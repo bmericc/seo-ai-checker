@@ -5,6 +5,9 @@
     $securityHeaders = $domainCheck->security_headers ?? [];
     $canonicalHostData = $domainCheck->canonical_host ?? [];
     $cruxData = $domainCheck->crux ?? [];
+    $gscData = $domainCheck->gsc ?? [];
+    $ga4Data = $domainCheck->ga4 ?? [];
+    $bingData = $domainCheck->bing_backlinks ?? [];
     $blockedCrawlers = collect($aiCrawlers['crawlers'] ?? [])->filter(fn ($c) => !$c['allowed']);
     $cruxRatings = collect($cruxData['metrics'] ?? [])->pluck('rating');
 @endphp
@@ -56,5 +59,33 @@
         <span class="badge bg-danger-lt">CrUX: hata</span>
     @else
         <span class="badge bg-secondary-lt">CrUX: veri yok</span>
+    @endif
+@endif
+
+@if ($gscData['configured'] ?? false)
+    @if ($gscData['error'] ?? null)
+        <span class="badge bg-danger-lt">GSC: hata</span>
+    @elseif ($gscData['verified'] ?? false)
+        <span class="badge bg-success-lt">GSC: {{ number_format($gscData['clicks'] ?? 0) }} tıklama</span>
+    @else
+        <span class="badge bg-secondary-lt">GSC: doğrulanmamış</span>
+    @endif
+@endif
+
+@if (!empty($ga4Data['property_id']))
+    @if ($ga4Data['error'] ?? null)
+        <span class="badge bg-danger-lt">GA4: hata</span>
+    @else
+        <span class="badge bg-success-lt">GA4: {{ number_format($ga4Data['total_sessions'] ?? 0) }} oturum</span>
+    @endif
+@endif
+
+@if ($bingData['configured'] ?? false)
+    @if ($bingData['error'] ?? null)
+        <span class="badge bg-danger-lt">Backlink: hata</span>
+    @elseif ($bingData['verified'] ?? false)
+        <span class="badge bg-success-lt">Backlink: {{ number_format($bingData['total_links'] ?? 0) }} link</span>
+    @else
+        <span class="badge bg-secondary-lt">Backlink: Bing'de doğrulanmamış</span>
     @endif
 @endif
