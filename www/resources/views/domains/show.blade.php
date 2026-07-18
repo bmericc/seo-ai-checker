@@ -459,6 +459,69 @@
         </div>
     </div>
 
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3 class="card-title">{{ __('Geçmiş Skorlar') }}</h3>
+        </div>
+        <div class="card-body">
+            @php
+                $aiSnapshot = $domain->aiVisibilitySnapshot();
+            @endphp
+            <div class="row mb-4">
+                <div class="col-12 col-md-4">
+                    <div class="text-secondary small mb-1">{{ __('AI Overview Görünürlük Skoru') }}</div>
+                    @if ($aiSnapshot['score'] === null)
+                        <div class="h2 mb-1 text-secondary">—</div>
+                        <div class="text-secondary small">{{ __('Henüz hiçbir anahtar kelimede AI Overview gözlemlenmedi.') }}</div>
+                    @else
+                        <div class="h2 mb-1">{{ number_format($aiSnapshot['score'], 0) }}%</div>
+                        <div class="text-secondary small">{{ __(':cited / :present anahtar kelimede AI Overview kaynağında domain gösteriliyor', ['cited' => $aiSnapshot['cited_count'], 'present' => $aiSnapshot['present_count']]) }}</div>
+                    @endif
+                </div>
+            </div>
+
+            @if (empty($scoreHistory['labels']))
+                <p class="text-secondary mb-0">{{ __('Grafikler için en az iki farklı günde tamamlanmış kontrol gerekir.') }}</p>
+            @else
+                <div class="row row-cards">
+                    <div class="col-12 col-lg-4">
+                        <div class="text-secondary small mb-2">{{ __('AI Overview görünürlük trendi') }}</div>
+                        <x-line-chart
+                            :labels="$scoreHistory['labels']"
+                            :series="[['label' => __('Görünürlük'), 'color' => '#0ca678', 'values' => $scoreHistory['ai_visibility']]]"
+                            :min="0"
+                            :max="100"
+                            value-suffix="%"
+                        />
+                    </div>
+                    <div class="col-12 col-lg-4">
+                        <div class="text-secondary small mb-2">{{ __('Lighthouse skor trendi') }}</div>
+                        <x-line-chart
+                            :labels="$scoreHistory['labels']"
+                            :series="[
+                                ['label' => __('Performans'), 'color' => '#206bc4', 'values' => $scoreHistory['lighthouse_performance']],
+                                ['label' => 'SEO', 'color' => '#2fb344', 'values' => $scoreHistory['lighthouse_seo']],
+                                ['label' => __('Erişilebilirlik'), 'color' => '#ae3ec9', 'values' => $scoreHistory['lighthouse_accessibility']],
+                                ['label' => 'Best Practices', 'color' => '#f76707', 'values' => $scoreHistory['lighthouse_best_practices']],
+                            ]"
+                            :min="0"
+                            :max="100"
+                        />
+                    </div>
+                    <div class="col-12 col-lg-4">
+                        <div class="text-secondary small mb-2">{{ __('Ortalama SERP pozisyon trendi') }}</div>
+                        <x-line-chart
+                            :labels="$scoreHistory['labels']"
+                            :series="[['label' => __('Pozisyon'), 'color' => '#4263eb', 'values' => $scoreHistory['average_position']]]"
+                            :min="1"
+                            :invert-y="true"
+                        />
+                    </div>
+                </div>
+            @endif
+        </div>
+    </div>
+
     @if ($sitemapUrlCounts['active'] + $sitemapUrlCounts['removed'] > 0)
         <div class="card mb-4">
             <div class="card-header">

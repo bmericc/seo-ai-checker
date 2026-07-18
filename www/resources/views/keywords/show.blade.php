@@ -18,6 +18,41 @@
 @section('content')
     <p class="text-secondary mb-4">{{ __('Sayfa:') }} {{ $keyword->targetUrl() }}</p>
 
+    @if (count($scoreHistory['labels']) > 1)
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="card-title">{{ __('Geçmiş Skor Trendi') }}</h3>
+            </div>
+            <div class="card-body">
+                <div class="row row-cards">
+                    <div class="col-12 col-lg-6">
+                        <div class="text-secondary small mb-2">{{ __('Lighthouse skor trendi') }}</div>
+                        <x-line-chart
+                            :labels="$scoreHistory['labels']"
+                            :series="[
+                                ['label' => __('Performans'), 'color' => '#206bc4', 'values' => $scoreHistory['lighthouse_performance']],
+                                ['label' => 'SEO', 'color' => '#2fb344', 'values' => $scoreHistory['lighthouse_seo']],
+                                ['label' => __('Erişilebilirlik'), 'color' => '#ae3ec9', 'values' => $scoreHistory['lighthouse_accessibility']],
+                                ['label' => 'Best Practices', 'color' => '#f76707', 'values' => $scoreHistory['lighthouse_best_practices']],
+                            ]"
+                            :min="0"
+                            :max="100"
+                        />
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <div class="text-secondary small mb-2">{{ __('SERP pozisyon trendi') }}</div>
+                        <x-line-chart
+                            :labels="$scoreHistory['labels']"
+                            :series="[['label' => __('Pozisyon'), 'color' => '#4263eb', 'values' => $scoreHistory['average_position']]]"
+                            :min="1"
+                            :invert-y="true"
+                        />
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     @if ($keyword->checks->isEmpty())
         <div class="card">
             <div class="empty">

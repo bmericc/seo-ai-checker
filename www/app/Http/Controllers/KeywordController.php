@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Domain;
 use App\Models\Keyword;
+use App\Services\Analytics\ScoreHistoryBuilder;
 use App\Services\CheckRunner;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -32,14 +33,17 @@ class KeywordController extends Controller
             ->with('flash', ['type' => 'success', 'message' => __('":keyword" eklendi.', ['keyword' => trim($data['keyword'])])]);
     }
 
-    public function show(Request $request, Keyword $keyword): View
+    public function show(Request $request, Keyword $keyword, ScoreHistoryBuilder $scoreHistoryBuilder): View
     {
         $keyword->loadMissing('domain');
         $this->ensureCanAccessKeyword($request, $keyword);
 
         $keyword->load(['domain', 'checks']);
 
-        return view('keywords.show', ['keyword' => $keyword]);
+        $ascendingChecks = $keyword->checks()->reorder()->orderBy('created_at')->orderBy('id')->get();
+        $scoreHistory = $scoreHistoryBuilder->groupedByDay($ascendingChecks);
+
+        return view('keywords.show', ['keyword' => $keyword, 'scoreHistory' => $scoreHistory]);
     }
 
     public function check(Request $request, Keyword $keyword, CheckRunner $checkRunner): RedirectResponse

@@ -63,6 +63,30 @@ class Domain extends Model
         return sprintf('https://%s/', $host);
     }
 
+    /**
+     * Her anahtar kelimenin EN SON kontrolune bakarak (kw.latestCheck eager
+     * load edilmis olmali) "su an" domain'in AI Overview'da ne kadar
+     * gorunur oldugunu ozetler: skor = kaynak gosterilen / AI Overview
+     * gozlemlenen anahtar kelime orani. AI Overview hicbir anahtar
+     * kelimede gozlemlenmediyse skor null'dur (henuz olculebilir bir sey
+     * yok, 0% ile karistirilmamali).
+     *
+     * @return array{score: ?float, cited_count: int, present_count: int, checked_count: int}
+     */
+    public function aiVisibilitySnapshot(): array
+    {
+        $latestChecks = $this->keywords->map->latestCheck->filter();
+        $present = $latestChecks->where('ai_overview_present', true);
+        $cited = $present->where('ai_overview_target_cited', true);
+
+        return [
+            'score' => $present->isNotEmpty() ? round(($cited->count() / $present->count()) * 100, 1) : null,
+            'cited_count' => $cited->count(),
+            'present_count' => $present->count(),
+            'checked_count' => $latestChecks->count(),
+        ];
+    }
+
     public function dismissKeywordSuggestion(string $phrase): void
     {
         $phrase = mb_strtolower(trim($phrase));
