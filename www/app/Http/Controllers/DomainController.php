@@ -40,6 +40,8 @@ class DomainController extends Controller
             ->with('flash', ['type' => 'success', 'message' => sprintf('%s eklendi.', $domain)]);
     }
 
+    private const MAX_SITEMAP_URLS_DISPLAYED = 200;
+
     public function show(Request $request, Domain $domain): View
     {
         $this->ensureCanAccessDomain($request, $domain);
@@ -51,7 +53,23 @@ class DomainController extends Controller
             'user',
         ]);
 
-        return view('domains.show', ['domain' => $domain]);
+        $sitemapUrlCounts = [
+            'active' => $domain->sitemapUrls()->whereNull('removed_at')->count(),
+            'removed' => $domain->sitemapUrls()->whereNotNull('removed_at')->count(),
+        ];
+
+        $sitemapUrls = $domain->sitemapUrls()
+            ->orderByRaw('removed_at IS NULL')
+            ->orderByDesc('removed_at')
+            ->orderByDesc('last_seen_at')
+            ->limit(self::MAX_SITEMAP_URLS_DISPLAYED)
+            ->get();
+
+        return view('domains.show', [
+            'domain' => $domain,
+            'sitemapUrls' => $sitemapUrls,
+            'sitemapUrlCounts' => $sitemapUrlCounts,
+        ]);
     }
 
     public function check(Request $request, Domain $domain, DomainCheckRunner $checkRunner): RedirectResponse
@@ -74,5 +92,18 @@ class DomainController extends Controller
         return redirect()
             ->route('dashboard')
             ->with('flash', ['type' => 'success', 'message' => 'Domain ve tum kayitli anahtar kelimeleri silindi.']);
+    }
+
+    public function dismissKeywordSuggestion(Request $request, Domain $domain): RedirectResponse
+    {
+        $this->ensureCanAccessDomain($request, $domain);
+
+        $data = $request->validate(['phrase' => ['required', 'string', 'max:255']]);
+
+        $domain->dismissKeywordSuggestion($data['phrase']);
+
+        return redirect()
+            ->route('domains.show', $domain)
+            ->with('flash', ['type' => 'success', 'message' => 'Oneri kaldirildi.']);
     }
 }

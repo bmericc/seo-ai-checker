@@ -39,6 +39,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/domains/{domain}', [DomainController::class, 'show'])->name('domains.show');
     Route::post('/domains/{domain}/check', [DomainController::class, 'check'])->name('domains.check');
     Route::delete('/domains/{domain}', [DomainController::class, 'destroy'])->name('domains.destroy');
+    Route::post('/domains/{domain}/keyword-suggestions/dismiss', [DomainController::class, 'dismissKeywordSuggestion'])->name('domains.keyword-suggestions.dismiss');
 
     Route::post('/domains/{domain}/keywords', [KeywordController::class, 'store'])->name('keywords.store');
     Route::get('/keywords/{keyword}', [KeywordController::class, 'show'])->name('keywords.show');

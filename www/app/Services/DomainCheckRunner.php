@@ -8,10 +8,13 @@ use App\Models\Domain;
 use App\Models\DomainCheck;
 use App\Services\CanonicalHost\CanonicalHostChecker;
 use App\Services\Crux\CrUxChecker;
+use App\Services\Keywords\KeywordSuggester;
+use App\Services\Keywords\KeywordSuggestion;
 use App\Services\Llms\LlmsTxtChecker;
 use App\Services\Robots\RobotsTxtChecker;
 use App\Services\Security\SecurityHeadersChecker;
 use App\Services\Sitemap\SitemapChecker;
+use App\Services\Sitemap\SitemapUrlSync;
 
 /**
  * Belirli bir anahtar kelime/URL'e degil, domain'in tamamina ait kontrolleri
@@ -28,6 +31,8 @@ final class DomainCheckRunner
         private readonly SecurityHeadersChecker $securityHeadersChecker,
         private readonly CanonicalHostChecker $canonicalHostChecker,
         private readonly CrUxChecker $cruxChecker,
+        private readonly SitemapUrlSync $sitemapUrlSync,
+        private readonly KeywordSuggester $keywordSuggester,
     ) {
     }
 
@@ -42,6 +47,16 @@ final class DomainCheckRunner
 
         $canonicalHost = $this->canonicalHostChecker->check($domain->domain);
         $crux = $this->cruxChecker->check('https://' . $canonicalHost->canonicalHost);
+
+        if ($sitemap->found && $sitemap->isValidXml) {
+            $this->sitemapUrlSync->sync($domain, $sitemap->urls);
+        }
+
+        $excludedPhrases = [
+            ...$domain->keywords()->pluck('keyword')->all(),
+            ...($domain->dismissed_keyword_suggestions ?? []),
+        ];
+        $keywordSuggestions = $this->keywordSuggester->suggest($rootUrl, $excludedPhrases);
 
         return $domain->domainChecks()->create([
             'ai_crawlers' => [
@@ -81,6 +96,10 @@ final class DomainCheckRunner
                 'collection_period' => $crux->collectionPeriod,
                 'error' => $crux->error,
             ],
+            'suggested_keywords' => array_map(
+                static fn (KeywordSuggestion $s) => ['phrase' => $s->phrase, 'score' => $s->score],
+                $keywordSuggestions,
+            ),
         ]);
     }
 }

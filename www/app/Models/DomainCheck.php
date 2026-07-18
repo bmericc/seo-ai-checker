@@ -17,6 +17,7 @@ class DomainCheck extends Model
         'security_headers',
         'canonical_host',
         'crux',
+        'suggested_keywords',
     ];
 
     protected $casts = [
@@ -26,6 +27,7 @@ class DomainCheck extends Model
         'security_headers' => 'array',
         'canonical_host' => 'array',
         'crux' => 'array',
+        'suggested_keywords' => 'array',
     ];
 
     public function domain(): BelongsTo

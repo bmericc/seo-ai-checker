@@ -79,6 +79,29 @@ class CrUxCheckerTest extends TestCase
         $this->assertSame('HTTP 500', $result->error);
     }
 
+    public function test_permission_denied_surfaces_the_google_error_reason(): void
+    {
+        $body = json_encode([
+            'error' => [
+                'code' => 403,
+                'message' => 'Requests to this API chromeuxreport.googleapis.com method google.chrome.uxreport.v1.ChromeUXReport.QueryRecord are blocked.',
+                'status' => 'PERMISSION_DENIED',
+                'details' => [
+                    ['reason' => 'API_KEY_SERVICE_BLOCKED'],
+                ],
+            ],
+        ]);
+
+        $checker = $this->checkerWithResponses([new Response(403, [], $body)]);
+
+        $result = $checker->check('https://example.com');
+
+        $this->assertTrue($result->configured);
+        $this->assertFalse($result->found);
+        $this->assertStringContainsString('API_KEY_SERVICE_BLOCKED', $result->error);
+        $this->assertStringContainsString('blocked', $result->error);
+    }
+
     public function test_network_failure_is_reported_as_an_error(): void
     {
         $checker = $this->checkerWithResponses([

@@ -55,7 +55,7 @@ final class CrUxChecker
         }
 
         if ($status !== 200) {
-            return new CrUxResult(configured: true, found: false, origin: $origin, error: "HTTP {$status}");
+            return new CrUxResult(configured: true, found: false, origin: $origin, error: $this->describeError($status, (string) $response->getBody()));
         }
 
         $data = json_decode((string) $response->getBody(), true);
@@ -82,6 +82,26 @@ final class CrUxChecker
             metrics: $metrics,
             collectionPeriod: $this->formatPeriod($data['record']['collectionPeriod'] ?? null),
         );
+    }
+
+    /**
+     * Google API'lari hata govdesinde genelde okunabilir bir "message" ve
+     * makine-okur bir "reason" doner (ornegin API_KEY_SERVICE_BLOCKED =
+     * anahtarin API kisitlamalari listesinde Chrome UX Report API yok, ya da
+     * API proje icin hic etkinlestirilmemis). Bu bilgiyi kullaniciya
+     * gostererek "veri yok" ile "yapilandirma hatasi" birbirine karismasin.
+     */
+    private function describeError(int $status, string $body): string
+    {
+        $data = json_decode($body, true);
+        $message = $data['error']['message'] ?? null;
+        $reason = $data['error']['details'][0]['reason'] ?? null;
+
+        if (is_string($message) && $message !== '') {
+            return $reason !== null ? "HTTP {$status} ({$reason}): {$message}" : "HTTP {$status}: {$message}";
+        }
+
+        return "HTTP {$status}";
     }
 
     private function rate(float $p75, float $good, float $needsImprovement): string

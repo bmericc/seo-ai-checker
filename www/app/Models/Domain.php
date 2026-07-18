@@ -11,7 +11,11 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Domain extends Model
 {
-    protected $fillable = ['domain', 'user_id'];
+    protected $fillable = ['domain', 'user_id', 'dismissed_keyword_suggestions'];
+
+    protected $casts = [
+        'dismissed_keyword_suggestions' => 'array',
+    ];
 
     public function user(): BelongsTo
     {
@@ -28,6 +32,11 @@ class Domain extends Model
         return $this->hasMany(DomainCheck::class)->latest('created_at');
     }
 
+    public function sitemapUrls(): HasMany
+    {
+        return $this->hasMany(SitemapUrl::class);
+    }
+
     public function latestDomainCheck(): HasOne
     {
         return $this->hasOne(DomainCheck::class)->latestOfMany();
@@ -36,6 +45,17 @@ class Domain extends Model
     public function rootUrl(): string
     {
         return sprintf('https://%s/', $this->domain);
+    }
+
+    public function dismissKeywordSuggestion(string $phrase): void
+    {
+        $phrase = mb_strtolower(trim($phrase));
+        $dismissed = $this->dismissed_keyword_suggestions ?? [];
+
+        if (!in_array($phrase, $dismissed, true)) {
+            $dismissed[] = $phrase;
+            $this->update(['dismissed_keyword_suggestions' => $dismissed]);
+        }
     }
 
     public function isVisibleTo(?User $user): bool

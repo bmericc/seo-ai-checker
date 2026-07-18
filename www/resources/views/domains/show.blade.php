@@ -36,7 +36,15 @@
             </p>
 
             @if ($domain->latestDomainCheck)
-                @php($domainCheck = $domain->latestDomainCheck)
+                @php
+                    $domainCheck = $domain->latestDomainCheck;
+                    $aiCrawlers = $domainCheck->ai_crawlers ?? [];
+                    $sitemapData = $domainCheck->sitemap ?? [];
+                    $llmsTxt = $domainCheck->llms_txt ?? [];
+                    $securityHeaders = $domainCheck->security_headers ?? [];
+                    $canonicalHostData = $domainCheck->canonical_host ?? [];
+                    $cruxData = $domainCheck->crux ?? [];
+                @endphp
 
                 <div class="text-secondary small mb-2">Son kontrol: {{ $domainCheck->created_at->format('Y-m-d H:i:s') }}</div>
                 <div class="mb-3">
@@ -52,12 +60,12 @@
                         </h2>
                         <div id="ac-crawlers" class="accordion-collapse collapse" data-bs-parent="#site-check-accordion">
                             <div class="accordion-body">
-                                @if ($domainCheck->ai_crawlers['found'] ?? false)
+                                @if ($aiCrawlers['found'] ?? false)
                                     <div class="table-responsive">
                                         <table class="table table-vcenter">
                                             <thead><tr><th>Crawler</th><th>Kim</th><th>Durum</th></tr></thead>
                                             <tbody>
-                                            @foreach ($domainCheck->ai_crawlers['crawlers'] as $token => $info)
+                                            @foreach ($aiCrawlers['crawlers'] as $token => $info)
                                                 <tr>
                                                     <td>{{ $token }}</td>
                                                     <td>{{ $info['label'] }}</td>
@@ -73,9 +81,9 @@
                                             </tbody>
                                         </table>
                                     </div>
-                                    <p class="text-secondary mb-0">Kaynak: <a href="{{ $domainCheck->ai_crawlers['url'] }}" target="_blank" rel="noopener">{{ $domainCheck->ai_crawlers['url'] }}</a></p>
+                                    <p class="text-secondary mb-0">Kaynak: <a href="{{ $aiCrawlers['url'] }}" target="_blank" rel="noopener">{{ $aiCrawlers['url'] }}</a></p>
                                 @else
-                                    <p class="text-secondary mb-0">robots.txt bulunamadı ({{ $domainCheck->ai_crawlers['url'] }}) — varsayılan olarak tüm crawler'lar için açık kabul edilir.</p>
+                                    <p class="text-secondary mb-0">robots.txt bulunamadı ({{ $aiCrawlers['url'] ?? '' }}) — varsayılan olarak tüm crawler'lar için açık kabul edilir.</p>
                                 @endif
                             </div>
                         </div>
@@ -89,19 +97,19 @@
                         </h2>
                         <div id="ac-sitemap" class="accordion-collapse collapse" data-bs-parent="#site-check-accordion">
                             <div class="accordion-body">
-                                @if ($domainCheck->sitemap['found'] ?? false)
-                                    @if ($domainCheck->sitemap['is_valid_xml'] ?? false)
+                                @if ($sitemapData['found'] ?? false)
+                                    @if ($sitemapData['is_valid_xml'] ?? false)
                                         <p>
-                                            {{ $domainCheck->sitemap['is_sitemap_index'] ? 'Sitemap index' : 'Sitemap' }},
-                                            {{ $domainCheck->sitemap['url_count'] }}
-                                            {{ $domainCheck->sitemap['is_sitemap_index'] ? 'alt-sitemap' : 'URL' }} içeriyor.
+                                            {{ $sitemapData['is_sitemap_index'] ? 'Sitemap index' : 'Sitemap' }},
+                                            {{ $sitemapData['url_count'] }}
+                                            {{ $sitemapData['is_sitemap_index'] ? 'alt-sitemap' : 'URL' }} içeriyor.
                                         </p>
                                     @else
-                                        <p class="text-danger">{{ $domainCheck->sitemap['error'] ?? 'Geçersiz XML.' }}</p>
+                                        <p class="text-danger">{{ $sitemapData['error'] ?? 'Geçersiz XML.' }}</p>
                                     @endif
-                                    <p class="text-secondary mb-0"><a href="{{ $domainCheck->sitemap['url'] }}" target="_blank" rel="noopener">{{ $domainCheck->sitemap['url'] }}</a></p>
+                                    <p class="text-secondary mb-0"><a href="{{ $sitemapData['url'] }}" target="_blank" rel="noopener">{{ $sitemapData['url'] }}</a></p>
                                 @else
-                                    <p class="text-secondary mb-0">{{ $domainCheck->sitemap['url'] ?? '' }} bulunamadı.</p>
+                                    <p class="text-secondary mb-0">{{ $sitemapData['url'] ?? '' }} bulunamadı.</p>
                                 @endif
                             </div>
                         </div>
@@ -115,13 +123,13 @@
                         </h2>
                         <div id="ac-llms" class="accordion-collapse collapse" data-bs-parent="#site-check-accordion">
                             <div class="accordion-body">
-                                @if ($domainCheck->llms_txt['found'] ?? false)
-                                    @if ($domainCheck->llms_txt['preview'])
-                                        <pre class="bg-body-secondary p-2 rounded">{{ $domainCheck->llms_txt['preview'] }}</pre>
+                                @if ($llmsTxt['found'] ?? false)
+                                    @if ($llmsTxt['preview'] ?? null)
+                                        <pre class="bg-body-secondary p-2 rounded">{{ $llmsTxt['preview'] }}</pre>
                                     @endif
-                                    <p class="text-secondary mb-0"><a href="{{ $domainCheck->llms_txt['url'] }}" target="_blank" rel="noopener">{{ $domainCheck->llms_txt['url'] }}</a></p>
+                                    <p class="text-secondary mb-0"><a href="{{ $llmsTxt['url'] }}" target="_blank" rel="noopener">{{ $llmsTxt['url'] }}</a></p>
                                 @else
-                                    <p class="text-secondary mb-0">{{ $domainCheck->llms_txt['url'] ?? '' }} bulunamadı.</p>
+                                    <p class="text-secondary mb-0">{{ $llmsTxt['url'] ?? '' }} bulunamadı.</p>
                                 @endif
                             </div>
                         </div>
@@ -135,12 +143,12 @@
                         </h2>
                         <div id="ac-security" class="accordion-collapse collapse" data-bs-parent="#site-check-accordion">
                             <div class="accordion-body">
-                                @if ($domainCheck->security_headers['reachable'] ?? false)
+                                @if ($securityHeaders['reachable'] ?? false)
                                     <div class="table-responsive">
                                         <table class="table table-vcenter">
                                             <thead><tr><th>Header</th><th>Değer</th></tr></thead>
                                             <tbody>
-                                            @foreach ($domainCheck->security_headers['headers'] ?? [] as $name => $value)
+                                            @foreach ($securityHeaders['headers'] ?? [] as $name => $value)
                                                 <tr>
                                                     <td>{{ $name }}</td>
                                                     <td>
@@ -155,7 +163,7 @@
                                             <tr>
                                                 <td>HTTP &rarr; HTTPS yönlendirme</td>
                                                 <td>
-                                                    @if ($domainCheck->security_headers['http_redirects_to_https'] ?? false)
+                                                    @if ($securityHeaders['http_redirects_to_https'] ?? false)
                                                         <span class="badge bg-success-lt">var</span>
                                                     @else
                                                         <span class="badge bg-warning-lt">yok</span>
@@ -180,17 +188,17 @@
                         </h2>
                         <div id="ac-canonical" class="accordion-collapse collapse" data-bs-parent="#site-check-accordion">
                             <div class="accordion-body">
-                                @if ($domainCheck->canonical_host['redirected'] ?? false)
+                                @if ($canonicalHostData['redirected'] ?? false)
                                     <p class="mb-0">
-                                        <code>{{ $domainCheck->canonical_host['original_host'] }}</code>,
-                                        HTTP {{ $domainCheck->canonical_host['redirect_status'] }} ile
-                                        <code>{{ $domainCheck->canonical_host['canonical_host'] }}</code>
+                                        <code>{{ $canonicalHostData['original_host'] }}</code>,
+                                        HTTP {{ $canonicalHostData['redirect_status'] }} ile
+                                        <code>{{ $canonicalHostData['canonical_host'] }}</code>
                                         adresine yönleniyor. Gerçek trafik (ve CrUX verisi) bu host altında toplanır;
                                         site-geneli kontroller (ve CrUX sorgusu) bu adrese göre yapılır.
                                     </p>
                                 @else
                                     <p class="text-secondary mb-0">
-                                        <code>{{ $domainCheck->canonical_host['original_host'] ?? $domain->domain }}</code>
+                                        <code>{{ $canonicalHostData['original_host'] ?? $domain->domain }}</code>
                                         kalıcı bir yönlendirme yapmıyor — bu host kanonik kabul edildi.
                                     </p>
                                 @endif
@@ -206,24 +214,31 @@
                         </h2>
                         <div id="ac-crux" class="accordion-collapse collapse" data-bs-parent="#site-check-accordion">
                             <div class="accordion-body">
-                                @if (!($domainCheck->crux['configured'] ?? false))
+                                @if (!($cruxData['configured'] ?? false))
                                     <p class="text-secondary mb-0">
                                         CrUX API anahtarı tanımlı değil (<code>CRUX_API_KEY</code> veya <code>PSI_API_KEY</code>).
                                     </p>
-                                @elseif (!($domainCheck->crux['found'] ?? false))
+                                @elseif ($cruxData['error'] ?? null)
+                                    <p class="text-danger mb-1">
+                                        <code>{{ $cruxData['origin'] ?? '' }}</code> sorgulanırken hata oluştu:
+                                        {{ $cruxData['error'] }}
+                                    </p>
                                     <p class="text-secondary mb-0">
-                                        <code>{{ $domainCheck->crux['origin'] ?? '' }}</code> için CrUX verisi bulunamadı
+                                        "PERMISSION_DENIED" / "API_KEY_SERVICE_BLOCKED" görüyorsanız: Google Cloud
+                                        Console'da API anahtarının <em>API kısıtlamaları</em> listesine
+                                        "Chrome UX Report API"yi ekleyin ve API'nin projede etkin olduğundan emin olun.
+                                    </p>
+                                @elseif (!($cruxData['found'] ?? false))
+                                    <p class="text-secondary mb-0">
+                                        <code>{{ $cruxData['origin'] ?? '' }}</code> için CrUX verisi bulunamadı
                                         (yeterli gerçek kullanıcı trafiği olmayabilir).
-                                        @if ($domainCheck->crux['error'] ?? null)
-                                            <span class="text-danger">{{ $domainCheck->crux['error'] }}</span>
-                                        @endif
                                     </p>
                                 @else
                                     <div class="table-responsive">
                                         <table class="table table-vcenter">
                                             <thead><tr><th>Metrik</th><th>p75</th><th>Değerlendirme</th></tr></thead>
                                             <tbody>
-                                            @foreach ($domainCheck->crux['metrics'] as $metric)
+                                            @foreach ($cruxData['metrics'] ?? [] as $metric)
                                                 <tr>
                                                     <td>{{ $metric['label'] }}</td>
                                                     <td>{{ $metric['p75'] }}</td>
@@ -242,9 +257,9 @@
                                         </table>
                                     </div>
                                     <p class="text-secondary mb-0">
-                                        Köken: <code>{{ $domainCheck->crux['origin'] }}</code>
-                                        @if ($domainCheck->crux['collection_period'] ?? null)
-                                            &middot; Veri periyodu: {{ $domainCheck->crux['collection_period'] }}
+                                        Köken: <code>{{ $cruxData['origin'] }}</code>
+                                        @if ($cruxData['collection_period'] ?? null)
+                                            &middot; Veri periyodu: {{ $cruxData['collection_period'] }}
                                         @endif
                                     </p>
                                 @endif
@@ -258,6 +273,61 @@
         </div>
     </div>
 
+    @if ($sitemapUrlCounts['active'] + $sitemapUrlCounts['removed'] > 0)
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="card-title">Keşfedilen Sayfalar (Sitemap)</h3>
+                <div class="card-actions">
+                    <span class="badge bg-success-lt">{{ $sitemapUrlCounts['active'] }} sitemap'te</span>
+                    @if ($sitemapUrlCounts['removed'] > 0)
+                        <span class="badge bg-warning-lt">{{ $sitemapUrlCounts['removed'] }} kaldırıldı</span>
+                    @endif
+                </div>
+            </div>
+            <div class="card-body py-2">
+                <p class="text-secondary mb-0">
+                    Sitemap.xml'de bulunan sayfalar; her "Site Kontrolü Yap" çalıştırmasında yeniden okunur.
+                    Bir sayfa sitemap'ten kaldırılırsa (silinmez, sadece) "kaldırıldı" olarak işaretlenir.
+                </p>
+            </div>
+            <div class="table-responsive" style="max-height: 420px; overflow-y: auto;">
+                <table class="table card-table table-vcenter table-sm">
+                    <thead>
+                        <tr>
+                            <th>URL</th>
+                            <th>İlk görülme</th>
+                            <th>Son görülme</th>
+                            <th>Durum</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($sitemapUrls as $sitemapUrl)
+                            <tr>
+                                <td class="text-truncate" style="max-width: 420px;">
+                                    <a href="{{ $sitemapUrl->url }}" target="_blank" rel="noopener">{{ $sitemapUrl->url }}</a>
+                                </td>
+                                <td class="text-secondary">{{ $sitemapUrl->first_seen_at->format('Y-m-d') }}</td>
+                                <td class="text-secondary">{{ $sitemapUrl->last_seen_at->format('Y-m-d') }}</td>
+                                <td>
+                                    @if ($sitemapUrl->removed_at)
+                                        <span class="badge bg-warning-lt">kaldırıldı: {{ $sitemapUrl->removed_at->format('Y-m-d') }}</span>
+                                    @else
+                                        <span class="badge bg-success-lt">sitemap'te</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @if ($sitemapUrlCounts['active'] + $sitemapUrlCounts['removed'] > $sitemapUrls->count())
+                <div class="card-body py-2">
+                    <p class="text-secondary mb-0 small">İlk {{ $sitemapUrls->count() }} kayıt gösteriliyor.</p>
+                </div>
+            @endif
+        </div>
+    @endif
+
     <div class="card">
         <div class="card-header">
             <h3 class="card-title">Anahtar Kelimeler</h3>
@@ -265,6 +335,41 @@
         <div class="card-body border-bottom py-2">
             <p class="text-secondary mb-0">"Kontrol Et" butonu SERP + on-page + Lighthouse taramasını aynı anda çalıştırır; bu 20-60 saniye sürebilir, sayfa kapanmadan bekleyin.</p>
         </div>
+
+        @php
+            $trackedKeywords = $domain->keywords->pluck('keyword')->map(fn ($k) => mb_strtolower(trim($k)));
+            $dismissedSuggestions = collect($domain->dismissed_keyword_suggestions ?? []);
+            $suggestedKeywords = collect($domain->latestDomainCheck?->suggested_keywords ?? [])
+                ->reject(fn ($s) => $trackedKeywords->contains(mb_strtolower($s['phrase'])))
+                ->reject(fn ($s) => $dismissedSuggestions->contains(mb_strtolower($s['phrase'])));
+        @endphp
+        @if ($suggestedKeywords->isNotEmpty())
+            <div class="card-body border-bottom py-3">
+                <div class="text-secondary small mb-2">
+                    Ana sayfa HTML'inden otomatik çıkarılan anahtar kelime önerileri — eklemek için "+", istemiyorsanız "×" tıklayın:
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach ($suggestedKeywords as $suggestion)
+                        <div class="btn-group">
+                            <form method="post" action="{{ route('keywords.store', $domain) }}">
+                                @csrf
+                                <input type="hidden" name="keyword" value="{{ $suggestion['phrase'] }}">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                    <i class="ti ti-plus icon"></i> {{ $suggestion['phrase'] }}
+                                </button>
+                            </form>
+                            <form method="post" action="{{ route('domains.keyword-suggestions.dismiss', $domain) }}">
+                                @csrf
+                                <input type="hidden" name="phrase" value="{{ $suggestion['phrase'] }}">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary" aria-label="Öneriyi kaldır: {{ $suggestion['phrase'] }}">
+                                    <i class="ti ti-x"></i>
+                                </button>
+                            </form>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
 
         @if ($domain->keywords->isEmpty())
             <div class="empty">
@@ -292,7 +397,9 @@
                     </thead>
                     <tbody>
                         @foreach ($domain->keywords as $kw)
-                            @php($last = $kw->latestCheck)
+                            @php
+                                $last = $kw->latestCheck;
+                            @endphp
                             <tr>
                                 <td><a href="{{ route('keywords.show', $kw) }}" class="fw-medium">{{ $kw->keyword }}</a></td>
                                 <td class="text-secondary">{{ $kw->url ?: ('https://' . $domain->domain . '/') }}</td>

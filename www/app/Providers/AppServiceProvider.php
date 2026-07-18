@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Services\CanonicalHost\CanonicalHostChecker;
 use App\Services\Crux\CrUxChecker;
+use App\Services\Keywords\KeywordSuggester;
 use App\Services\Lighthouse\PageSpeedInsightsClient;
 use App\Services\Llms\LlmsTxtChecker;
 use App\Services\OnPage\OnPageSeoAnalyzer;
@@ -12,6 +13,7 @@ use App\Services\Serp\GoogleRequestThrottle;
 use App\Services\Security\SecurityHeadersChecker;
 use App\Services\Serp\GoogleSerpScraper;
 use App\Services\Sitemap\SitemapChecker;
+use App\Services\Sitemap\SitemapUrlSync;
 use App\Support\HttpClientFactory;
 use GuzzleHttp\Client;
 use Illuminate\Support\ServiceProvider;
@@ -65,6 +67,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(CanonicalHostChecker::class, fn ($app) => new CanonicalHostChecker($app->make(Client::class)));
 
         $this->app->singleton(CrUxChecker::class, fn ($app) => new CrUxChecker($app->make(Client::class), config('seo.crux.api_key')));
+
+        $this->app->singleton(SitemapUrlSync::class, fn () => new SitemapUrlSync());
+
+        $this->app->singleton(KeywordSuggester::class, fn ($app) => new KeywordSuggester($app->make(Client::class)));
 
         $this->app->singleton(PageSpeedInsightsClient::class, function () {
             $lh = config('seo.lighthouse');
