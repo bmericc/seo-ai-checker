@@ -61,6 +61,43 @@ class Ga4PropertyListerTest extends TestCase
         $this->assertSame('Personal · blog.example.com', $result->properties[2]->label);
     }
 
+    public function test_follows_next_page_token_to_collect_properties_across_pages(): void
+    {
+        $firstBody = json_encode([
+            'accountSummaries' => [
+                [
+                    'displayName' => 'Acme Inc',
+                    'propertySummaries' => [
+                        ['property' => 'properties/111', 'displayName' => 'acme.com'],
+                    ],
+                ],
+            ],
+            'nextPageToken' => 'page-2',
+        ]);
+        $secondBody = json_encode([
+            'accountSummaries' => [
+                [
+                    'displayName' => 'Beta LLC',
+                    'propertySummaries' => [
+                        ['property' => 'properties/222', 'displayName' => 'beta.com'],
+                    ],
+                ],
+            ],
+        ]);
+
+        $lister = $this->listerWithResponses([
+            new Response(200, [], $firstBody),
+            new Response(200, [], $secondBody),
+        ]);
+
+        $result = $lister->list('token');
+
+        $this->assertTrue($result->configured);
+        $this->assertCount(2, $result->properties);
+        $this->assertSame('111', $result->properties[0]->propertyId);
+        $this->assertSame('222', $result->properties[1]->propertyId);
+    }
+
     public function test_no_accounts_returns_an_empty_property_list(): void
     {
         $lister = $this->listerWithResponses([new Response(200, [], json_encode(['accountSummaries' => []]))]);

@@ -22,45 +22,61 @@ final class Ga4PropertyLister
     ) {
     }
 
+    private const MAX_PAGES = 20;
+
     public function list(?string $accessToken): Ga4PropertyListResult
     {
         if ($accessToken === null || $accessToken === '') {
             return new Ga4PropertyListResult(configured: false);
         }
 
-        try {
-            $response = $this->client->get(self::ENDPOINT, [
-                'headers' => ['Authorization' => 'Bearer ' . $accessToken],
-                'query' => ['pageSize' => 200],
-                'http_errors' => false,
-            ]);
-        } catch (GuzzleException $e) {
-            return new Ga4PropertyListResult(configured: true, error: $e->getMessage());
-        }
-
-        if ($response->getStatusCode() !== 200) {
-            return new Ga4PropertyListResult(
-                configured: true,
-                error: $this->describeError($response->getStatusCode(), (string) $response->getBody()),
-            );
-        }
-
-        $data = json_decode((string) $response->getBody(), true);
         $properties = [];
+        $pageToken = null;
 
-        foreach ($data['accountSummaries'] ?? [] as $account) {
-            $accountName = $account['displayName'] ?? '';
+        for ($page = 0; $page < self::MAX_PAGES; $page++) {
+            $query = ['pageSize' => 200];
+            if ($pageToken !== null) {
+                $query['pageToken'] = $pageToken;
+            }
 
-            foreach ($account['propertySummaries'] ?? [] as $property) {
-                $propertyId = $this->extractPropertyId($property['property'] ?? '');
-                if ($propertyId === null) {
-                    continue;
+            try {
+                $response = $this->client->get(self::ENDPOINT, [
+                    'headers' => ['Authorization' => 'Bearer ' . $accessToken],
+                    'query' => $query,
+                    'http_errors' => false,
+                ]);
+            } catch (GuzzleException $e) {
+                return new Ga4PropertyListResult(configured: true, error: $e->getMessage());
+            }
+
+            if ($response->getStatusCode() !== 200) {
+                return new Ga4PropertyListResult(
+                    configured: true,
+                    error: $this->describeError($response->getStatusCode(), (string) $response->getBody()),
+                );
+            }
+
+            $data = json_decode((string) $response->getBody(), true);
+
+            foreach ($data['accountSummaries'] ?? [] as $account) {
+                $accountName = $account['displayName'] ?? '';
+
+                foreach ($account['propertySummaries'] ?? [] as $property) {
+                    $propertyId = $this->extractPropertyId($property['property'] ?? '');
+                    if ($propertyId === null) {
+                        continue;
+                    }
+
+                    $propertyName = $property['displayName'] ?? $propertyId;
+                    $label = $accountName !== '' ? "{$accountName} · {$propertyName}" : $propertyName;
+
+                    $properties[] = new Ga4Property($propertyId, $label);
                 }
+            }
 
-                $propertyName = $property['displayName'] ?? $propertyId;
-                $label = $accountName !== '' ? "{$accountName} · {$propertyName}" : $propertyName;
-
-                $properties[] = new Ga4Property($propertyId, $label);
+            $pageToken = $data['nextPageToken'] ?? null;
+            if ($pageToken === null || $pageToken === '') {
+                break;
             }
         }
 
