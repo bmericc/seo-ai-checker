@@ -22,38 +22,38 @@ class UserController extends Controller
     {
         $user->update(['approved_at' => now()]);
 
-        return back()->with('flash', ['type' => 'success', 'message' => sprintf('%s onaylandı.', $user->email)]);
+        return back()->with('flash', ['type' => 'success', 'message' => __(':email onaylandı.', ['email' => $user->email])]);
     }
 
     public function revoke(User $user): RedirectResponse
     {
-        abort_if($user->id === auth()->id(), 403, 'Kendi hesabınızın onayını buradan kaldıramazsınız.');
+        abort_if($user->id === auth()->id(), 403, __('Kendi hesabınızın onayını buradan kaldıramazsınız.'));
 
         $user->update(['approved_at' => null]);
 
-        return back()->with('flash', ['type' => 'success', 'message' => sprintf('%s onayı kaldırıldı.', $user->email)]);
+        return back()->with('flash', ['type' => 'success', 'message' => __(':email onayı kaldırıldı.', ['email' => $user->email])]);
     }
 
     public function toggleAdmin(User $user): RedirectResponse
     {
-        abort_if($user->id === auth()->id(), 403, 'Kendi admin yetkinizi buradan değiştiremezsiniz.');
+        abort_if($user->id === auth()->id(), 403, __('Kendi admin yetkinizi buradan değiştiremezsiniz.'));
 
         $user->update(['is_admin' => !$user->is_admin]);
 
         return back()->with('flash', [
             'type' => 'success',
             'message' => $user->is_admin
-                ? sprintf('%s admin yapıldı.', $user->email)
-                : sprintf('%s adminlikten çıkarıldı.', $user->email),
+                ? __(':email admin yapıldı.', ['email' => $user->email])
+                : __(':email adminlikten çıkarıldı.', ['email' => $user->email]),
         ]);
     }
 
     public function destroy(User $user): RedirectResponse
     {
-        abort_if($user->id === auth()->id(), 403, 'Kendi hesabınızı buradan silemezsiniz.');
+        abort_if($user->id === auth()->id(), 403, __('Kendi hesabınızı buradan silemezsiniz.'));
 
         $user->delete();
 
-        return back()->with('flash', ['type' => 'success', 'message' => sprintf('%s silindi.', $user->email)]);
+        return back()->with('flash', ['type' => 'success', 'message' => __(':email silindi.', ['email' => $user->email])]);
     }
 }

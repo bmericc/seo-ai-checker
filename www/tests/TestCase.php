@@ -7,6 +7,19 @@ use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 abstract class TestCase extends BaseTestCase
 {
     /**
+     * Symfony's Request::create() (used internally by the HTTP test
+     * client) synthesizes a default "Accept-Language: en-us,en;q=0.5"
+     * header even when a test never sets one - unlike real production
+     * requests (Request::createFromGlobals()), which only carry a
+     * language header if the actual client sent one. Without this
+     * override, every test would resolve to English via SetLocale's
+     * Accept-Language detection, breaking existing Turkish-text
+     * assertions. Individual tests can still override with
+     * ->withHeaders(['Accept-Language' => 'en']).
+     */
+    protected $defaultHeaders = ['Accept-Language' => 'tr'];
+
+    /**
      * Docker injects DB_DATABASE as a real container-level environment
      * variable (see docker-compose.yml's `environment:` block), which
      * populates $_ENV before phpunit.xml's <env name="DB_DATABASE"

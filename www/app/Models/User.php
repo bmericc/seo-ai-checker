@@ -11,12 +11,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'is_admin', 'approved_at', 'google_id', 'google_access_token', 'google_refresh_token', 'google_token_expires_at', 'bing_access_token', 'bing_refresh_token', 'bing_token_expires_at'])]
+#[Fillable(['name', 'email', 'password', 'is_admin', 'approved_at', 'google_id', 'google_access_token', 'google_refresh_token', 'google_token_expires_at', 'bing_access_token', 'bing_refresh_token', 'bing_token_expires_at', 'locale'])]
 #[Hidden(['password', 'remember_token', 'google_access_token', 'google_refresh_token', 'bing_access_token', 'bing_refresh_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
+
+    /**
+     * Uygulamanin desteklemedigi dil dosyasi olusturmamak icin sabit tutulur.
+     */
+    public const array SUPPORTED_LOCALES = ['tr', 'en'];
 
     /**
      * Get the attributes that should be cast.

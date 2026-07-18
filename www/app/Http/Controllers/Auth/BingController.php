@@ -56,16 +56,16 @@ class BingController extends Controller
         $expectedState = session()->pull(self::STATE_SESSION_KEY);
 
         if ($request->query('error') !== null) {
-            return $this->fail('Bing yetkilendirmesi reddedildi.');
+            return $this->fail(__('Bing yetkilendirmesi reddedildi.'));
         }
 
         if (!is_string($expectedState) || $request->query('state') !== $expectedState) {
-            return $this->fail('Bing yetkilendirmesi doğrulanamadı (durum uyuşmazlığı). Lütfen tekrar deneyin.');
+            return $this->fail(__('Bing yetkilendirmesi doğrulanamadı (durum uyuşmazlığı). Lütfen tekrar deneyin.'));
         }
 
         $code = $request->query('code');
         if (!is_string($code) || $code === '') {
-            return $this->fail('Bing yetkilendirme kodu alınamadı.');
+            return $this->fail(__('Bing yetkilendirme kodu alınamadı.'));
         }
 
         try {
@@ -80,11 +80,11 @@ class BingController extends Controller
                 'http_errors' => false,
             ]);
         } catch (GuzzleException $e) {
-            return $this->fail('Bing token isteği başarısız oldu: ' . $e->getMessage());
+            return $this->fail(__('Bing token isteği başarısız oldu: :error', ['error' => $e->getMessage()]));
         }
 
         if ($response->getStatusCode() !== 200) {
-            return $this->fail('Bing token isteği başarısız oldu (HTTP ' . $response->getStatusCode() . ').');
+            return $this->fail(__('Bing token isteği başarısız oldu (HTTP :status).', ['status' => $response->getStatusCode()]));
         }
 
         $data = json_decode((string) $response->getBody(), true);
@@ -93,7 +93,7 @@ class BingController extends Controller
         $expiresIn = $data['expires_in'] ?? null;
 
         if (!is_string($accessToken) || $accessToken === '') {
-            return $this->fail('Bing yanıtında access token bulunamadı.');
+            return $this->fail(__('Bing yanıtında access token bulunamadı.'));
         }
 
         $user = Auth::user();
@@ -108,7 +108,7 @@ class BingController extends Controller
 
         return redirect()
             ->route('dashboard')
-            ->with('flash', ['type' => 'success', 'message' => 'Bing hesabı bağlandı.']);
+            ->with('flash', ['type' => 'success', 'message' => __('Bing hesabı bağlandı.')]);
     }
 
     private function fail(string $message): RedirectResponse

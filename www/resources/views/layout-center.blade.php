@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr" data-bs-theme="light">
+<html lang="{{ app()->getLocale() }}" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -32,8 +32,8 @@
 
         <div class="text-center text-secondary mt-4">
             <ul class="list-inline list-inline-dots mb-0">
-                <li class="list-inline-item"><a href="{{ route('privacy-policy') }}" class="link-secondary">Gizlilik Politikası</a></li>
-                <li class="list-inline-item"><a href="{{ route('terms-of-service') }}" class="link-secondary">Kullanım Koşulları</a></li>
+                <li class="list-inline-item"><a href="{{ route('privacy-policy') }}" class="link-secondary">{{ __('Gizlilik Politikası') }}</a></li>
+                <li class="list-inline-item"><a href="{{ route('terms-of-service') }}" class="link-secondary">{{ __('Kullanım Koşulları') }}</a></li>
             </ul>
         </div>
     </div>

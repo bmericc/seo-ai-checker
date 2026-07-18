@@ -45,7 +45,7 @@ class GoogleController extends Controller
             $googleUser = Socialite::driver('google')->user();
         } catch (InvalidStateException $e) {
             return response()->view('auth.error', [
-                'message' => 'Giris dogrulamasi basarisiz oldu (state uyusmazligi). Lutfen tekrar deneyin.',
+                'message' => __('Giriş doğrulaması başarısız oldu (state uyuşmazlığı). Lütfen tekrar deneyin.'),
             ], 400);
         }
 
@@ -53,7 +53,7 @@ class GoogleController extends Controller
 
         if ($email === '') {
             return response()->view('auth.error', [
-                'message' => 'Google hesabinizdan e-posta adresi alinamadi.',
+                'message' => __('Google hesabınızdan e-posta adresi alınamadı.'),
             ], 403);
         }
 
@@ -79,12 +79,30 @@ class GoogleController extends Controller
             'google_access_token' => $googleUser->token,
             'google_refresh_token' => $googleUser->refreshToken ?: $user->google_refresh_token,
             'google_token_expires_at' => $googleUser->expiresIn ? now()->addSeconds($googleUser->expiresIn) : $user->google_token_expires_at,
+            'locale' => $this->normalizeLocale($googleUser->user['locale'] ?? null) ?? $user->locale,
         ])->save();
 
         Auth::login($user, remember: true);
         request()->session()->regenerate();
 
         return redirect()->intended('/');
+    }
+
+    /**
+     * Google'in userinfo yanitindaki "locale" alani OIDC'de opsiyonel bir
+     * claim'dir - her hesapta olmayabilir. Geldiginde "en-GB" gibi bolge
+     * ekli degerleri ana dile indirger, desteklenmeyen/eksik bir deger icin
+     * null doner (cagiran taraf mevcut degeri korur).
+     */
+    private function normalizeLocale(?string $rawLocale): ?string
+    {
+        if ($rawLocale === null || $rawLocale === '') {
+            return null;
+        }
+
+        $primary = strtolower(explode('-', $rawLocale)[0]);
+
+        return in_array($primary, User::SUPPORTED_LOCALES, true) ? $primary : null;
     }
 
     private function isBootstrapAdmin(string $email): bool

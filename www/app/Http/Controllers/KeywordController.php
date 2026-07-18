@@ -29,7 +29,7 @@ class KeywordController extends Controller
 
         return redirect()
             ->route('domains.show', $domain)
-            ->with('flash', ['type' => 'success', 'message' => sprintf('"%s" eklendi.', trim($data['keyword']))]);
+            ->with('flash', ['type' => 'success', 'message' => __('":keyword" eklendi.', ['keyword' => trim($data['keyword'])])]);
     }
 
     public function show(Request $request, Keyword $keyword): View
@@ -51,7 +51,7 @@ class KeywordController extends Controller
 
         return redirect()
             ->route('keywords.show', $keyword)
-            ->with('flash', ['type' => 'success', 'message' => 'Kontrol tamamlandi.']);
+            ->with('flash', ['type' => 'success', 'message' => __('Kontrol tamamlandı.')]);
     }
 
     public function destroy(Request $request, Keyword $keyword): RedirectResponse
@@ -64,6 +64,6 @@ class KeywordController extends Controller
 
         return redirect()
             ->route('domains.show', $domain)
-            ->with('flash', ['type' => 'success', 'message' => 'Anahtar kelime silindi.']);
+            ->with('flash', ['type' => 'success', 'message' => __('Anahtar kelime silindi.')]);
     }
 }

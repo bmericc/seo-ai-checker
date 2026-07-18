@@ -24,7 +24,7 @@ class DomainController extends Controller
         $domain = DomainHelper::fromFreeText($request->string('domain')->toString());
 
         if ($domain === null) {
-            return back()->with('flash', ['type' => 'error', 'message' => 'Gecerli bir domain girin (ornek: example.com).']);
+            return back()->with('flash', ['type' => 'error', 'message' => __('Geçerli bir domain girin (örnek: example.com).')]);
         }
 
         $existing = Domain::query()
@@ -34,14 +34,14 @@ class DomainController extends Controller
         if ($existing !== null) {
             return redirect()
                 ->route('domains.show', $existing)
-                ->with('flash', ['type' => 'error', 'message' => sprintf('%s zaten kayitli.', $domain)]);
+                ->with('flash', ['type' => 'error', 'message' => __(':domain zaten kayıtlı.', ['domain' => $domain])]);
         }
 
         $record = $request->user()->domains()->create(['domain' => $domain]);
 
         return redirect()
             ->route('domains.show', $record)
-            ->with('flash', ['type' => 'success', 'message' => sprintf('%s eklendi.', $domain)]);
+            ->with('flash', ['type' => 'success', 'message' => __(':domain eklendi.', ['domain' => $domain])]);
     }
 
     private const MAX_SITEMAP_URLS_DISPLAYED = 200;
@@ -90,7 +90,7 @@ class DomainController extends Controller
 
         return redirect()
             ->route('domains.show', $domain)
-            ->with('flash', ['type' => 'success', 'message' => 'Site kontrolu tamamlandi.']);
+            ->with('flash', ['type' => 'success', 'message' => __('Site kontrolü tamamlandı.')]);
     }
 
     public function destroy(Request $request, Domain $domain): RedirectResponse
@@ -101,7 +101,7 @@ class DomainController extends Controller
 
         return redirect()
             ->route('dashboard')
-            ->with('flash', ['type' => 'success', 'message' => 'Domain ve tum kayitli anahtar kelimeleri silindi.']);
+            ->with('flash', ['type' => 'success', 'message' => __('Domain ve tüm kayıtlı anahtar kelimeleri silindi.')]);
     }
 
     public function dismissKeywordSuggestion(Request $request, Domain $domain): RedirectResponse
@@ -114,7 +114,7 @@ class DomainController extends Controller
 
         return redirect()
             ->route('domains.show', $domain)
-            ->with('flash', ['type' => 'success', 'message' => 'Oneri kaldirildi.']);
+            ->with('flash', ['type' => 'success', 'message' => __('Öneri kaldırıldı.')]);
     }
 
     public function updateGa4Property(Request $request, Domain $domain): RedirectResponse
@@ -127,7 +127,7 @@ class DomainController extends Controller
 
         return redirect()
             ->route('domains.show', $domain)
-            ->with('flash', ['type' => 'success', 'message' => 'GA4 Property ID guncellendi.']);
+            ->with('flash', ['type' => 'success', 'message' => __('GA4 Property ID güncellendi.')]);
     }
 
     public function fetchGa4Properties(
@@ -144,19 +144,19 @@ class DomainController extends Controller
         if (!$result->configured) {
             return redirect()
                 ->route('domains.show', $domain)
-                ->with('flash', ['type' => 'error', 'message' => 'Google hesabınız bağlı değil.']);
+                ->with('flash', ['type' => 'error', 'message' => __('Google hesabınız bağlı değil.')]);
         }
 
         if ($result->error !== null) {
             return redirect()
                 ->route('domains.show', $domain)
-                ->with('flash', ['type' => 'error', 'message' => 'GA4 property listesi alınamadı: ' . $result->error]);
+                ->with('flash', ['type' => 'error', 'message' => __('GA4 property listesi alınamadı: :error', ['error' => $result->error])]);
         }
 
         if ($result->properties === []) {
             return redirect()
                 ->route('domains.show', $domain)
-                ->with('flash', ['type' => 'error', 'message' => 'Erişebildiğiniz bir GA4 property bulunamadı.']);
+                ->with('flash', ['type' => 'error', 'message' => __('Erişebildiğiniz bir GA4 property bulunamadı.')]);
         }
 
         return redirect()

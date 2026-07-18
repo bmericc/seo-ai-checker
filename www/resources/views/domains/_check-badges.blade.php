@@ -13,79 +13,79 @@
 @endphp
 
 @if (!($aiCrawlers['found'] ?? false))
-    <span class="badge bg-secondary-lt">robots.txt yok — hepsi açık</span>
+    <span class="badge bg-secondary-lt">{{ __('robots.txt yok — hepsi açık') }}</span>
 @elseif ($blockedCrawlers->isEmpty())
-    <span class="badge bg-success-lt">AI crawler'lar: hepsi açık</span>
+    <span class="badge bg-success-lt">{{ __("AI crawler'lar: hepsi açık") }}</span>
 @else
-    <span class="badge bg-warning-lt">AI crawler'lar: {{ $blockedCrawlers->count() }} engelli</span>
+    <span class="badge bg-warning-lt">{{ __("AI crawler'lar: :count engelli", ['count' => $blockedCrawlers->count()]) }}</span>
 @endif
 
 @if ($sitemapData['found'] ?? false)
     @if ($sitemapData['is_valid_xml'] ?? false)
-        <span class="badge bg-success-lt">Sitemap: geçerli</span>
+        <span class="badge bg-success-lt">{{ __('Sitemap: geçerli') }}</span>
     @else
-        <span class="badge bg-warning-lt">Sitemap: geçersiz XML</span>
+        <span class="badge bg-warning-lt">{{ __('Sitemap: geçersiz XML') }}</span>
     @endif
 @else
-    <span class="badge bg-warning-lt">Sitemap yok</span>
+    <span class="badge bg-warning-lt">{{ __('Sitemap yok') }}</span>
 @endif
 
 @if ($llmsTxt['found'] ?? false)
-    <span class="badge bg-success-lt">llms.txt var</span>
+    <span class="badge bg-success-lt">{{ __('llms.txt var') }}</span>
 @else
-    <span class="badge bg-secondary-lt">llms.txt yok</span>
+    <span class="badge bg-secondary-lt">{{ __('llms.txt yok') }}</span>
 @endif
 
 @if ($securityHeaders['http_redirects_to_https'] ?? false)
-    <span class="badge bg-success-lt">HTTPS zorunlu</span>
+    <span class="badge bg-success-lt">{{ __('HTTPS zorunlu') }}</span>
 @else
-    <span class="badge bg-warning-lt">HTTPS yönlendirmesi yok</span>
+    <span class="badge bg-warning-lt">{{ __('HTTPS yönlendirmesi yok') }}</span>
 @endif
 
 @if ($canonicalHostData['redirected'] ?? false)
-    <span class="badge bg-azure-lt">Kanonik: {{ $canonicalHostData['canonical_host'] }}</span>
+    <span class="badge bg-azure-lt">{{ __('Kanonik: :host', ['host' => $canonicalHostData['canonical_host']]) }}</span>
 @endif
 
 @if ($cruxData['configured'] ?? false)
     @if ($cruxData['found'] ?? false)
         @if ($cruxRatings->contains('poor'))
-            <span class="badge bg-danger-lt">CrUX: zayıf</span>
+            <span class="badge bg-danger-lt">{{ __('CrUX: zayıf') }}</span>
         @elseif ($cruxRatings->contains('needs_improvement'))
-            <span class="badge bg-warning-lt">CrUX: geliştirilmeli</span>
+            <span class="badge bg-warning-lt">{{ __('CrUX: geliştirilmeli') }}</span>
         @else
-            <span class="badge bg-success-lt">CrUX: iyi</span>
+            <span class="badge bg-success-lt">{{ __('CrUX: iyi') }}</span>
         @endif
     @elseif ($cruxData['error'] ?? null)
-        <span class="badge bg-danger-lt">CrUX: hata</span>
+        <span class="badge bg-danger-lt">{{ __('CrUX: hata') }}</span>
     @else
-        <span class="badge bg-secondary-lt">CrUX: veri yok</span>
+        <span class="badge bg-secondary-lt">{{ __('CrUX: veri yok') }}</span>
     @endif
 @endif
 
 @if ($gscData['configured'] ?? false)
     @if ($gscData['error'] ?? null)
-        <span class="badge bg-danger-lt">GSC: hata</span>
+        <span class="badge bg-danger-lt">{{ __('GSC: hata') }}</span>
     @elseif ($gscData['verified'] ?? false)
-        <span class="badge bg-success-lt">GSC: {{ number_format($gscData['clicks'] ?? 0) }} tıklama</span>
+        <span class="badge bg-success-lt">{{ __('GSC: :count tıklama', ['count' => number_format($gscData['clicks'] ?? 0)]) }}</span>
     @else
-        <span class="badge bg-secondary-lt">GSC: doğrulanmamış</span>
+        <span class="badge bg-secondary-lt">{{ __('GSC: doğrulanmamış') }}</span>
     @endif
 @endif
 
 @if (!empty($ga4Data['property_id']))
     @if ($ga4Data['error'] ?? null)
-        <span class="badge bg-danger-lt">GA4: hata</span>
+        <span class="badge bg-danger-lt">{{ __('GA4: hata') }}</span>
     @else
-        <span class="badge bg-success-lt">GA4: {{ number_format($ga4Data['total_sessions'] ?? 0) }} oturum</span>
+        <span class="badge bg-success-lt">{{ __('GA4: :count oturum', ['count' => number_format($ga4Data['total_sessions'] ?? 0)]) }}</span>
     @endif
 @endif
 
 @if ($bingData['configured'] ?? false)
     @if ($bingData['error'] ?? null)
-        <span class="badge bg-danger-lt">Backlink: hata</span>
+        <span class="badge bg-danger-lt">{{ __('Backlink: hata') }}</span>
     @elseif ($bingData['verified'] ?? false)
-        <span class="badge bg-success-lt">Backlink: {{ number_format($bingData['total_links'] ?? 0) }} link</span>
+        <span class="badge bg-success-lt">{{ __('Backlink: :count link', ['count' => number_format($bingData['total_links'] ?? 0)]) }}</span>
     @else
-        <span class="badge bg-secondary-lt">Backlink: Bing'de doğrulanmamış</span>
+        <span class="badge bg-secondary-lt">{{ __("Backlink: Bing'de doğrulanmamış") }}</span>
     @endif
 @endif

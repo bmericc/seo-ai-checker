@@ -10,19 +10,19 @@
     <form method="post" action="{{ route('keywords.check', $keyword) }}" class="d-inline">
         @csrf
         <button type="submit" class="btn btn-primary">
-            <i class="ti ti-refresh icon"></i> Kontrol Et
+            <i class="ti ti-refresh icon"></i> {{ __('Kontrol Et') }}
         </button>
     </form>
 @endsection
 
 @section('content')
-    <p class="text-secondary mb-4">Sayfa: {{ $keyword->targetUrl() }}</p>
+    <p class="text-secondary mb-4">{{ __('Sayfa:') }} {{ $keyword->targetUrl() }}</p>
 
     @if ($keyword->checks->isEmpty())
         <div class="card">
             <div class="empty">
                 <div class="empty-icon"><i class="ti ti-history fs-1"></i></div>
-                <p class="empty-title">Henüz kontrol çalıştırılmadı</p>
+                <p class="empty-title">{{ __('Henüz kontrol çalıştırılmadı') }}</p>
             </div>
         </div>
     @else
@@ -32,21 +32,21 @@
                     <div class="me-auto fw-medium">{{ $check->created_at->format('Y-m-d H:i:s') }}</div>
 
                     @if ($check->blocked)
-                        <span class="badge bg-warning-lt">Google engellendi</span>
+                        <span class="badge bg-warning-lt">{{ __('Google engellendi') }}</span>
                     @elseif ($check->target_position)
-                        <span class="badge bg-success-lt">Sıralama: {{ $check->target_position }}</span>
+                        <span class="badge bg-success-lt">{{ __('Sıralama: :position', ['position' => $check->target_position]) }}</span>
                     @else
-                        <span class="badge bg-secondary-lt">İlk sonuçlarda yok</span>
+                        <span class="badge bg-secondary-lt">{{ __('İlk sonuçlarda yok') }}</span>
                     @endif
 
                     @if ($check->ai_overview_present)
                         @if ($check->ai_overview_target_cited)
-                            <span class="badge bg-success-lt">AI Overview: kaynakta</span>
+                            <span class="badge bg-success-lt">{{ __('AI Overview: kaynakta') }}</span>
                         @else
-                            <span class="badge bg-warning-lt">AI Overview: var, kaynakta değil</span>
+                            <span class="badge bg-warning-lt">{{ __('AI Overview: var, kaynakta değil') }}</span>
                         @endif
                     @else
-                        <span class="badge bg-secondary-lt">AI Overview yok</span>
+                        <span class="badge bg-secondary-lt">{{ __('AI Overview yok') }}</span>
                     @endif
                 </div>
                 <div class="card-body">
@@ -56,17 +56,17 @@
 
                     @if ($check->ai_overview_present)
                         <p class="text-secondary">
-                            AI Overview kaynak domainler:
+                            {{ __('AI Overview kaynak domainler:') }}
                             @if (!empty($check->ai_overview_cited_domains))
                                 {{ implode(', ', $check->ai_overview_cited_domains) }}
                             @else
-                                (otomatik çıkarılamadı){{ $check->ai_overview_note ? ' — ' . $check->ai_overview_note : '' }}
+                                {{ __('(otomatik çıkarılamadı)') }}{{ $check->ai_overview_note ? ' — ' . $check->ai_overview_note : '' }}
                             @endif
                         </p>
                     @endif
 
                     @if ($check->onpage_error)
-                        <p class="text-danger mb-0">On-page analiz başarısız: {{ $check->onpage_error }}</p>
+                        <p class="text-danger mb-0">{{ __('On-page analiz başarısız: :error', ['error' => $check->onpage_error]) }}</p>
                     @endif
 
                     <div class="d-flex align-items-center gap-1 flex-wrap mt-2">
@@ -74,9 +74,9 @@
                         @if ($check->lighthouse_error)
                             <span class="text-danger">{{ $check->lighthouse_error }}</span>
                         @else
-                            <span class="badge bg-blue-lt">Performans {{ $check->lighthouse_performance ?? '-' }}</span>
+                            <span class="badge bg-blue-lt">{{ __('Performans') }} {{ $check->lighthouse_performance ?? '-' }}</span>
                             <span class="badge bg-blue-lt">SEO {{ $check->lighthouse_seo ?? '-' }}</span>
-                            <span class="badge bg-blue-lt">Erişilebilirlik {{ $check->lighthouse_accessibility ?? '-' }}</span>
+                            <span class="badge bg-blue-lt">{{ __('Erişilebilirlik') }} {{ $check->lighthouse_accessibility ?? '-' }}</span>
                             <span class="badge bg-blue-lt">Best Practices {{ $check->lighthouse_best_practices ?? '-' }}</span>
                         @endif
                     </div>
@@ -87,14 +87,14 @@
                                 <div class="accordion-item">
                                     <h2 class="accordion-header">
                                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#organic-{{ $check->id }}">
-                                            Organik sonuçlar ({{ count($check->organic_results) }})
+                                            {{ __('Organik sonuçlar (:count)', ['count' => count($check->organic_results)]) }}
                                         </button>
                                     </h2>
                                     <div id="organic-{{ $check->id }}" class="accordion-collapse collapse" data-bs-parent="#check-accordion-{{ $check->id }}">
                                         <div class="accordion-body">
                                             <div class="table-responsive">
                                                 <table class="table table-vcenter">
-                                                    <thead><tr><th>#</th><th>Domain</th><th>Başlık</th></tr></thead>
+                                                    <thead><tr><th>#</th><th>Domain</th><th>{{ __('Başlık') }}</th></tr></thead>
                                                     <tbody>
                                                     @foreach ($check->organic_results as $r)
                                                         <tr><td>{{ $r['position'] }}</td><td>{{ $r['domain'] }}</td><td>{{ $r['title'] }}</td></tr>
@@ -111,21 +111,21 @@
                                 <div class="accordion-item">
                                     <h2 class="accordion-header">
                                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#onpage-{{ $check->id }}">
-                                            On-page SEO detayı
+                                            {{ __('On-page SEO detayı') }}
                                         </button>
                                     </h2>
                                     <div id="onpage-{{ $check->id }}" class="accordion-collapse collapse" data-bs-parent="#check-accordion-{{ $check->id }}">
                                         <div class="accordion-body">
                                             <div class="table-responsive">
                                                 <table class="table table-vcenter">
-                                                    <tr><th class="w-25">Title</th><td>{{ $check->onpage['title'] ?: '(yok)' }} ({{ $check->onpage['title_length'] }} karakter)</td></tr>
-                                                    <tr><th>Meta description</th><td>{{ $check->onpage['meta_description'] ?: '(yok)' }} ({{ $check->onpage['meta_description_length'] }} karakter)</td></tr>
-                                                    <tr><th>H1</th><td>{{ !empty($check->onpage['h1s']) ? implode(', ', $check->onpage['h1s']) : '(yok)' }}</td></tr>
-                                                    <tr><th>H2 sayısı</th><td>{{ $check->onpage['h2_count'] }}</td></tr>
-                                                    <tr><th>Kelime sayısı</th><td>{{ $check->onpage['word_count'] }}</td></tr>
-                                                    <tr><th>Anahtar kelime yoğunluğu</th><td>{{ $check->onpage['keyword_density_percent'] }}%</td></tr>
-                                                    <tr><th>Alt etiketi eksik görsel</th><td>{{ $check->onpage['images_missing_alt'] }}</td></tr>
-                                                    <tr><th>İç/dış link</th><td>{{ $check->onpage['internal_links'] }} / {{ $check->onpage['external_links'] }}</td></tr>
+                                                    <tr><th class="w-25">Title</th><td>{{ $check->onpage['title'] ?: __('(yok)') }} ({{ $check->onpage['title_length'] }} {{ __('karakter') }})</td></tr>
+                                                    <tr><th>Meta description</th><td>{{ $check->onpage['meta_description'] ?: __('(yok)') }} ({{ $check->onpage['meta_description_length'] }} {{ __('karakter') }})</td></tr>
+                                                    <tr><th>H1</th><td>{{ !empty($check->onpage['h1s']) ? implode(', ', $check->onpage['h1s']) : __('(yok)') }}</td></tr>
+                                                    <tr><th>{{ __('H2 sayısı') }}</th><td>{{ $check->onpage['h2_count'] }}</td></tr>
+                                                    <tr><th>{{ __('Kelime sayısı') }}</th><td>{{ $check->onpage['word_count'] }}</td></tr>
+                                                    <tr><th>{{ __('Anahtar kelime yoğunluğu') }}</th><td>{{ $check->onpage['keyword_density_percent'] }}%</td></tr>
+                                                    <tr><th>{{ __('Alt etiketi eksik görsel') }}</th><td>{{ $check->onpage['images_missing_alt'] }}</td></tr>
+                                                    <tr><th>{{ __('İç/dış link') }}</th><td>{{ $check->onpage['internal_links'] }} / {{ $check->onpage['external_links'] }}</td></tr>
                                                     <tr>
                                                         <th>Canonical</th>
                                                         <td>
@@ -133,26 +133,26 @@
                                                                 $canonicalStatus = $check->onpage['canonical_status'] ?? null;
                                                             @endphp
                                                             @if ($canonicalStatus === 'self')
-                                                                <span class="badge bg-success-lt">kendine işaret ediyor</span>
+                                                                <span class="badge bg-success-lt">{{ __('kendine işaret ediyor') }}</span>
                                                             @elseif ($canonicalStatus === 'different')
-                                                                <span class="badge bg-warning-lt">farklı URL'e işaret ediyor</span>
+                                                                <span class="badge bg-warning-lt">{{ __("farklı URL'e işaret ediyor") }}</span>
                                                             @elseif ($canonicalStatus === 'missing')
-                                                                <span class="badge bg-warning-lt">yok</span>
+                                                                <span class="badge bg-warning-lt">{{ __('yok') }}</span>
                                                             @else
                                                                 <span class="text-secondary">-</span>
                                                             @endif
                                                         </td>
                                                     </tr>
                                                     <tr>
-                                                        <th>Başlık hiyerarşisi</th>
+                                                        <th>{{ __('Başlık hiyerarşisi') }}</th>
                                                         <td>
                                                             @if (($check->onpage['h1_count'] ?? count($check->onpage['h1s'] ?? [])) !== 1)
-                                                                <span class="badge bg-warning-lt">H1 sayısı: {{ $check->onpage['h1_count'] ?? count($check->onpage['h1s'] ?? []) }}</span>
+                                                                <span class="badge bg-warning-lt">{{ __('H1 sayısı: :count', ['count' => $check->onpage['h1_count'] ?? count($check->onpage['h1s'] ?? [])]) }}</span>
                                                             @endif
                                                             @if ($check->onpage['heading_hierarchy_skip'] ?? false)
-                                                                <span class="badge bg-warning-lt">seviye atlaması var</span>
+                                                                <span class="badge bg-warning-lt">{{ __('seviye atlaması var') }}</span>
                                                             @elseif (isset($check->onpage['heading_hierarchy_skip']))
-                                                                <span class="badge bg-success-lt">sorun yok</span>
+                                                                <span class="badge bg-success-lt">{{ __('sorun yok') }}</span>
                                                             @endif
                                                         </td>
                                                     </tr>
@@ -163,7 +163,7 @@
                                                                 $ogTags = collect($check->onpage['og_tags'] ?? [])->filter();
                                                             @endphp
                                                             @if ($ogTags->isEmpty())
-                                                                <span class="text-secondary">yok</span>
+                                                                <span class="text-secondary">{{ __('yok') }}</span>
                                                             @else
                                                                 @foreach ($ogTags as $key => $value)
                                                                     <span class="badge bg-azure-lt">{{ $key }}</span>
@@ -176,13 +176,13 @@
                                                         <td>{{ $check->onpage['twitter_card'] ?? '-' }}</td>
                                                     </tr>
                                                     <tr>
-                                                        <th>Yapısal veri (Schema.org)</th>
+                                                        <th>{{ __('Yapısal veri (Schema.org)') }}</th>
                                                         <td>
                                                             @php
-                                                                $schemaTypes = $check->onpage['schema_types'] ?? ($check->onpage['has_structured_data'] ?? false ? ['(tip tespit edilemedi)'] : []);
+                                                                $schemaTypes = $check->onpage['schema_types'] ?? ($check->onpage['has_structured_data'] ?? false ? [__('(tip tespit edilemedi)')] : []);
                                                             @endphp
                                                             @if (empty($schemaTypes))
-                                                                <span class="text-secondary">yok</span>
+                                                                <span class="text-secondary">{{ __('yok') }}</span>
                                                             @else
                                                                 @foreach ($schemaTypes as $type)
                                                                     <span class="badge {{ in_array($type, $check->onpage['deprecated_schema_types'] ?? []) ? 'bg-warning-lt' : 'bg-azure-lt' }}">{{ $type }}</span>
@@ -198,7 +198,7 @@
                                                                 $hreflangIssues = $check->onpage['hreflang_issues'] ?? [];
                                                             @endphp
                                                             @if (empty($hreflangTags))
-                                                                <span class="text-secondary">yok</span>
+                                                                <span class="text-secondary">{{ __('yok') }}</span>
                                                             @else
                                                                 @foreach (array_keys($hreflangTags) as $lang)
                                                                     <span class="badge bg-azure-lt">{{ $lang }}</span>
@@ -210,7 +210,7 @@
                                                         </td>
                                                     </tr>
                                                     <tr>
-                                                        <th>Görseller</th>
+                                                        <th>{{ __('Görseller') }}</th>
                                                         <td>
                                                             @php
                                                                 $imgStats = $check->onpage['image_stats'] ?? null;
@@ -218,18 +218,18 @@
                                                             @if ($imgStats === null)
                                                                 <span class="text-secondary">-</span>
                                                             @else
-                                                                {{ $imgStats['total'] }} görsel
+                                                                {{ __(':count görsel', ['count' => $imgStats['total']]) }}
                                                                 @if ($imgStats['missing_alt'] > 0)
-                                                                    <span class="badge bg-warning-lt">{{ $imgStats['missing_alt'] }} alt eksik</span>
+                                                                    <span class="badge bg-warning-lt">{{ __(':count alt eksik', ['count' => $imgStats['missing_alt']]) }}</span>
                                                                 @endif
                                                                 @if ($imgStats['missing_dimensions'] > 0)
-                                                                    <span class="badge bg-warning-lt">{{ $imgStats['missing_dimensions'] }} boyut eksik</span>
+                                                                    <span class="badge bg-warning-lt">{{ __(':count boyut eksik', ['count' => $imgStats['missing_dimensions']]) }}</span>
                                                                 @endif
                                                                 @if ($imgStats['not_lazy'] > 0)
-                                                                    <span class="badge bg-secondary-lt">{{ $imgStats['not_lazy'] }} lazy-load değil</span>
+                                                                    <span class="badge bg-secondary-lt">{{ __(':count lazy-load değil', ['count' => $imgStats['not_lazy']]) }}</span>
                                                                 @endif
                                                                 @if ($imgStats['legacy_format'] > 0)
-                                                                    <span class="badge bg-secondary-lt">{{ $imgStats['legacy_format'] }} eski format (jpg/png/gif)</span>
+                                                                    <span class="badge bg-secondary-lt">{{ __(':count eski format (jpg/png/gif)', ['count' => $imgStats['legacy_format']]) }}</span>
                                                                 @endif
                                                             @endif
                                                         </td>
@@ -246,7 +246,7 @@
                                 <div class="accordion-item">
                                     <h2 class="accordion-header">
                                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#lh-{{ $check->id }}">
-                                            Lighthouse detayı (Core Web Vitals + ham veri)
+                                            {{ __('Lighthouse detayı (Core Web Vitals + ham veri)') }}
                                         </button>
                                     </h2>
                                     <div id="lh-{{ $check->id }}" class="accordion-collapse collapse" data-bs-parent="#check-accordion-{{ $check->id }}">
@@ -254,7 +254,7 @@
                                             @if (!empty($metrics))
                                                 <div class="table-responsive">
                                                     <table class="table table-vcenter">
-                                                        <thead><tr><th>Metrik</th><th>Değer</th></tr></thead>
+                                                        <thead><tr><th>{{ __('Metrik') }}</th><th>{{ __('Değer') }}</th></tr></thead>
                                                         <tbody>
                                                         @foreach ($metrics as $metric)
                                                             <tr>
@@ -267,7 +267,7 @@
                                                 </div>
                                             @endif
                                             <a href="{{ route('checks.lighthouse-raw', $check) }}" class="btn btn-outline-secondary btn-sm">
-                                                <i class="ti ti-download icon"></i> Ham PSI JSON verisini indir
+                                                <i class="ti ti-download icon"></i> {{ __('Ham PSI JSON verisini indir') }}
                                             </a>
                                         </div>
                                     </div>

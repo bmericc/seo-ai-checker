@@ -1,11 +1,11 @@
 @extends('layout')
 
-@section('title', 'Domainler')
+@section('title', __('Domainler'))
 
-@section('page-title', 'Domainler')
+@section('page-title', __('Domainler'))
 @section('page-actions')
     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-add-domain">
-        <i class="ti ti-plus icon"></i> Domain Ekle
+        <i class="ti ti-plus icon"></i> {{ __('Domain Ekle') }}
     </button>
 @endsection
 
@@ -14,11 +14,11 @@
         @if ($domains->isEmpty())
             <div class="empty">
                 <div class="empty-icon"><i class="ti ti-world fs-1"></i></div>
-                <p class="empty-title">Henüz domain eklenmedi</p>
-                <p class="empty-subtitle text-secondary">Takibe başlamak için bir domain ekleyin.</p>
+                <p class="empty-title">{{ __('Henüz domain eklenmedi') }}</p>
+                <p class="empty-subtitle text-secondary">{{ __('Takibe başlamak için bir domain ekleyin.') }}</p>
                 <div class="empty-action">
                     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-add-domain">
-                        <i class="ti ti-plus icon"></i> Domain Ekle
+                        <i class="ti ti-plus icon"></i> {{ __('Domain Ekle') }}
                     </button>
                 </div>
             </div>
@@ -27,13 +27,13 @@
                 <table class="table card-table table-vcenter">
                     <thead>
                         <tr>
-                            <th>Domain</th>
+                            <th>{{ __('Domain') }}</th>
                             @if (auth()->user()->is_admin)
-                                <th>Sahibi</th>
+                                <th>{{ __('Sahibi') }}</th>
                             @endif
-                            <th>Site Kontrolü</th>
-                            <th>Anahtar kelime sayısı</th>
-                            <th>Eklenme</th>
+                            <th>{{ __('Site Kontrolü') }}</th>
+                            <th>{{ __('Anahtar kelime sayısı') }}</th>
+                            <th>{{ __('Eklenme') }}</th>
                             <th class="w-1"></th>
                         </tr>
                     </thead>
@@ -54,10 +54,10 @@
                                 <td><span class="badge bg-azure-lt">{{ $domain->keywords_count }}</span></td>
                                 <td class="text-secondary">{{ $domain->created_at?->format('Y-m-d H:i') }}</td>
                                 <td>
-                                    <form method="post" action="{{ route('domains.destroy', $domain) }}" onsubmit="return confirm('{{ $domain->domain }} silinsin mi? Tum anahtar kelimeler ve gecmis de silinecek.');">
+                                    <form method="post" action="{{ route('domains.destroy', $domain) }}" onsubmit="return confirm('{{ __(':domain silinsin mi? Tüm anahtar kelimeler ve geçmiş de silinecek.', ['domain' => $domain->domain]) }}');">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-ghost-danger btn-icon" aria-label="Sil">
+                                        <button type="submit" class="btn btn-ghost-danger btn-icon" aria-label="{{ __('Sil') }}">
                                             <i class="ti ti-trash"></i>
                                         </button>
                                     </form>
@@ -76,19 +76,19 @@
                 <form method="post" action="{{ route('domains.store') }}">
                     @csrf
                     <div class="modal-header">
-                        <h5 class="modal-title">Domain Ekle</h5>
+                        <h5 class="modal-title">{{ __('Domain Ekle') }}</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <div class="mb-0">
-                            <label class="form-label">Domain</label>
+                            <label class="form-label">{{ __('Domain') }}</label>
                             <input type="text" name="domain" class="form-control" placeholder="example.com" required autofocus>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-link link-secondary" data-bs-dismiss="modal">İptal</button>
+                        <button type="button" class="btn btn-link link-secondary" data-bs-dismiss="modal">{{ __('İptal') }}</button>
                         <button type="submit" class="btn btn-primary">
-                            <i class="ti ti-plus icon"></i> Ekle
+                            <i class="ti ti-plus icon"></i> {{ __('Ekle') }}
                         </button>
                     </div>
                 </form>

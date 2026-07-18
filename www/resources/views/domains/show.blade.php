@@ -3,36 +3,34 @@
 @section('title', $domain->domain)
 
 @section('page-pretitle')
-    <a href="{{ route('dashboard') }}" class="text-secondary">&larr; Domainler</a>
+    <a href="{{ route('dashboard') }}" class="text-secondary">&larr; {{ __('Domainler') }}</a>
 @endsection
 @section('page-title')
     {{ $domain->domain }}
     @if (auth()->user()->is_admin)
-        <span class="badge bg-secondary-lt ms-2">Sahibi: {{ $domain->user?->email ?? '—' }}</span>
+        <span class="badge bg-secondary-lt ms-2">{{ __('Sahibi: :email', ['email' => $domain->user?->email ?? '—']) }}</span>
     @endif
 @endsection
 @section('page-actions')
     <form method="post" action="{{ route('domains.check', $domain) }}" class="d-inline">
         @csrf
         <button type="submit" class="btn btn-outline-primary">
-            <i class="ti ti-refresh icon"></i> Site Kontrolü Yap
+            <i class="ti ti-refresh icon"></i> {{ __('Site Kontrolü Yap') }}
         </button>
     </form>
     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-add-keyword">
-        <i class="ti ti-plus icon"></i> Anahtar Kelime Ekle
+        <i class="ti ti-plus icon"></i> {{ __('Anahtar Kelime Ekle') }}
     </button>
 @endsection
 
 @section('content')
     <div class="card mb-4">
         <div class="card-header">
-            <h3 class="card-title">Site Kontrolü</h3>
+            <h3 class="card-title">{{ __('Site Kontrolü') }}</h3>
         </div>
         <div class="card-body">
             <p class="text-secondary">
-                Belirli bir anahtar kelimeye değil, domain'in tamamına ait kontroller:
-                AI crawler'ların robots.txt erişimi, sitemap.xml, llms.txt ve
-                güvenlik header'ları.
+                {{ __("Belirli bir anahtar kelimeye değil, domain'in tamamına ait kontroller: AI crawler'ların robots.txt erişimi, sitemap.xml, llms.txt ve güvenlik header'ları.") }}
             </p>
 
             @if ($domain->latestDomainCheck)
@@ -49,14 +47,14 @@
                     $bingData = $domainCheck->bing_backlinks ?? [];
                 @endphp
 
-                <div class="text-secondary small mb-2">Son kontrol: {{ $domainCheck->created_at->format('Y-m-d H:i:s') }}</div>
+                <div class="text-secondary small mb-2">{{ __('Son kontrol: :date', ['date' => $domainCheck->created_at->format('Y-m-d H:i:s')]) }}</div>
                 <div class="mb-3">
                     @include('domains._check-badges', ['domainCheck' => $domainCheck])
                 </div>
 
                 @if (!empty($driftChanges))
                     <div class="alert alert-warning">
-                        <div class="fw-medium mb-1">Bir önceki kontrole göre değişenler:</div>
+                        <div class="fw-medium mb-1">{{ __('Bir önceki kontrole göre değişenler:') }}</div>
                         <ul class="mb-0 ps-3">
                             @foreach ($driftChanges as $change)
                                 <li>{{ $change }}</li>
@@ -69,7 +67,7 @@
                     <div class="accordion-item">
                         <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ac-crawlers">
-                                AI crawler erişimi (robots.txt)
+                                {{ __("AI crawler erişimi (robots.txt)") }}
                             </button>
                         </h2>
                         <div id="ac-crawlers" class="accordion-collapse collapse" data-bs-parent="#site-check-accordion">
@@ -77,7 +75,7 @@
                                 @if ($aiCrawlers['found'] ?? false)
                                     <div class="table-responsive">
                                         <table class="table table-vcenter">
-                                            <thead><tr><th>Crawler</th><th>Kim</th><th>Durum</th></tr></thead>
+                                            <thead><tr><th>Crawler</th><th>{{ __('Kim') }}</th><th>{{ __('Durum') }}</th></tr></thead>
                                             <tbody>
                                             @foreach ($aiCrawlers['crawlers'] as $token => $info)
                                                 <tr>
@@ -85,9 +83,9 @@
                                                     <td>{{ $info['label'] }}</td>
                                                     <td>
                                                         @if ($info['allowed'])
-                                                            <span class="badge bg-success-lt">Açık</span>
+                                                            <span class="badge bg-success-lt">{{ __('Açık') }}</span>
                                                         @else
-                                                            <span class="badge bg-warning-lt">Engelli</span>
+                                                            <span class="badge bg-warning-lt">{{ __('Engelli') }}</span>
                                                         @endif
                                                     </td>
                                                 </tr>
@@ -95,9 +93,9 @@
                                             </tbody>
                                         </table>
                                     </div>
-                                    <p class="text-secondary mb-0">Kaynak: <a href="{{ $aiCrawlers['url'] }}" target="_blank" rel="noopener">{{ $aiCrawlers['url'] }}</a></p>
+                                    <p class="text-secondary mb-0">{{ __('Kaynak:') }} <a href="{{ $aiCrawlers['url'] }}" target="_blank" rel="noopener">{{ $aiCrawlers['url'] }}</a></p>
                                 @else
-                                    <p class="text-secondary mb-0">robots.txt bulunamadı ({{ $aiCrawlers['url'] ?? '' }}) — varsayılan olarak tüm crawler'lar için açık kabul edilir.</p>
+                                    <p class="text-secondary mb-0">{{ __(':url bulunamadı — varsayılan olarak tüm crawler\'lar için açık kabul edilir.', ['url' => $aiCrawlers['url'] ?? '']) }}</p>
                                 @endif
                             </div>
                         </div>
@@ -106,7 +104,7 @@
                     <div class="accordion-item">
                         <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ac-sitemap">
-                                Sitemap
+                                {{ __('Sitemap') }}
                             </button>
                         </h2>
                         <div id="ac-sitemap" class="accordion-collapse collapse" data-bs-parent="#site-check-accordion">
@@ -114,16 +112,16 @@
                                 @if ($sitemapData['found'] ?? false)
                                     @if ($sitemapData['is_valid_xml'] ?? false)
                                         <p>
-                                            {{ ($sitemapData['is_sitemap_index'] ?? false) ? 'Sitemap index' : 'Sitemap' }},
+                                            {{ ($sitemapData['is_sitemap_index'] ?? false) ? __('Sitemap index') : __('Sitemap') }},
                                             {{ $sitemapData['url_count'] ?? 0 }}
-                                            {{ ($sitemapData['is_sitemap_index'] ?? false) ? 'alt-sitemap' : 'URL' }} içeriyor.
+                                            {{ ($sitemapData['is_sitemap_index'] ?? false) ? __('alt-sitemap') : 'URL' }} {{ __('içeriyor.') }}
                                         </p>
                                     @else
-                                        <p class="text-danger">{{ $sitemapData['error'] ?? 'Geçersiz XML.' }}</p>
+                                        <p class="text-danger">{{ $sitemapData['error'] ?? __('Geçersiz XML.') }}</p>
                                     @endif
                                     <p class="text-secondary mb-0"><a href="{{ $sitemapData['url'] }}" target="_blank" rel="noopener">{{ $sitemapData['url'] }}</a></p>
                                 @else
-                                    <p class="text-secondary mb-0">{{ $sitemapData['url'] ?? '' }} bulunamadı.</p>
+                                    <p class="text-secondary mb-0">{{ __(':url bulunamadı.', ['url' => $sitemapData['url'] ?? '']) }}</p>
                                 @endif
                             </div>
                         </div>
@@ -143,7 +141,7 @@
                                     @endif
                                     <p class="text-secondary mb-0"><a href="{{ $llmsTxt['url'] }}" target="_blank" rel="noopener">{{ $llmsTxt['url'] }}</a></p>
                                 @else
-                                    <p class="text-secondary mb-0">{{ $llmsTxt['url'] ?? '' }} bulunamadı.</p>
+                                    <p class="text-secondary mb-0">{{ __(':url bulunamadı.', ['url' => $llmsTxt['url'] ?? '']) }}</p>
                                 @endif
                             </div>
                         </div>
@@ -152,7 +150,7 @@
                     <div class="accordion-item">
                         <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ac-security">
-                                Güvenlik header'ları
+                                {{ __("Güvenlik header'ları") }}
                             </button>
                         </h2>
                         <div id="ac-security" class="accordion-collapse collapse" data-bs-parent="#site-check-accordion">
@@ -160,7 +158,7 @@
                                 @if ($securityHeaders['reachable'] ?? false)
                                     <div class="table-responsive">
                                         <table class="table table-vcenter">
-                                            <thead><tr><th>Header</th><th>Değer</th></tr></thead>
+                                            <thead><tr><th>Header</th><th>{{ __('Değer') }}</th></tr></thead>
                                             <tbody>
                                             @foreach ($securityHeaders['headers'] ?? [] as $name => $value)
                                                 <tr>
@@ -169,18 +167,18 @@
                                                         @if ($value)
                                                             {{ $value }}
                                                         @else
-                                                            <span class="badge bg-warning-lt">yok</span>
+                                                            <span class="badge bg-warning-lt">{{ __('yok') }}</span>
                                                         @endif
                                                     </td>
                                                 </tr>
                                             @endforeach
                                             <tr>
-                                                <td>HTTP &rarr; HTTPS yönlendirme</td>
+                                                <td>{{ __('HTTP &rarr; HTTPS yönlendirme') }}</td>
                                                 <td>
                                                     @if ($securityHeaders['http_redirects_to_https'] ?? false)
-                                                        <span class="badge bg-success-lt">var</span>
+                                                        <span class="badge bg-success-lt">{{ __('var') }}</span>
                                                     @else
-                                                        <span class="badge bg-warning-lt">yok</span>
+                                                        <span class="badge bg-warning-lt">{{ __('yok') }}</span>
                                                     @endif
                                                 </td>
                                             </tr>
@@ -188,7 +186,7 @@
                                         </table>
                                     </div>
                                 @else
-                                    <p class="text-danger mb-0">Domaine erişilemedi.</p>
+                                    <p class="text-danger mb-0">{{ __('Domaine erişilemedi.') }}</p>
                                 @endif
                             </div>
                         </div>
@@ -197,23 +195,18 @@
                     <div class="accordion-item">
                         <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ac-canonical">
-                                Kanonik host
+                                {{ __('Kanonik host') }}
                             </button>
                         </h2>
                         <div id="ac-canonical" class="accordion-collapse collapse" data-bs-parent="#site-check-accordion">
                             <div class="accordion-body">
                                 @if ($canonicalHostData['redirected'] ?? false)
                                     <p class="mb-0">
-                                        <code>{{ $canonicalHostData['original_host'] }}</code>,
-                                        HTTP {{ $canonicalHostData['redirect_status'] }} ile
-                                        <code>{{ $canonicalHostData['canonical_host'] }}</code>
-                                        adresine yönleniyor. Gerçek trafik (ve CrUX verisi) bu host altında toplanır;
-                                        site-geneli kontroller (ve CrUX sorgusu) bu adrese göre yapılır.
+                                        {!! __('<code>:originalHost</code>, HTTP :status ile <code>:canonicalHost</code> adresine yönleniyor. Gerçek trafik (ve CrUX verisi) bu host altında toplanır; site-geneli kontroller (ve CrUX sorgusu) bu adrese göre yapılır.', ['originalHost' => $canonicalHostData['original_host'], 'status' => $canonicalHostData['redirect_status'], 'canonicalHost' => $canonicalHostData['canonical_host']]) !!}
                                     </p>
                                 @else
                                     <p class="text-secondary mb-0">
-                                        <code>{{ $canonicalHostData['original_host'] ?? $domain->domain }}</code>
-                                        kalıcı bir yönlendirme yapmıyor — bu host kanonik kabul edildi.
+                                        {!! __('<code>:host</code> kalıcı bir yönlendirme yapmıyor — bu host kanonik kabul edildi.', ['host' => $canonicalHostData['original_host'] ?? $domain->domain]) !!}
                                     </p>
                                 @endif
                             </div>
@@ -223,43 +216,39 @@
                     <div class="accordion-item">
                         <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ac-crux">
-                                CrUX (gerçek kullanıcı verisi)
+                                {{ __('CrUX (gerçek kullanıcı verisi)') }}
                             </button>
                         </h2>
                         <div id="ac-crux" class="accordion-collapse collapse" data-bs-parent="#site-check-accordion">
                             <div class="accordion-body">
                                 @php
                                     $cruxMetricDescriptions = [
-                                        'LCP' => 'Largest Contentful Paint — sayfadaki en büyük içerik öğesinin (görsel, video, blok metin) görünür hale gelme süresi. Yükleme hızını gösterir.',
-                                        'INP' => 'Interaction to Next Paint — kullanıcının tıklama/dokunma/tuş basma gibi etkileşimlerine sayfanın tepki verme süresi. Etkileşim duyarlılığını gösterir.',
-                                        'CLS' => 'Cumulative Layout Shift — sayfa yüklenirken öğelerin beklenmedik şekilde yer değiştirmesinin toplam skoru. Görsel kararlılığı gösterir.',
-                                        'FCP' => 'First Contentful Paint — tarayıcının ilk metin/görsel içeriği ekrana çizdiği an. Sayfanın "boş değil" hissini verdiği süredir.',
-                                        'TTFB' => 'Time to First Byte — tarayıcının sunucudan yanıtın ilk baytını alma süresi. Sunucu/ağ gecikmesini gösterir.',
+                                        'LCP' => __('Largest Contentful Paint — sayfadaki en büyük içerik öğesinin (görsel, video, blok metin) görünür hale gelme süresi. Yükleme hızını gösterir.'),
+                                        'INP' => __('Interaction to Next Paint — kullanıcının tıklama/dokunma/tuş basma gibi etkileşimlerine sayfanın tepki verme süresi. Etkileşim duyarlılığını gösterir.'),
+                                        'CLS' => __('Cumulative Layout Shift — sayfa yüklenirken öğelerin beklenmedik şekilde yer değiştirmesinin toplam skoru. Görsel kararlılığı gösterir.'),
+                                        'FCP' => __('First Contentful Paint — tarayıcının ilk metin/görsel içeriği ekrana çizdiği an. Sayfanın "boş değil" hissini verdiği süredir.'),
+                                        'TTFB' => __('Time to First Byte — tarayıcının sunucudan yanıtın ilk baytını alma süresi. Sunucu/ağ gecikmesini gösterir.'),
                                     ];
                                 @endphp
                                 @if (!($cruxData['configured'] ?? false))
                                     <p class="text-secondary mb-0">
-                                        CrUX API anahtarı tanımlı değil (<code>CRUX_API_KEY</code> veya <code>PSI_API_KEY</code>).
+                                        {!! __('CrUX API anahtarı tanımlı değil (<code>CRUX_API_KEY</code> veya <code>PSI_API_KEY</code>).') !!}
                                     </p>
                                 @elseif ($cruxData['error'] ?? null)
                                     <p class="text-danger mb-1">
-                                        <code>{{ $cruxData['origin'] ?? '' }}</code> sorgulanırken hata oluştu:
-                                        {{ $cruxData['error'] }}
+                                        {!! __('<code>:origin</code> sorgulanırken hata oluştu: :error', ['origin' => $cruxData['origin'] ?? '', 'error' => $cruxData['error']]) !!}
                                     </p>
                                     <p class="text-secondary mb-0">
-                                        "PERMISSION_DENIED" / "API_KEY_SERVICE_BLOCKED" görüyorsanız: Google Cloud
-                                        Console'da API anahtarının <em>API kısıtlamaları</em> listesine
-                                        "Chrome UX Report API"yi ekleyin ve API'nin projede etkin olduğundan emin olun.
+                                        {{ __('"PERMISSION_DENIED" / "API_KEY_SERVICE_BLOCKED" görüyorsanız: Google Cloud Console\'da API anahtarının API kısıtlamaları listesine "Chrome UX Report API"yi ekleyin ve API\'nin projede etkin olduğundan emin olun.') }}
                                     </p>
                                 @elseif (!($cruxData['found'] ?? false))
                                     <p class="text-secondary mb-0">
-                                        <code>{{ $cruxData['origin'] ?? '' }}</code> için CrUX verisi bulunamadı
-                                        (yeterli gerçek kullanıcı trafiği olmayabilir).
+                                        {!! __('<code>:origin</code> için CrUX verisi bulunamadı (yeterli gerçek kullanıcı trafiği olmayabilir).', ['origin' => $cruxData['origin'] ?? '']) !!}
                                     </p>
                                 @else
                                     <div class="table-responsive">
                                         <table class="table table-vcenter">
-                                            <thead><tr><th>Metrik</th><th>p75</th><th>Değerlendirme</th></tr></thead>
+                                            <thead><tr><th>{{ __('Metrik') }}</th><th>p75</th><th>{{ __('Değerlendirme') }}</th></tr></thead>
                                             <tbody>
                                             @foreach ($cruxData['metrics'] ?? [] as $metric)
                                                 <tr>
@@ -276,11 +265,11 @@
                                                     <td>{{ $metric['p75'] }}</td>
                                                     <td>
                                                         @if ($metric['rating'] === 'good')
-                                                            <span class="badge bg-success-lt">iyi</span>
+                                                            <span class="badge bg-success-lt">{{ __('iyi') }}</span>
                                                         @elseif ($metric['rating'] === 'needs_improvement')
-                                                            <span class="badge bg-warning-lt">geliştirilmeli</span>
+                                                            <span class="badge bg-warning-lt">{{ __('geliştirilmeli') }}</span>
                                                         @else
-                                                            <span class="badge bg-danger-lt">zayıf</span>
+                                                            <span class="badge bg-danger-lt">{{ __('zayıf') }}</span>
                                                         @endif
                                                     </td>
                                                 </tr>
@@ -289,9 +278,9 @@
                                         </table>
                                     </div>
                                     <p class="text-secondary mb-0">
-                                        Köken: <code>{{ $cruxData['origin'] }}</code>
+                                        {{ __('Köken:') }} <code>{{ $cruxData['origin'] }}</code>
                                         @if ($cruxData['collection_period'] ?? null)
-                                            &middot; Veri periyodu: {{ $cruxData['collection_period'] }}
+                                            &middot; {{ __('Veri periyodu:') }} {{ $cruxData['collection_period'] }}
                                         @endif
                                     </p>
                                 @endif
@@ -309,29 +298,27 @@
                             <div class="accordion-body">
                                 @if (!auth()->user()->hasGoogleOfflineAccess())
                                     <p class="text-secondary mb-0">
-                                        Google hesabınız bağlı değil. Search Console verisi için üstteki
-                                        "Google hesabını bağla" bağlantısından tekrar giriş yapın.
+                                        {!! __('Google hesabınız bağlı değil. Search Console verisi için üstteki ":link" bağlantısından tekrar giriş yapın.', ['link' => __('Google hesabını bağla')]) !!}
                                     </p>
                                 @elseif ($gscData['error'] ?? null)
-                                    <p class="text-danger mb-0">Search Console sorgulanırken hata oluştu: {{ $gscData['error'] }}</p>
+                                    <p class="text-danger mb-0">{{ __('Search Console sorgulanırken hata oluştu: :error', ['error' => $gscData['error']]) }}</p>
                                 @elseif (!($gscData['verified'] ?? false))
                                     <p class="text-secondary mb-0">
-                                        Bu domain, bağlı Google hesabınızın Search Console'unda doğrulanmış bir
-                                        mülk (property) olarak bulunamadı.
+                                        {{ __("Bu domain, bağlı Google hesabınızın Search Console'unda doğrulanmış bir mülk (property) olarak bulunamadı.") }}
                                     </p>
                                 @else
                                     <div class="table-responsive">
                                         <table class="table table-vcenter">
                                             <tbody>
-                                                <tr><td>Tıklama</td><td>{{ number_format($gscData['clicks'] ?? 0) }}</td></tr>
-                                                <tr><td>Gösterim</td><td>{{ number_format($gscData['impressions'] ?? 0) }}</td></tr>
+                                                <tr><td>{{ __('Tıklama') }}</td><td>{{ number_format($gscData['clicks'] ?? 0) }}</td></tr>
+                                                <tr><td>{{ __('Gösterim') }}</td><td>{{ number_format($gscData['impressions'] ?? 0) }}</td></tr>
                                                 <tr><td>CTR</td><td>{{ number_format((($gscData['ctr'] ?? 0) * 100), 2) }}%</td></tr>
-                                                <tr><td>Ortalama pozisyon</td><td>{{ $gscData['average_position'] ? number_format($gscData['average_position'], 1) : '-' }}</td></tr>
+                                                <tr><td>{{ __('Ortalama pozisyon') }}</td><td>{{ $gscData['average_position'] ? number_format($gscData['average_position'], 1) : '-' }}</td></tr>
                                             </tbody>
                                         </table>
                                     </div>
                                     <p class="text-secondary mb-0">
-                                        Mülk: <code>{{ $gscData['site_url'] }}</code>
+                                        {{ __('Mülk:') }} <code>{{ $gscData['site_url'] }}</code>
                                         @if (($gscData['period_start'] ?? null) && ($gscData['period_end'] ?? null))
                                             &middot; {{ $gscData['period_start'] }} — {{ $gscData['period_end'] }}
                                         @endif
@@ -351,30 +338,27 @@
                             <div class="accordion-body">
                                 @if ($ga4Data['disabled'] ?? false)
                                     <p class="text-secondary mb-2">
-                                        GA4 entegrasyonu şu anda devre dışı — Google'ın "analytics.readonly"
-                                        kapsamı için istediği kullanım açıklaması/demo video doğrulama süreci
-                                        tamamlanınca etkinleştirilecek. Property ID'yi şimdiden girebilirsiniz.
+                                        {{ __('GA4 entegrasyonu şu anda devre dışı — Google\'ın "analytics.readonly" kapsamı için istediği kullanım açıklaması/demo video doğrulama süreci tamamlanınca etkinleştirilecek. Property ID\'yi şimdiden girebilirsiniz.') }}
                                     </p>
                                 @elseif (!auth()->user()->hasGoogleOfflineAccess())
                                     <p class="text-secondary mb-0">
-                                        Google hesabınız bağlı değil. GA4 verisi için üstteki
-                                        "Google hesabını bağla" bağlantısından tekrar giriş yapın.
+                                        {!! __('Google hesabınız bağlı değil. GA4 verisi için üstteki ":link" bağlantısından tekrar giriş yapın.', ['link' => __('Google hesabını bağla')]) !!}
                                     </p>
                                 @elseif ($ga4Data['error'] ?? null)
-                                    <p class="text-danger mb-0">GA4 sorgulanırken hata oluştu: {{ $ga4Data['error'] }}</p>
+                                    <p class="text-danger mb-0">{{ __('GA4 sorgulanırken hata oluştu: :error', ['error' => $ga4Data['error']]) }}</p>
                                 @elseif (empty($ga4Data['property_id']))
-                                    <p class="text-secondary mb-2">GA4 Property ID girilmedi.</p>
+                                    <p class="text-secondary mb-2">{{ __('GA4 Property ID girilmedi.') }}</p>
                                 @else
                                     <div class="table-responsive">
                                         <table class="table table-vcenter">
                                             <tbody>
-                                                <tr><td>Toplam oturum (28 gün)</td><td>{{ number_format($ga4Data['total_sessions'] ?? 0) }}</td></tr>
-                                                <tr><td>Organik arama oturumu</td><td>{{ number_format($ga4Data['organic_sessions'] ?? 0) }}</td></tr>
-                                                <tr><td>Aktif kullanıcı</td><td>{{ number_format($ga4Data['active_users'] ?? 0) }}</td></tr>
+                                                <tr><td>{{ __('Toplam oturum (28 gün)') }}</td><td>{{ number_format($ga4Data['total_sessions'] ?? 0) }}</td></tr>
+                                                <tr><td>{{ __('Organik arama oturumu') }}</td><td>{{ number_format($ga4Data['organic_sessions'] ?? 0) }}</td></tr>
+                                                <tr><td>{{ __('Aktif kullanıcı') }}</td><td>{{ number_format($ga4Data['active_users'] ?? 0) }}</td></tr>
                                             </tbody>
                                         </table>
                                     </div>
-                                    <p class="text-secondary mb-0">Property ID: <code>{{ $ga4Data['property_id'] }}</code></p>
+                                    <p class="text-secondary mb-0">{{ __('Property ID:') }} <code>{{ $ga4Data['property_id'] }}</code></p>
                                 @endif
                                 @php
                                     $ga4Properties = session('ga4Properties', []);
@@ -387,16 +371,16 @@
                                     @method('PATCH')
                                     <div class="flex-grow-1">
                                         @if (!empty($ga4Properties))
-                                            <label class="form-label">GA4 Hesabı</label>
+                                            <label class="form-label">{{ __('GA4 Hesabı') }}</label>
                                             <select class="form-select mb-2" data-ga4-account-select="{{ $domain->id }}">
-                                                <option value="">— Hesap seçiniz —</option>
+                                                <option value="">{{ __('— Hesap seçiniz —') }}</option>
                                                 @foreach ($ga4PropertiesByAccount as $accountName => $accountProperties)
                                                     <option value="{{ $accountName }}" @selected($selectedGa4Account === $accountName)>{{ $accountName }} ({{ $accountProperties->count() }})</option>
                                                 @endforeach
                                             </select>
                                             <label class="form-label">GA4 Property</label>
                                             <select name="ga4_property_id" class="form-select" data-ga4-property-select="{{ $domain->id }}" @if(!$selectedGa4Account) disabled @endif>
-                                                <option value="">— {{ $selectedGa4Account ? 'Seçiniz' : 'Önce hesap seçin' }} —</option>
+                                                <option value="">{{ $selectedGa4Account ? __('— Seçiniz —') : __('— Önce hesap seçin —') }}</option>
                                                 @foreach ($ga4Properties as $property)
                                                     <option
                                                         value="{{ $property['propertyId'] }}"
@@ -406,20 +390,20 @@
                                                     >{{ $property['label'] }} ({{ $property['propertyId'] }})</option>
                                                 @endforeach
                                             </select>
-                                            <small class="form-hint">Önce hesabınızı, ardından property'nizi seçin. {{ $ga4PropertiesByAccount->count() }} hesap ve {{ count($ga4Properties) }} property bulundu.</small>
+                                            <small class="form-hint">{{ __('Önce hesabınızı, ardından property\'nizi seçin. :accountCount hesap ve :propertyCount property bulundu.', ['accountCount' => $ga4PropertiesByAccount->count(), 'propertyCount' => count($ga4Properties)]) }}</small>
                                         @else
                                             <label class="form-label">GA4 Property ID</label>
-                                            <input type="text" name="ga4_property_id" class="form-control" value="{{ $domain->ga4_property_id }}" placeholder="ör. 123456789">
-                                            <small class="form-hint">GA4 Yönetici paneli &rarr; Mülk ayarları'ndan kopyalayın, ya da aşağıdan listeyi getirin.</small>
+                                            <input type="text" name="ga4_property_id" class="form-control" value="{{ $domain->ga4_property_id }}" placeholder="{{ __('ör. 123456789') }}">
+                                            <small class="form-hint">{{ __("GA4 Yönetici paneli &rarr; Mülk ayarları'ndan kopyalayın, ya da aşağıdan listeyi getirin.") }}</small>
                                         @endif
                                     </div>
-                                    <button type="submit" class="btn btn-outline-primary">Kaydet</button>
+                                    <button type="submit" class="btn btn-outline-primary">{{ __('Kaydet') }}</button>
                                 </form>
                                 @if (empty($ga4Properties) && auth()->user()->hasGoogleOfflineAccess())
                                     <form method="post" action="{{ route('domains.ga4-properties.fetch', $domain) }}" class="mt-2">
                                         @csrf
                                         <button type="submit" class="btn btn-sm btn-outline-secondary">
-                                            <i class="ti ti-refresh icon"></i> Property listesini getir
+                                            <i class="ti ti-refresh icon"></i> {{ __('Property listesini getir') }}
                                         </button>
                                     </form>
                                 @endif
@@ -430,28 +414,25 @@
                     <div class="accordion-item">
                         <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ac-bing">
-                                Backlink (Bing Webmaster)
+                                {{ __('Backlink (Bing Webmaster)') }}
                             </button>
                         </h2>
                         <div id="ac-bing" class="accordion-collapse collapse" data-bs-parent="#site-check-accordion">
                             <div class="accordion-body">
                                 @if (!auth()->user()->hasBingOfflineAccess())
                                     <p class="text-secondary mb-0">
-                                        Bing hesabınız bağlı değil. Backlink verisi için üstteki
-                                        "Bing hesabını bağla" bağlantısından bağlanın.
+                                        {!! __('Bing hesabınız bağlı değil. Backlink verisi için üstteki ":link" bağlantısından bağlanın.', ['link' => __('Bing hesabını bağla')]) !!}
                                     </p>
                                 @elseif ($bingData['error'] ?? null)
-                                    <p class="text-danger mb-0">Bing Webmaster sorgulanırken hata oluştu: {{ $bingData['error'] }}</p>
+                                    <p class="text-danger mb-0">{{ __('Bing Webmaster sorgulanırken hata oluştu: :error', ['error' => $bingData['error']]) }}</p>
                                 @elseif (!($bingData['verified'] ?? false))
                                     <p class="text-secondary mb-0">
-                                        Bu domain, bağlı Bing hesabınızda doğrulanmış bir site olarak bulunamadı.
-                                        Not: bu, genel bir backlink indeksi değildir — yalnızca kendi Bing Webmaster
-                                        hesabınızda doğruladığınız siteler için veri döner.
+                                        {{ __('Bu domain, bağlı Bing hesabınızda doğrulanmış bir site olarak bulunamadı. Not: bu, genel bir backlink indeksi değildir — yalnızca kendi Bing Webmaster hesabınızda doğruladığınız siteler için veri döner.') }}
                                     </p>
                                 @else
                                     <div class="table-responsive">
                                         <table class="table table-vcenter">
-                                            <thead><tr><th>Sayfa</th><th>Inbound link sayısı</th></tr></thead>
+                                            <thead><tr><th>{{ __('Sayfa') }}</th><th>{{ __('Inbound link sayısı') }}</th></tr></thead>
                                             <tbody>
                                             @foreach ($bingData['top_pages'] ?? [] as $page)
                                                 <tr>
@@ -465,9 +446,7 @@
                                         </table>
                                     </div>
                                     <p class="text-secondary mb-0">
-                                        Toplam {{ number_format($bingData['total_links'] ?? 0) }} inbound link,
-                                        {{ number_format($bingData['pages_with_links'] ?? 0) }} sayfaya dağılmış.
-                                        Mülk: <code>{{ $bingData['site_url'] }}</code>
+                                        {{ __('Toplam :total inbound link, :pages sayfaya dağılmış. Mülk: :siteUrl', ['total' => number_format($bingData['total_links'] ?? 0), 'pages' => number_format($bingData['pages_with_links'] ?? 0), 'siteUrl' => $bingData['site_url']]) }}
                                     </p>
                                 @endif
                             </div>
@@ -475,7 +454,7 @@
                     </div>
                 </div>
             @else
-                <p class="text-secondary mb-0">Henüz site kontrolü çalıştırılmadı.</p>
+                <p class="text-secondary mb-0">{{ __('Henüz site kontrolü çalıştırılmadı.') }}</p>
             @endif
         </div>
     </div>
@@ -483,21 +462,20 @@
     @if ($sitemapUrlCounts['active'] + $sitemapUrlCounts['removed'] > 0)
         <div class="card mb-4">
             <div class="card-header">
-                <h3 class="card-title">Keşfedilen Sayfalar (Sitemap)</h3>
+                <h3 class="card-title">{{ __('Keşfedilen Sayfalar (Sitemap)') }}</h3>
                 <div class="card-actions">
-                    <span class="badge bg-success-lt">{{ $sitemapUrlCounts['active'] }} sitemap'te</span>
+                    <span class="badge bg-success-lt">{{ __(":count sitemap'te", ['count' => $sitemapUrlCounts['active']]) }}</span>
                     @if ($sitemapUrlCounts['removed'] > 0)
-                        <span class="badge bg-warning-lt">{{ $sitemapUrlCounts['removed'] }} kaldırıldı</span>
+                        <span class="badge bg-warning-lt">{{ __(':count kaldırıldı', ['count' => $sitemapUrlCounts['removed']]) }}</span>
                     @endif
                     <a href="{{ route('domains.lighthouse-report', $domain) }}" class="btn btn-sm btn-outline-primary">
-                        <i class="ti ti-gauge icon"></i> Sayfa Raporu
+                        <i class="ti ti-gauge icon"></i> {{ __('Sayfa Raporu') }}
                     </a>
                 </div>
             </div>
             <div class="card-body py-2">
                 <p class="text-secondary mb-0">
-                    Sitemap.xml'de bulunan sayfalar; her "Site Kontrolü Yap" çalıştırmasında yeniden okunur.
-                    Bir sayfa sitemap'ten kaldırılırsa (silinmez, sadece) "kaldırıldı" olarak işaretlenir.
+                    {{ __('Sitemap.xml\'de bulunan sayfalar; her "Site Kontrolü Yap" çalıştırmasında yeniden okunur. Bir sayfa sitemap\'ten kaldırılırsa (silinmez, sadece) "kaldırıldı" olarak işaretlenir.') }}
                 </p>
             </div>
             <div class="table-responsive" style="max-height: 420px; overflow-y: auto;">
@@ -505,9 +483,9 @@
                     <thead>
                         <tr>
                             <th>URL</th>
-                            <th>İlk görülme</th>
-                            <th>Son görülme</th>
-                            <th>Durum</th>
+                            <th>{{ __('İlk görülme') }}</th>
+                            <th>{{ __('Son görülme') }}</th>
+                            <th>{{ __('Durum') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -520,9 +498,9 @@
                                 <td class="text-secondary">{{ $sitemapUrl->last_seen_at->format('Y-m-d') }}</td>
                                 <td>
                                     @if ($sitemapUrl->removed_at)
-                                        <span class="badge bg-warning-lt">kaldırıldı: {{ $sitemapUrl->removed_at->format('Y-m-d') }}</span>
+                                        <span class="badge bg-warning-lt">{{ __('kaldırıldı: :date', ['date' => $sitemapUrl->removed_at->format('Y-m-d')]) }}</span>
                                     @else
-                                        <span class="badge bg-success-lt">sitemap'te</span>
+                                        <span class="badge bg-success-lt">{{ __("sitemap'te") }}</span>
                                     @endif
                                 </td>
                             </tr>
@@ -532,7 +510,7 @@
             </div>
             @if ($sitemapUrlCounts['active'] + $sitemapUrlCounts['removed'] > $sitemapUrls->count())
                 <div class="card-body py-2">
-                    <p class="text-secondary mb-0 small">İlk {{ $sitemapUrls->count() }} kayıt gösteriliyor.</p>
+                    <p class="text-secondary mb-0 small">{{ __('İlk :count kayıt gösteriliyor.', ['count' => $sitemapUrls->count()]) }}</p>
                 </div>
             @endif
         </div>
@@ -540,10 +518,10 @@
 
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">Anahtar Kelimeler</h3>
+            <h3 class="card-title">{{ __('Anahtar Kelimeler') }}</h3>
         </div>
         <div class="card-body border-bottom py-2">
-            <p class="text-secondary mb-0">"Kontrol Et" butonu SERP + on-page + Lighthouse taramasını aynı anda çalıştırır; bu 20-60 saniye sürebilir, sayfa kapanmadan bekleyin.</p>
+            <p class="text-secondary mb-0">{{ __('"Kontrol Et" butonu SERP + on-page + Lighthouse taramasını aynı anda çalıştırır; bu 20-60 saniye sürebilir, sayfa kapanmadan bekleyin.') }}</p>
         </div>
 
         @php
@@ -556,7 +534,7 @@
         @if ($suggestedKeywords->isNotEmpty())
             <div class="card-body border-bottom py-3">
                 <div class="text-secondary small mb-2">
-                    Ana sayfa HTML'inden otomatik çıkarılan anahtar kelime önerileri — eklemek için "+", istemiyorsanız "×" tıklayın:
+                    {{ __('Ana sayfa HTML\'inden otomatik çıkarılan anahtar kelime önerileri — eklemek için "+", istemiyorsanız "×" tıklayın:') }}
                 </div>
                 <div class="d-flex flex-wrap gap-2">
                     @foreach ($suggestedKeywords as $suggestion)
@@ -571,7 +549,7 @@
                             <form method="post" action="{{ route('domains.keyword-suggestions.dismiss', $domain) }}">
                                 @csrf
                                 <input type="hidden" name="phrase" value="{{ $suggestion['phrase'] }}">
-                                <button type="submit" class="btn btn-sm btn-outline-secondary" aria-label="Öneriyi kaldır: {{ $suggestion['phrase'] }}">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary" aria-label="{{ __('Öneriyi kaldır: :phrase', ['phrase' => $suggestion['phrase']]) }}">
                                     <i class="ti ti-x"></i>
                                 </button>
                             </form>
@@ -584,10 +562,10 @@
         @if ($domain->keywords->isEmpty())
             <div class="empty">
                 <div class="empty-icon"><i class="ti ti-key fs-1"></i></div>
-                <p class="empty-title">Henüz anahtar kelime eklenmedi</p>
+                <p class="empty-title">{{ __('Henüz anahtar kelime eklenmedi') }}</p>
                 <div class="empty-action">
                     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-add-keyword">
-                        <i class="ti ti-plus icon"></i> Anahtar Kelime Ekle
+                        <i class="ti ti-plus icon"></i> {{ __('Anahtar Kelime Ekle') }}
                     </button>
                 </div>
             </div>
@@ -596,12 +574,12 @@
                 <table class="table card-table table-vcenter">
                     <thead>
                         <tr>
-                            <th>Kelime</th>
-                            <th>Sayfa</th>
-                            <th>Son sıralama</th>
+                            <th>{{ __('Kelime') }}</th>
+                            <th>{{ __('Sayfa') }}</th>
+                            <th>{{ __('Son sıralama') }}</th>
                             <th>AI Overview</th>
-                            <th>Lighthouse (Perf/SEO/Eris/BP)</th>
-                            <th>Son kontrol</th>
+                            <th>{{ __('Lighthouse (Perf/SEO/Eris/BP)') }}</th>
+                            <th>{{ __('Son kontrol') }}</th>
                             <th class="w-1"></th>
                         </tr>
                     </thead>
@@ -617,11 +595,11 @@
                                     @if (!$last)
                                         <span class="text-secondary">-</span>
                                     @elseif ($last->blocked)
-                                        <span class="badge bg-warning-lt">engellendi</span>
+                                        <span class="badge bg-warning-lt">{{ __('engellendi') }}</span>
                                     @elseif ($last->target_position)
                                         <strong>{{ $last->target_position }}</strong>
                                     @else
-                                        <span class="text-secondary">bulunamadı</span>
+                                        <span class="text-secondary">{{ __('bulunamadı') }}</span>
                                     @endif
                                 </td>
                                 <td>
@@ -629,12 +607,12 @@
                                         <span class="text-secondary">-</span>
                                     @elseif ($last->ai_overview_present)
                                         @if ($last->ai_overview_target_cited)
-                                            <span class="badge bg-success-lt">var, kaynakta</span>
+                                            <span class="badge bg-success-lt">{{ __('var, kaynakta') }}</span>
                                         @else
-                                            <span class="badge bg-warning-lt">var, kaynakta değil</span>
+                                            <span class="badge bg-warning-lt">{{ __('var, kaynakta değil') }}</span>
                                         @endif
                                     @else
-                                        <span class="text-secondary">yok</span>
+                                        <span class="text-secondary">{{ __('yok') }}</span>
                                     @endif
                                 </td>
                                 <td class="text-secondary">
@@ -652,14 +630,14 @@
                                     <div class="btn-list flex-nowrap">
                                         <form method="post" action="{{ route('keywords.check', $kw) }}">
                                             @csrf
-                                            <button type="submit" class="btn btn-icon btn-outline-primary" aria-label="Kontrol Et">
+                                            <button type="submit" class="btn btn-icon btn-outline-primary" aria-label="{{ __('Kontrol Et') }}">
                                                 <i class="ti ti-refresh"></i>
                                             </button>
                                         </form>
-                                        <form method="post" action="{{ route('keywords.destroy', $kw) }}" onsubmit="return confirm('Bu anahtar kelime silinsin mi?');">
+                                        <form method="post" action="{{ route('keywords.destroy', $kw) }}" onsubmit="return confirm('{{ __('Bu anahtar kelime silinsin mi?') }}');">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-icon btn-ghost-danger" aria-label="Sil">
+                                            <button type="submit" class="btn btn-icon btn-ghost-danger" aria-label="{{ __('Sil') }}">
                                                 <i class="ti ti-trash"></i>
                                             </button>
                                         </form>
@@ -679,24 +657,24 @@
                 <form method="post" action="{{ route('keywords.store', $domain) }}">
                     @csrf
                     <div class="modal-header">
-                        <h5 class="modal-title">Anahtar Kelime Ekle</h5>
+                        <h5 class="modal-title">{{ __('Anahtar Kelime Ekle') }}</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label">Anahtar kelime</label>
+                            <label class="form-label">{{ __('Anahtar kelime') }}</label>
                             <input type="text" name="keyword" class="form-control" required autofocus>
                         </div>
                         <div class="mb-0">
-                            <label class="form-label">On-page analiz sayfası (opsiyonel)</label>
+                            <label class="form-label">{{ __('On-page analiz sayfası (opsiyonel)') }}</label>
                             <input type="url" name="url" class="form-control" placeholder="https://{{ $domain->domain }}/sayfa">
-                            <small class="form-hint">Boş bırakılırsa https://{{ $domain->domain }}/ kullanılır.</small>
+                            <small class="form-hint">{{ __('Boş bırakılırsa :url kullanılır.', ['url' => 'https://' . $domain->domain . '/']) }}</small>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-link link-secondary" data-bs-dismiss="modal">İptal</button>
+                        <button type="button" class="btn btn-link link-secondary" data-bs-dismiss="modal">{{ __('İptal') }}</button>
                         <button type="submit" class="btn btn-primary">
-                            <i class="ti ti-plus icon"></i> Ekle
+                            <i class="ti ti-plus icon"></i> {{ __('Ekle') }}
                         </button>
                     </div>
                 </form>

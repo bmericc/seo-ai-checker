@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr" data-bs-theme="light">
+<html lang="{{ app()->getLocale() }}" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -28,7 +28,7 @@
             @auth
                 <div class="navbar-nav flex-row order-md-last">
                     <div class="nav-item dropdown">
-                        <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown" aria-label="Kullanıcı menüsü">
+                        <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown" aria-label="{{ __('Kullanıcı menüsü') }}">
                             <span class="avatar avatar-sm bg-primary-lt">{{ strtoupper(substr(auth()->user()->name ?: auth()->user()->email, 0, 1)) }}</span>
                             <div class="d-none d-xl-block ps-2">
                                 <div>{{ auth()->user()->name }}</div>
@@ -38,14 +38,14 @@
                         <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
                             @if (auth()->user()->is_admin)
                                 <a href="{{ route('admin.users.index') }}" class="dropdown-item">
-                                    <i class="ti ti-users-group icon me-1"></i>Kullanıcılar
+                                    <i class="ti ti-users-group icon me-1"></i>{{ __('Kullanıcılar') }}
                                 </a>
                                 <div class="dropdown-divider"></div>
                             @endif
                             <form method="post" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit" class="dropdown-item">
-                                    <i class="ti ti-logout icon me-1"></i>Çıkış yap
+                                    <i class="ti ti-logout icon me-1"></i>{{ __('Çıkış yap') }}
                                 </button>
                             </form>
                         </div>
@@ -64,14 +64,14 @@
                             <li class="nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                                 <a class="nav-link" href="{{ route('dashboard') }}">
                                     <span class="nav-link-icon"><i class="ti ti-world"></i></span>
-                                    <span class="nav-link-title">Domainler</span>
+                                    <span class="nav-link-title">{{ __('Domainler') }}</span>
                                 </a>
                             </li>
                             @if (auth()->user()->is_admin)
                                 <li class="nav-item {{ request()->routeIs('admin.*') ? 'active' : '' }}">
                                     <a class="nav-link" href="{{ route('admin.users.index') }}">
                                         <span class="nav-link-icon"><i class="ti ti-users-group"></i></span>
-                                        <span class="nav-link-title">Kullanıcılar</span>
+                                        <span class="nav-link-title">{{ __('Kullanıcılar') }}</span>
                                     </a>
                                 </li>
                             @endif
@@ -108,15 +108,15 @@
                 @auth
                     @if (!auth()->user()->hasGoogleOfflineAccess())
                         <div class="alert alert-info alert-dismissible" role="alert">
-                            Search Console ve GA4 verilerini görebilmek için Google hesabınızı yeniden bağlamanız gerekiyor.
-                            <a href="{{ route('google.redirect') }}" class="alert-link">Google hesabını bağla</a>
+                            {{ __('Search Console ve GA4 verilerini görebilmek için Google hesabınızı yeniden bağlamanız gerekiyor.') }}
+                            <a href="{{ route('google.redirect') }}" class="alert-link">{{ __('Google hesabını bağla') }}</a>
                             <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
                         </div>
                     @endif
                     @if (!auth()->user()->hasBingOfflineAccess())
                         <div class="alert alert-info alert-dismissible" role="alert">
-                            Kendi doğruladığınız sitelerin backlink verisini görebilmek için Bing hesabınızı bağlamanız gerekiyor.
-                            <a href="{{ route('bing.connect') }}" class="alert-link">Bing hesabını bağla</a>
+                            {{ __('Kendi doğruladığınız sitelerin backlink verisini görebilmek için Bing hesabınızı bağlamanız gerekiyor.') }}
+                            <a href="{{ route('bing.connect') }}" class="alert-link">{{ __('Bing hesabını bağla') }}</a>
                             <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
                         </div>
                     @endif
@@ -147,8 +147,8 @@
                 <div class="row text-center align-items-center flex-row-reverse">
                     <div class="col-lg-auto ms-lg-auto">
                         <ul class="list-inline list-inline-dots mb-0">
-                            <li class="list-inline-item"><a href="{{ route('privacy-policy') }}" class="link-secondary">Gizlilik Politikası</a></li>
-                            <li class="list-inline-item"><a href="{{ route('terms-of-service') }}" class="link-secondary">Kullanım Koşulları</a></li>
+                            <li class="list-inline-item"><a href="{{ route('privacy-policy') }}" class="link-secondary">{{ __('Gizlilik Politikası') }}</a></li>
+                            <li class="list-inline-item"><a href="{{ route('terms-of-service') }}" class="link-secondary">{{ __('Kullanım Koşulları') }}</a></li>
                         </ul>
                     </div>
                 </div>
@@ -192,7 +192,9 @@
                     propertySelect.value = '';
                 }
                 if (placeholderOption) {
-                    placeholderOption.textContent = chosenAccount === '' ? '— Önce hesap seçin —' : '— Seçiniz —';
+                    placeholderOption.textContent = chosenAccount === ''
+                        ? {!! json_encode(__('— Önce hesap seçin —')) !!}
+                        : {!! json_encode(__('— Seçiniz —')) !!};
                 }
             }
 

@@ -112,7 +112,7 @@ class LighthouseReportController extends Controller
             ->route('domains.lighthouse-report', $domain)
             ->with('flash', [
                 'type' => 'success',
-                'message' => $this->batchMessage($queued, $reused, 'Lighthouse taraması'),
+                'message' => $this->batchMessage($queued, $reused, __('Lighthouse taraması')),
             ]);
     }
 
@@ -149,22 +149,22 @@ class LighthouseReportController extends Controller
             ->route('domains.lighthouse-report', $domain)
             ->with('flash', [
                 'type' => 'success',
-                'message' => $this->batchMessage($queued, $reused, 'on-page SEO analizi'),
+                'message' => $this->batchMessage($queued, $reused, __('on-page SEO analizi')),
             ]);
     }
 
     private function batchMessage(int $queued, int $reused, string $label): string
     {
         if ($queued === 0 && $reused === 0) {
-            return 'Taranacak yeni sayfa yok.';
+            return __('Taranacak yeni sayfa yok.');
         }
 
         $parts = [];
         if ($queued > 0) {
-            $parts[] = sprintf('%d sayfa %s için kuyruğa eklendi', $queued, $label);
+            $parts[] = __(':count sayfa :label için kuyruğa eklendi', ['count' => $queued, 'label' => $label]);
         }
         if ($reused > 0) {
-            $parts[] = sprintf('%d sayfa başka bir kullanıcının taze sonucundan kopyalandı', $reused);
+            $parts[] = __(':count sayfa başka bir kullanıcının taze sonucundan kopyalandı', ['count' => $reused]);
         }
 
         return implode(', ', $parts) . '.';
