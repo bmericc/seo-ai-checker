@@ -15,12 +15,21 @@ class SitemapUrl extends Model
         'first_seen_at',
         'last_seen_at',
         'removed_at',
+        'lighthouse_performance',
+        'lighthouse_seo',
+        'lighthouse_accessibility',
+        'lighthouse_best_practices',
+        'lighthouse_raw',
+        'lighthouse_error',
+        'lighthouse_checked_at',
     ];
 
     protected $casts = [
         'first_seen_at' => 'datetime',
         'last_seen_at' => 'datetime',
         'removed_at' => 'datetime',
+        'lighthouse_raw' => 'array',
+        'lighthouse_checked_at' => 'datetime',
     ];
 
     public function domain(): BelongsTo
@@ -31,5 +40,10 @@ class SitemapUrl extends Model
     public function isRemoved(): bool
     {
         return $this->removed_at !== null;
+    }
+
+    public function isLighthouseChecked(): bool
+    {
+        return $this->lighthouse_checked_at !== null;
     }
 }

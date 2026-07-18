@@ -282,6 +282,9 @@
                     @if ($sitemapUrlCounts['removed'] > 0)
                         <span class="badge bg-warning-lt">{{ $sitemapUrlCounts['removed'] }} kaldırıldı</span>
                     @endif
+                    <a href="{{ route('domains.lighthouse-report', $domain) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="ti ti-gauge icon"></i> Lighthouse Raporu
+                    </a>
                 </div>
             </div>
             <div class="card-body py-2">

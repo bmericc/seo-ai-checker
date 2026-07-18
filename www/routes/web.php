@@ -6,6 +6,7 @@ use App\Http\Controllers\CheckController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DomainController;
 use App\Http\Controllers\KeywordController;
+use App\Http\Controllers\LighthouseReportController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -40,6 +41,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/domains/{domain}/check', [DomainController::class, 'check'])->name('domains.check');
     Route::delete('/domains/{domain}', [DomainController::class, 'destroy'])->name('domains.destroy');
     Route::post('/domains/{domain}/keyword-suggestions/dismiss', [DomainController::class, 'dismissKeywordSuggestion'])->name('domains.keyword-suggestions.dismiss');
+    Route::get('/domains/{domain}/lighthouse-report', [LighthouseReportController::class, 'show'])->name('domains.lighthouse-report');
+    Route::post('/domains/{domain}/lighthouse-report/start', [LighthouseReportController::class, 'start'])->name('domains.lighthouse-report.start');
 
     Route::post('/domains/{domain}/keywords', [KeywordController::class, 'store'])->name('keywords.store');
     Route::get('/keywords/{keyword}', [KeywordController::class, 'show'])->name('keywords.show');
