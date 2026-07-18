@@ -56,9 +56,11 @@ class Ga4PropertyListerTest extends TestCase
         $this->assertTrue($result->configured);
         $this->assertCount(3, $result->properties);
         $this->assertSame('111', $result->properties[0]->propertyId);
-        $this->assertSame('Acme Inc · acme.com', $result->properties[0]->label);
+        $this->assertSame('acme.com', $result->properties[0]->label);
+        $this->assertSame('Acme Inc', $result->properties[0]->accountName);
         $this->assertSame('333', $result->properties[2]->propertyId);
-        $this->assertSame('Personal · blog.example.com', $result->properties[2]->label);
+        $this->assertSame('blog.example.com', $result->properties[2]->label);
+        $this->assertSame('Personal', $result->properties[2]->accountName);
     }
 
     public function test_follows_next_page_token_to_collect_properties_across_pages(): void

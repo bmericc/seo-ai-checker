@@ -162,7 +162,11 @@ class DomainController extends Controller
         return redirect()
             ->route('domains.show', $domain)
             ->with('ga4Properties', array_map(
-                fn (Ga4Property $property) => ['propertyId' => $property->propertyId, 'label' => $property->label],
+                fn (Ga4Property $property) => [
+                    'propertyId' => $property->propertyId,
+                    'label' => $property->label,
+                    'accountName' => $property->accountName,
+                ],
                 $result->properties,
             ));
     }

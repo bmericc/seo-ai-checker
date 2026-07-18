@@ -58,7 +58,8 @@ class FetchGa4PropertiesTest extends TestCase
         $response->assertSessionHas('ga4Properties');
 
         $showResponse = $this->actingAs($user)->get(route('domains.show', $domain));
-        $showResponse->assertSee('Acme · example.com (999)');
+        $showResponse->assertSee('Acme');
+        $showResponse->assertSee('example.com (999)');
     }
 
     public function test_not_connected_user_gets_an_error_and_no_properties_flashed(): void

@@ -60,6 +60,7 @@ final class Ga4PropertyLister
 
             foreach ($data['accountSummaries'] ?? [] as $account) {
                 $accountName = $account['displayName'] ?? '';
+                $accountName = $accountName !== '' ? $accountName : 'Diğer';
 
                 foreach ($account['propertySummaries'] ?? [] as $property) {
                     $propertyId = $this->extractPropertyId($property['property'] ?? '');
@@ -68,9 +69,8 @@ final class Ga4PropertyLister
                     }
 
                     $propertyName = $property['displayName'] ?? $propertyId;
-                    $label = $accountName !== '' ? "{$accountName} · {$propertyName}" : $propertyName;
 
-                    $properties[] = new Ga4Property($propertyId, $label);
+                    $properties[] = new Ga4Property($propertyId, $propertyName, $accountName);
                 }
             }
 

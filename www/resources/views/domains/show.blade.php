@@ -378,6 +378,7 @@
                                 @endif
                                 @php
                                     $ga4Properties = session('ga4Properties', []);
+                                    $ga4PropertiesByAccount = collect($ga4Properties)->groupBy('accountName');
                                 @endphp
                                 <form method="post" action="{{ route('domains.ga4-property.update', $domain) }}" class="d-flex gap-2 align-items-end mt-3">
                                     @csrf
@@ -387,11 +388,15 @@
                                         @if (!empty($ga4Properties))
                                             <select name="ga4_property_id" class="form-select">
                                                 <option value="">— Seçiniz —</option>
-                                                @foreach ($ga4Properties as $property)
-                                                    <option value="{{ $property['propertyId'] }}" @selected($domain->ga4_property_id === $property['propertyId'])>{{ $property['label'] }} ({{ $property['propertyId'] }})</option>
+                                                @foreach ($ga4PropertiesByAccount as $accountName => $accountProperties)
+                                                    <optgroup label="{{ $accountName }}">
+                                                        @foreach ($accountProperties as $property)
+                                                            <option value="{{ $property['propertyId'] }}" @selected($domain->ga4_property_id === $property['propertyId'])>{{ $property['label'] }} ({{ $property['propertyId'] }})</option>
+                                                        @endforeach
+                                                    </optgroup>
                                                 @endforeach
                                             </select>
-                                            <small class="form-hint">Google hesabınızda bulunan property'ler listelendi.</small>
+                                            <small class="form-hint">Önce hesap grubu, ardından property görünür. Google hesabınızda bulunan {{ $ga4PropertiesByAccount->count() }} hesap ve {{ count($ga4Properties) }} property listelendi.</small>
                                         @else
                                             <input type="text" name="ga4_property_id" class="form-control" value="{{ $domain->ga4_property_id }}" placeholder="ör. 123456789">
                                             <small class="form-hint">GA4 Yönetici paneli &rarr; Mülk ayarları'ndan kopyalayın, ya da aşağıdan listeyi getirin.</small>
