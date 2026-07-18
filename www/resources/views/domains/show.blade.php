@@ -358,16 +358,37 @@
                                     </div>
                                     <p class="text-secondary mb-0">Property ID: <code>{{ $ga4Data['property_id'] }}</code></p>
                                 @endif
+                                @php
+                                    $ga4Properties = session('ga4Properties', []);
+                                @endphp
                                 <form method="post" action="{{ route('domains.ga4-property.update', $domain) }}" class="d-flex gap-2 align-items-end mt-3">
                                     @csrf
                                     @method('PATCH')
                                     <div class="flex-grow-1">
                                         <label class="form-label">GA4 Property ID</label>
-                                        <input type="text" name="ga4_property_id" class="form-control" value="{{ $domain->ga4_property_id }}" placeholder="ör. 123456789">
-                                        <small class="form-hint">GA4 Yönetici paneli &rarr; Mülk ayarları'ndan kopyalayın.</small>
+                                        @if (!empty($ga4Properties))
+                                            <select name="ga4_property_id" class="form-select">
+                                                <option value="">— Seçiniz —</option>
+                                                @foreach ($ga4Properties as $property)
+                                                    <option value="{{ $property->propertyId }}" @selected($domain->ga4_property_id === $property->propertyId)>{{ $property->label }} ({{ $property->propertyId }})</option>
+                                                @endforeach
+                                            </select>
+                                            <small class="form-hint">Google hesabınızda bulunan property'ler listelendi.</small>
+                                        @else
+                                            <input type="text" name="ga4_property_id" class="form-control" value="{{ $domain->ga4_property_id }}" placeholder="ör. 123456789">
+                                            <small class="form-hint">GA4 Yönetici paneli &rarr; Mülk ayarları'ndan kopyalayın, ya da aşağıdan listeyi getirin.</small>
+                                        @endif
                                     </div>
                                     <button type="submit" class="btn btn-outline-primary">Kaydet</button>
                                 </form>
+                                @if (empty($ga4Properties) && auth()->user()->hasGoogleOfflineAccess())
+                                    <form method="post" action="{{ route('domains.ga4-properties.fetch', $domain) }}" class="mt-2">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                            <i class="ti ti-refresh icon"></i> Property listesini getir
+                                        </button>
+                                    </form>
+                                @endif
                             </div>
                         </div>
                     </div>

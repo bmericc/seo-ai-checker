@@ -6,6 +6,7 @@ use App\Services\Bing\BingBacklinksChecker;
 use App\Services\CanonicalHost\CanonicalHostChecker;
 use App\Services\Crux\CrUxChecker;
 use App\Services\Ga4\Ga4Checker;
+use App\Services\Ga4\Ga4PropertyLister;
 use App\Services\Google\GoogleTokenService;
 use App\Services\Gsc\GscChecker;
 use App\Services\Keywords\KeywordSuggester;
@@ -77,6 +78,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(GscChecker::class, fn ($app) => new GscChecker($app->make(Client::class)));
 
         $this->app->singleton(Ga4Checker::class, fn ($app) => new Ga4Checker($app->make(Client::class)));
+
+        $this->app->singleton(Ga4PropertyLister::class, fn ($app) => new Ga4PropertyLister($app->make(Client::class)));
 
         $this->app->singleton(BingBacklinksChecker::class, fn ($app) => new BingBacklinksChecker($app->make(Client::class), config('seo.bing.api_key')));
 

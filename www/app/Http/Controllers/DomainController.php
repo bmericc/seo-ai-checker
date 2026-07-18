@@ -7,6 +7,8 @@ namespace App\Http\Controllers;
 use App\Models\Domain;
 use App\Services\DomainCheckRunner;
 use App\Services\Drift\DomainCheckDrift;
+use App\Services\Ga4\Ga4PropertyLister;
+use App\Services\Google\GoogleTokenService;
 use App\Support\Domain as DomainHelper;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -125,5 +127,39 @@ class DomainController extends Controller
         return redirect()
             ->route('domains.show', $domain)
             ->with('flash', ['type' => 'success', 'message' => 'GA4 Property ID guncellendi.']);
+    }
+
+    public function fetchGa4Properties(
+        Request $request,
+        Domain $domain,
+        GoogleTokenService $tokenService,
+        Ga4PropertyLister $lister,
+    ): RedirectResponse {
+        $this->ensureCanAccessDomain($request, $domain);
+
+        $accessToken = $tokenService->getValidAccessToken($domain->user);
+        $result = $lister->list($accessToken);
+
+        if (!$result->configured) {
+            return redirect()
+                ->route('domains.show', $domain)
+                ->with('flash', ['type' => 'error', 'message' => 'Google hesabınız bağlı değil.']);
+        }
+
+        if ($result->error !== null) {
+            return redirect()
+                ->route('domains.show', $domain)
+                ->with('flash', ['type' => 'error', 'message' => 'GA4 property listesi alınamadı: ' . $result->error]);
+        }
+
+        if ($result->properties === []) {
+            return redirect()
+                ->route('domains.show', $domain)
+                ->with('flash', ['type' => 'error', 'message' => 'Erişebildiğiniz bir GA4 property bulunamadı.']);
+        }
+
+        return redirect()
+            ->route('domains.show', $domain)
+            ->with('ga4Properties', $result->properties);
     }
 }
