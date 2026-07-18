@@ -379,25 +379,36 @@
                                 @php
                                     $ga4Properties = session('ga4Properties', []);
                                     $ga4PropertiesByAccount = collect($ga4Properties)->groupBy('accountName');
+                                    $selectedGa4Property = collect($ga4Properties)->firstWhere('propertyId', $domain->ga4_property_id);
+                                    $selectedGa4Account = $selectedGa4Property['accountName'] ?? null;
                                 @endphp
                                 <form method="post" action="{{ route('domains.ga4-property.update', $domain) }}" class="d-flex gap-2 align-items-end mt-3">
                                     @csrf
                                     @method('PATCH')
                                     <div class="flex-grow-1">
-                                        <label class="form-label">GA4 Property ID</label>
                                         @if (!empty($ga4Properties))
-                                            <select name="ga4_property_id" class="form-select">
-                                                <option value="">— Seçiniz —</option>
+                                            <label class="form-label">GA4 Hesabı</label>
+                                            <select class="form-select mb-2" data-ga4-account-select="{{ $domain->id }}">
+                                                <option value="">— Hesap seçiniz —</option>
                                                 @foreach ($ga4PropertiesByAccount as $accountName => $accountProperties)
-                                                    <optgroup label="{{ $accountName }}">
-                                                        @foreach ($accountProperties as $property)
-                                                            <option value="{{ $property['propertyId'] }}" @selected($domain->ga4_property_id === $property['propertyId'])>{{ $property['label'] }} ({{ $property['propertyId'] }})</option>
-                                                        @endforeach
-                                                    </optgroup>
+                                                    <option value="{{ $accountName }}" @selected($selectedGa4Account === $accountName)>{{ $accountName }} ({{ $accountProperties->count() }})</option>
                                                 @endforeach
                                             </select>
-                                            <small class="form-hint">Önce hesap grubu, ardından property görünür. Google hesabınızda bulunan {{ $ga4PropertiesByAccount->count() }} hesap ve {{ count($ga4Properties) }} property listelendi.</small>
+                                            <label class="form-label">GA4 Property</label>
+                                            <select name="ga4_property_id" class="form-select" data-ga4-property-select="{{ $domain->id }}" @if(!$selectedGa4Account) disabled @endif>
+                                                <option value="">— {{ $selectedGa4Account ? 'Seçiniz' : 'Önce hesap seçin' }} —</option>
+                                                @foreach ($ga4Properties as $property)
+                                                    <option
+                                                        value="{{ $property['propertyId'] }}"
+                                                        data-account="{{ $property['accountName'] }}"
+                                                        @selected($domain->ga4_property_id === $property['propertyId'])
+                                                        @if($selectedGa4Account !== $property['accountName']) hidden @endif
+                                                    >{{ $property['label'] }} ({{ $property['propertyId'] }})</option>
+                                                @endforeach
+                                            </select>
+                                            <small class="form-hint">Önce hesabınızı, ardından property'nizi seçin. {{ $ga4PropertiesByAccount->count() }} hesap ve {{ count($ga4Properties) }} property bulundu.</small>
                                         @else
+                                            <label class="form-label">GA4 Property ID</label>
                                             <input type="text" name="ga4_property_id" class="form-control" value="{{ $domain->ga4_property_id }}" placeholder="ör. 123456789">
                                             <small class="form-hint">GA4 Yönetici paneli &rarr; Mülk ayarları'ndan kopyalayın, ya da aşağıdan listeyi getirin.</small>
                                         @endif

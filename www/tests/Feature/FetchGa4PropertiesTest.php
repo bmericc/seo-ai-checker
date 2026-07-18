@@ -62,6 +62,71 @@ class FetchGa4PropertiesTest extends TestCase
         $showResponse->assertSee('example.com (999)');
     }
 
+    public function test_show_page_renders_a_two_step_account_then_property_select(): void
+    {
+        $user = User::factory()->create(['approved_at' => now()]);
+        $domain = Domain::query()->create(['domain' => 'example.com', 'user_id' => $user->id]);
+        $domain->domainChecks()->create([
+            'ai_crawlers' => ['found' => false],
+            'sitemap' => ['found' => false],
+            'llms_txt' => ['found' => false],
+            'security_headers' => ['reachable' => false],
+            'canonical_host' => ['canonical_host' => 'example.com'],
+            'crux' => ['configured' => false],
+            'gsc' => ['configured' => false],
+            'ga4' => ['configured' => false],
+            'bing_backlinks' => ['configured' => false],
+        ]);
+
+        $response = $this->actingAs($user)->withSession(['ga4Properties' => [
+            ['propertyId' => '111', 'label' => 'acme.com', 'accountName' => 'Acme Inc'],
+            ['propertyId' => '222', 'label' => 'shop.acme.com', 'accountName' => 'Acme Inc'],
+            ['propertyId' => '333', 'label' => 'blog.example.com', 'accountName' => 'Personal'],
+        ]])->get(route('domains.show', $domain));
+
+        $response->assertSee('data-ga4-account-select', false);
+        $response->assertSee('data-ga4-property-select', false);
+        $response->assertSee('Acme Inc (2)');
+        $response->assertSee('Personal (1)');
+        $response->assertSee('data-account="Acme Inc"', false);
+        $response->assertSee('data-account="Personal"', false);
+    }
+
+    public function test_saved_property_preselects_its_account_on_reload(): void
+    {
+        $user = User::factory()->create(['approved_at' => now()]);
+        $domain = Domain::query()->create(['domain' => 'example.com', 'user_id' => $user->id, 'ga4_property_id' => '333']);
+        $domain->domainChecks()->create([
+            'ai_crawlers' => ['found' => false],
+            'sitemap' => ['found' => false],
+            'llms_txt' => ['found' => false],
+            'security_headers' => ['reachable' => false],
+            'canonical_host' => ['canonical_host' => 'example.com'],
+            'crux' => ['configured' => false],
+            'gsc' => ['configured' => false],
+            'ga4' => ['configured' => false],
+            'bing_backlinks' => ['configured' => false],
+        ]);
+
+        $response = $this->actingAs($user)->withSession(['ga4Properties' => [
+            ['propertyId' => '111', 'label' => 'acme.com', 'accountName' => 'Acme Inc'],
+            ['propertyId' => '333', 'label' => 'blog.example.com', 'accountName' => 'Personal'],
+        ]])->get(route('domains.show', $domain));
+
+        preg_match('/<select[^>]*data-ga4-account-select[^>]*>(.*?)<\/select>/s', $response->getContent(), $accountMatch);
+        preg_match('/<select[^>]*data-ga4-property-select[^>]*>(.*?)<\/select>/s', $response->getContent(), $propertyMatch);
+
+        $this->assertStringContainsString('selected', $this->extractOptionAttributes($accountMatch[1], 'Personal'));
+        $this->assertStringContainsString('selected', $this->extractOptionAttributes($propertyMatch[1], '333'));
+    }
+
+    private function extractOptionAttributes(string $selectHtml, string $value): string
+    {
+        preg_match('/<option[^>]*value="' . preg_quote($value, '/') . '"[^>]*>/', $selectHtml, $match);
+
+        return $match[0] ?? '';
+    }
+
     public function test_not_connected_user_gets_an_error_and_no_properties_flashed(): void
     {
         $user = User::factory()->create(['approved_at' => now()]);

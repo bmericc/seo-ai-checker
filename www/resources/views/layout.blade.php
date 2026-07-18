@@ -162,6 +162,42 @@
         document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
             new tabler.Tooltip(el);
         });
+
+        document.querySelectorAll('[data-ga4-account-select]').forEach(function (accountSelect) {
+            var domainId = accountSelect.dataset.ga4AccountSelect;
+            var propertySelect = document.querySelector('[data-ga4-property-select="' + domainId + '"]');
+            if (!propertySelect) {
+                return;
+            }
+
+            var placeholderOption = propertySelect.querySelector('option[value=""]');
+
+            function applyAccountFilter() {
+                var chosenAccount = accountSelect.value;
+                var hasVisibleSelection = false;
+
+                Array.from(propertySelect.options).forEach(function (option) {
+                    if (!option.value) {
+                        return;
+                    }
+                    var matches = chosenAccount !== '' && option.dataset.account === chosenAccount;
+                    option.hidden = !matches;
+                    if (matches && option.selected) {
+                        hasVisibleSelection = true;
+                    }
+                });
+
+                propertySelect.disabled = chosenAccount === '';
+                if (!hasVisibleSelection) {
+                    propertySelect.value = '';
+                }
+                if (placeholderOption) {
+                    placeholderOption.textContent = chosenAccount === '' ? '— Önce hesap seçin —' : '— Seçiniz —';
+                }
+            }
+
+            accountSelect.addEventListener('change', applyAccountFilter);
+        });
     });
 </script>
 </body>
