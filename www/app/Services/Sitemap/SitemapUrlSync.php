@@ -13,9 +13,21 @@ use Illuminate\Support\Carbon;
  * guncellenir (ve daha once kaldirilmis isaretliyse removed_at temizlenir),
  * yeni gorulenler olusturulur, artik listede olmayanlar removed_at ile
  * isaretlenir (silinmez - gecmis korunur).
+ *
+ * Yeni olusturulan bir URL icin, ayni domain string'ini takip eden baska
+ * bir kullanicinin Lighthouse/on-page tarama sonucu varsa (bkz.
+ * SharedSitemapUrlLookup) o sonuc dogrudan kopyalanir - tazeligi ne olursa
+ * olsun, hicbir sey olmamasindan iyidir; zaten cok eskiyse mevcut
+ * "hic taranmamis/en eski taranmis once" sirlama mantigi onu yine de
+ * yeniden taramaya aday yapar.
  */
 final class SitemapUrlSync
 {
+    public function __construct(
+        private readonly SharedSitemapUrlLookup $sharedLookup,
+    ) {
+    }
+
     /**
      * @param  string[]  $urls
      */
@@ -38,12 +50,20 @@ final class SitemapUrlSync
             }
 
             $toCreate = array_diff($urls, $existing);
-            foreach ($toCreate as $url) {
-                $domain->sitemapUrls()->create([
-                    'url' => $url,
-                    'first_seen_at' => $now,
-                    'last_seen_at' => $now,
-                ]);
+            if ($toCreate !== []) {
+                $siblings = $this->sharedLookup->siblingsByUrl($domain, $toCreate);
+
+                foreach ($toCreate as $url) {
+                    $sibling = $siblings->get($url);
+
+                    $domain->sitemapUrls()->create([
+                        'url' => $url,
+                        'first_seen_at' => $now,
+                        'last_seen_at' => $now,
+                        ...($sibling !== null ? $this->sharedLookup->lighthouseFields($sibling) : []),
+                        ...($sibling !== null ? $this->sharedLookup->onPageFields($sibling) : []),
+                    ]);
+                }
             }
         }
 

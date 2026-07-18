@@ -17,6 +17,7 @@ use App\Services\Serp\GoogleRequestThrottle;
 use App\Services\Security\SecurityHeadersChecker;
 use App\Services\Serp\GoogleSerpScraper;
 use App\Services\SharedDomainCheckLookup;
+use App\Services\Sitemap\SharedSitemapUrlLookup;
 use App\Services\Sitemap\SitemapChecker;
 use App\Services\Sitemap\SitemapUrlSync;
 use App\Support\HttpClientFactory;
@@ -85,7 +86,9 @@ class AppServiceProvider extends ServiceProvider
             config('services.google.client_secret'),
         ));
 
-        $this->app->singleton(SitemapUrlSync::class, fn () => new SitemapUrlSync());
+        $this->app->singleton(SharedSitemapUrlLookup::class, fn () => new SharedSitemapUrlLookup());
+
+        $this->app->singleton(SitemapUrlSync::class, fn ($app) => new SitemapUrlSync($app->make(SharedSitemapUrlLookup::class)));
 
         $this->app->singleton(SharedDomainCheckLookup::class, fn () => new SharedDomainCheckLookup());
 
