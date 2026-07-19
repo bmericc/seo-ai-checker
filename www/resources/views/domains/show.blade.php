@@ -648,6 +648,52 @@
         </div>
     </div>
 
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3 class="card-title">{{ __('Rakip Analizi') }}</h3>
+        </div>
+        <div class="card-body">
+            @if ($competitorAnalysis['tracked_keyword_count'] === 0)
+                <p class="text-secondary mb-0">{{ __('Rakip analizi için en az bir anahtar kelimede engellenmemiş bir SERP kontrolü gerekir.') }}</p>
+            @elseif (empty($competitorAnalysis['competitors']))
+                <p class="text-secondary mb-0">{{ __('İzlenen anahtar kelimelerin SERP sonuçlarında tekrar eden bir rakip domain bulunamadı.') }}</p>
+            @else
+                <p class="text-secondary">
+                    {{ __('İzlenen :count anahtar kelimenin son SERP sonuçlarında sizinle birlikte en sık çıkan domainler:', ['count' => $competitorAnalysis['tracked_keyword_count']]) }}
+                </p>
+                <div class="table-responsive">
+                    <table class="table card-table table-vcenter">
+                        <thead>
+                            <tr>
+                                <th>Domain</th>
+                                <th>{{ __('Ortak anahtar kelime') }}</th>
+                                <th>{{ __('Ortalama pozisyon') }}</th>
+                                <th>{{ __('En iyi pozisyon') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($competitorAnalysis['competitors'] as $competitor)
+                                <tr>
+                                    <td class="fw-medium">{{ $competitor['domain'] }}</td>
+                                    <td>
+                                        <span
+                                            data-bs-toggle="tooltip"
+                                            data-bs-placement="top"
+                                            title="{{ implode(', ', $competitor['keywords']) }}"
+                                            style="cursor: help; border-bottom: 1px dotted currentColor;"
+                                        >{{ __(':count / :total', ['count' => $competitor['keyword_count'], 'total' => $competitorAnalysis['tracked_keyword_count']]) }}</span>
+                                    </td>
+                                    <td class="text-secondary">{{ $competitor['average_position'] }}</td>
+                                    <td class="text-secondary">{{ $competitor['best_position'] }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </div>
+    </div>
+
     @if ($sitemapUrlCounts['active'] + $sitemapUrlCounts['removed'] > 0)
         <div class="card mb-4">
             <div class="card-header">

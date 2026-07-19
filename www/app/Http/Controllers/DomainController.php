@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Jobs\RunDomainWhoisLookup;
 use App\Models\Check;
 use App\Models\Domain;
+use App\Services\Analytics\CompetitorAnalyzer;
 use App\Services\Analytics\ScoreHistoryBuilder;
 use App\Services\DomainCheckRunner;
 use App\Services\Drift\DomainCheckDrift;
@@ -90,6 +91,8 @@ class DomainController extends Controller
             $domain->domainChecks()->reorder()->orderBy('created_at')->orderBy('id')->get()
         );
 
+        $competitorAnalysis = (new CompetitorAnalyzer())->frequentCompetitors($domain->domain, $domain->keywords);
+
         return view('domains.show', [
             'domain' => $domain,
             'sitemapUrls' => $sitemapUrls,
@@ -97,6 +100,7 @@ class DomainController extends Controller
             'driftChanges' => $driftChanges,
             'scoreHistory' => $scoreHistory,
             'domainCheckHistory' => $domainCheckHistory,
+            'competitorAnalysis' => $competitorAnalysis,
         ]);
     }
 

@@ -121,6 +121,24 @@ take plain values in, return typed result objects out).
   equivalent: shares queued Lighthouse/on-page scan results for a given URL
   across users.
 
+### Analytics (derived from existing data, no new queries)
+
+Both of these are pure computation over `Check`/`DomainCheck` rows already
+collected by the services above - no new API calls or database tables.
+
+- `App\Services\Analytics\ScoreHistoryBuilder` — turns a domain's or
+  keyword's `Check` history (and a domain's `DomainCheck` history) into
+  day-bucketed time series for the domain/keyword pages' charts: AI
+  Overview visibility %, Lighthouse scores, average SERP position, CrUX
+  load-time metrics, Search Console clicks/impressions/CTR/position, GA4
+  sessions/users.
+- `App\Services\Analytics\CompetitorAnalyzer` — the "rakip analizi"
+  (competitor analysis) card: looks at each tracked keyword's *latest*
+  `Check.organic_results` and surfaces which domains recur most often
+  alongside the tracked domain (ranked by number of distinct keywords
+  shared, not raw appearance count, so one frequently-rechecked keyword
+  can't dominate the ranking), with their average/best position.
+
 ### SEO / SERP
 
 - `App\Services\Serp\GoogleSerpScraper` — Google SERP scraping + AI
