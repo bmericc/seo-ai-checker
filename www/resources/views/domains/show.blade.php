@@ -519,6 +519,86 @@
                     </div>
                 </div>
             @endif
+
+            @unless (empty($domainCheckHistory['labels']))
+                <hr class="my-4">
+                <h4 class="mb-3">{{ __('Site Kontrolü Geçmişi') }}</h4>
+                <div class="row row-cards mb-3">
+                    <div class="col-12 col-lg-6">
+                        <div class="text-secondary small mb-2">{{ __('CrUX yükleme süresi trendi (ms)') }}</div>
+                        <x-line-chart
+                            :labels="$domainCheckHistory['labels']"
+                            :series="[
+                                ['label' => 'LCP', 'color' => '#206bc4', 'values' => $domainCheckHistory['crux_lcp']],
+                                ['label' => 'FCP', 'color' => '#2fb344', 'values' => $domainCheckHistory['crux_fcp']],
+                                ['label' => 'TTFB', 'color' => '#ae3ec9', 'values' => $domainCheckHistory['crux_ttfb']],
+                                ['label' => 'INP', 'color' => '#f76707', 'values' => $domainCheckHistory['crux_inp']],
+                            ]"
+                            :min="0"
+                            value-suffix="ms"
+                        />
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <div class="text-secondary small mb-2">{{ __('CrUX CLS trendi') }}</div>
+                        <x-line-chart
+                            :labels="$domainCheckHistory['labels']"
+                            :series="[['label' => 'CLS', 'color' => '#d63939', 'values' => $domainCheckHistory['crux_cls']]]"
+                            :min="0"
+                            :decimals="3"
+                        />
+                    </div>
+                </div>
+                <div class="row row-cards mb-3">
+                    <div class="col-12 col-lg-3">
+                        <div class="text-secondary small mb-2">{{ __('Search Console tıklama trendi') }}</div>
+                        <x-line-chart
+                            :labels="$domainCheckHistory['labels']"
+                            :series="[['label' => __('Tıklama'), 'color' => '#206bc4', 'values' => $domainCheckHistory['gsc_clicks']]]"
+                            :min="0"
+                        />
+                    </div>
+                    <div class="col-12 col-lg-3">
+                        <div class="text-secondary small mb-2">{{ __('Search Console gösterim trendi') }}</div>
+                        <x-line-chart
+                            :labels="$domainCheckHistory['labels']"
+                            :series="[['label' => __('Gösterim'), 'color' => '#2fb344', 'values' => $domainCheckHistory['gsc_impressions']]]"
+                            :min="0"
+                        />
+                    </div>
+                    <div class="col-12 col-lg-3">
+                        <div class="text-secondary small mb-2">CTR {{ __('trendi') }}</div>
+                        <x-line-chart
+                            :labels="$domainCheckHistory['labels']"
+                            :series="[['label' => 'CTR', 'color' => '#ae3ec9', 'values' => $domainCheckHistory['gsc_ctr']]]"
+                            :min="0"
+                            value-suffix="%"
+                        />
+                    </div>
+                    <div class="col-12 col-lg-3">
+                        <div class="text-secondary small mb-2">{{ __('Search Console ortalama pozisyon trendi') }}</div>
+                        <x-line-chart
+                            :labels="$domainCheckHistory['labels']"
+                            :series="[['label' => __('Pozisyon'), 'color' => '#4263eb', 'values' => $domainCheckHistory['gsc_average_position']]]"
+                            :min="1"
+                            :invert-y="true"
+                        />
+                    </div>
+                </div>
+                <div class="row row-cards">
+                    <div class="col-12">
+                        <div class="text-secondary small mb-2">{{ __('GA4 oturum ve kullanıcı trendi') }}</div>
+                        <x-line-chart
+                            :labels="$domainCheckHistory['labels']"
+                            :series="[
+                                ['label' => __('Toplam oturum'), 'color' => '#206bc4', 'values' => $domainCheckHistory['ga4_total_sessions']],
+                                ['label' => __('Organik oturum'), 'color' => '#2fb344', 'values' => $domainCheckHistory['ga4_organic_sessions']],
+                                ['label' => __('Aktif kullanıcı'), 'color' => '#f76707', 'values' => $domainCheckHistory['ga4_active_users']],
+                            ]"
+                            :min="0"
+                        />
+                    </div>
+                </div>
+            @endunless
         </div>
     </div>
 

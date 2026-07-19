@@ -6,11 +6,12 @@
     'height' => 160,
     'valueSuffix' => '',
     'invertY' => false,
+    'decimals' => 1,
 ])
 
 @php
-    $format = function (float $v) {
-        $s = number_format($v, 1, '.', '');
+    $format = function (float $v) use ($decimals) {
+        $s = number_format($v, $decimals, '.', '');
         return rtrim(rtrim($s, '0'), '.');
     };
 

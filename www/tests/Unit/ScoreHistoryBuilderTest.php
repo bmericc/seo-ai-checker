@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit;
 
 use App\Models\Check;
+use App\Models\DomainCheck;
 use App\Services\Analytics\ScoreHistoryBuilder;
 use Illuminate\Support\Collection;
 use PHPUnit\Framework\TestCase;
@@ -31,6 +32,31 @@ class ScoreHistoryBuilderTest extends TestCase
             'lighthouse_seo' => null,
             'lighthouse_accessibility' => null,
             'lighthouse_best_practices' => null,
+        ], $overrides));
+
+        return $check;
+    }
+
+    /**
+     * Overrides for 'crux'/'gsc'/'ga4' must be passed as arrays (matching
+     * the shape DomainCheckRunner writes) - they're JSON-encoded here
+     * because setRawAttributes stores the *raw* (pre-cast) column value,
+     * same as what actually comes back from the database.
+     */
+    private function domainCheck(string $day, array $overrides = []): DomainCheck
+    {
+        foreach (['crux', 'gsc', 'ga4'] as $jsonColumn) {
+            if (array_key_exists($jsonColumn, $overrides)) {
+                $overrides[$jsonColumn] = json_encode($overrides[$jsonColumn]);
+            }
+        }
+
+        $check = new DomainCheck();
+        $check->setRawAttributes(array_merge([
+            'created_at' => $day,
+            'crux' => null,
+            'gsc' => null,
+            'ga4' => null,
         ], $overrides));
 
         return $check;
@@ -107,5 +133,51 @@ class ScoreHistoryBuilderTest extends TestCase
         $result = (new ScoreHistoryBuilder())->groupedByDay($checks);
 
         $this->assertSame([60.0], $result['lighthouse_performance']);
+    }
+
+    public function test_domain_check_history_extracts_crux_gsc_and_ga4_series(): void
+    {
+        $checks = new Collection([
+            $this->domainCheck('2026-07-10', [
+                'crux' => ['metrics' => [
+                    'largest_contentful_paint' => ['label' => 'LCP', 'p75' => 2000, 'rating' => 'good'],
+                    'cumulative_layout_shift' => ['label' => 'CLS', 'p75' => 0.05, 'rating' => 'good'],
+                ]],
+                'gsc' => ['clicks' => 100, 'impressions' => 1000, 'ctr' => 0.1, 'average_position' => 8.0],
+                'ga4' => ['total_sessions' => 500, 'organic_sessions' => 300, 'active_users' => 200],
+            ]),
+            $this->domainCheck('2026-07-11', [
+                'crux' => ['metrics' => [
+                    'largest_contentful_paint' => ['label' => 'LCP', 'p75' => 3000, 'rating' => 'needs_improvement'],
+                ]],
+                'gsc' => ['clicks' => 200, 'impressions' => 2000, 'ctr' => 0.2, 'average_position' => 4.0],
+            ]),
+        ]);
+
+        $result = (new ScoreHistoryBuilder())->domainCheckHistory($checks);
+
+        $this->assertSame(['2026-07-10', '2026-07-11'], $result['labels']);
+        $this->assertSame([2000.0, 3000.0], $result['crux_lcp']);
+        // Only the first day reported CLS - the second day must stay null,
+        // not silently become 0 and drag down a future average.
+        $this->assertSame([0.05, null], $result['crux_cls']);
+        $this->assertSame([100.0, 200.0], $result['gsc_clicks']);
+        $this->assertSame([10.0, 20.0], $result['gsc_ctr']);
+        $this->assertSame([500.0, null], $result['ga4_total_sessions']);
+    }
+
+    public function test_domain_check_history_ignores_null_json_columns(): void
+    {
+        $checks = new Collection([
+            $this->domainCheck('2026-07-10'),
+            $this->domainCheck('2026-07-11'),
+        ]);
+
+        $result = (new ScoreHistoryBuilder())->domainCheckHistory($checks);
+
+        $this->assertSame(['2026-07-10', '2026-07-11'], $result['labels']);
+        $this->assertSame([null, null], $result['crux_lcp']);
+        $this->assertSame([null, null], $result['gsc_clicks']);
+        $this->assertSame([null, null], $result['ga4_total_sessions']);
     }
 }

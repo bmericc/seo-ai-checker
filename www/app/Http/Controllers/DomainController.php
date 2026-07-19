@@ -83,12 +83,17 @@ class DomainController extends Controller
             ? (new DomainCheckDrift())->diff($recentChecks[0], $recentChecks[1])
             : [];
 
+        $domainCheckHistory = $scoreHistoryBuilder->domainCheckHistory(
+            $domain->domainChecks()->reorder()->orderBy('created_at')->orderBy('id')->get()
+        );
+
         return view('domains.show', [
             'domain' => $domain,
             'sitemapUrls' => $sitemapUrls,
             'sitemapUrlCounts' => $sitemapUrlCounts,
             'driftChanges' => $driftChanges,
             'scoreHistory' => $scoreHistory,
+            'domainCheckHistory' => $domainCheckHistory,
         ]);
     }
 
