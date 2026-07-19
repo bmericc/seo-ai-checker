@@ -185,8 +185,8 @@ instead, dispatched per `SitemapUrl`:
 - `App\Jobs\RunSitemapUrlOnPageCheck` — runs `OnPageSeoAnalyzer` for one
   sitemap URL and writes the result back onto that `SitemapUrl`.
 
-The `queue` Docker/Compose worker (`php artisan queue:listen`, see
-[docs/docker.md](docker.md)) must be running for these to actually process.
+The `worker` Docker/Compose service (`php artisan queue:work`, see
+`docker-compose.yml`) must be running for these to actually process.
 
 ## Auth, access control & localization
 
