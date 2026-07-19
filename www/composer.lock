@@ -4,8 +4,44 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1294714c063121496e6e1f95ad1a4f50",
+    "content-hash": "3e33f6aaccfbed6c24315b85cc1b3352",
     "packages": [
+        {
+            "name": "bahricanli/domainhunter",
+            "version": "1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/bahricanli/laravel-domainhunter.git",
+                "reference": "3fc6c87ecea291f15a87f4c9c404c054fe79ce35"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/bahricanli/laravel-domainhunter/zipball/3fc6c87ecea291f15a87f4c9c404c054fe79ce35",
+                "reference": "3fc6c87ecea291f15a87f4c9c404c054fe79ce35",
+                "shasum": ""
+            },
+            "require": {
+                "ext-intl": "*",
+                "php": "^8.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "BahriCanli\\DomainHunter\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-3.0-or-later"
+            ],
+            "description": "Framework-agnostic WHOIS lookup and domain-name parsing shared by domainhunter (Slim) and domainhunter-app (Laravel)",
+            "homepage": "https://github.com/bahricanli/laravel-domainhunter",
+            "support": {
+                "issues": "https://github.com/bahricanli/laravel-domainhunter/issues",
+                "source": "https://github.com/bahricanli/laravel-domainhunter/tree/v1.0.1"
+            },
+            "time": "2026-07-14T19:31:34+00:00"
+        },
         {
             "name": "brick/math",
             "version": "0.18.0",
@@ -8806,5 +8842,5 @@
         "php": "^8.4"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.6.0"
 }

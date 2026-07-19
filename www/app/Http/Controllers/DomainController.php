@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Jobs\RunDomainWhoisLookup;
 use App\Models\Check;
 use App\Models\Domain;
 use App\Services\Analytics\ScoreHistoryBuilder;
@@ -40,6 +41,8 @@ class DomainController extends Controller
         }
 
         $record = $request->user()->domains()->create(['domain' => $domain]);
+
+        RunDomainWhoisLookup::dispatch($record->id);
 
         return redirect()
             ->route('domains.show', $record)
@@ -106,6 +109,17 @@ class DomainController extends Controller
         return redirect()
             ->route('domains.show', $domain)
             ->with('flash', ['type' => 'success', 'message' => __('Site kontrolü tamamlandı.')]);
+    }
+
+    public function refreshWhois(Request $request, Domain $domain): RedirectResponse
+    {
+        $this->ensureCanAccessDomain($request, $domain);
+
+        RunDomainWhoisLookup::dispatch($domain->id);
+
+        return redirect()
+            ->route('domains.show', $domain)
+            ->with('flash', ['type' => 'success', 'message' => __('WHOIS bilgisi kuyruğa alındı, birazdan güncellenecek.')]);
     }
 
     public function destroy(Request $request, Domain $domain): RedirectResponse

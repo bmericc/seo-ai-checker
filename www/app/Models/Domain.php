@@ -11,10 +11,25 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Domain extends Model
 {
-    protected $fillable = ['domain', 'user_id', 'dismissed_keyword_suggestions', 'ga4_property_id'];
+    protected $fillable = [
+        'domain',
+        'user_id',
+        'dismissed_keyword_suggestions',
+        'ga4_property_id',
+        'whois_registrar',
+        'whois_registered_at',
+        'whois_expires_at',
+        'whois_raw',
+        'whois_error',
+        'whois_checked_at',
+    ];
 
     protected $casts = [
         'dismissed_keyword_suggestions' => 'array',
+        'whois_registered_at' => 'date',
+        'whois_expires_at' => 'date',
+        'whois_raw' => 'array',
+        'whois_checked_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -85,6 +100,17 @@ class Domain extends Model
             'present_count' => $present->count(),
             'checked_count' => $latestChecks->count(),
         ];
+    }
+
+    /**
+     * whois_registered_at bilinmiyorsa (WHOIS henuz cekilmediyse, ya da
+     * kayit tarihini raporlamayan bir TLD icin bulunamadiysa) null doner.
+     */
+    public function whoisAgeInYears(): ?int
+    {
+        return $this->whois_registered_at === null
+            ? null
+            : (int) $this->whois_registered_at->diffInYears(now());
     }
 
     public function dismissKeywordSuggestion(string $phrase): void
