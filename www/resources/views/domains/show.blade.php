@@ -26,6 +26,52 @@
 @section('content')
     <div class="card mb-4">
         <div class="card-header">
+            <h3 class="card-title">WHOIS</h3>
+            <div class="card-actions">
+                <form method="post" action="{{ route('domains.whois.refresh', $domain) }}">
+                    @csrf
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">
+                        <i class="ti ti-refresh icon"></i> {{ __('WHOIS Bilgisini Yenile') }}
+                    </button>
+                </form>
+            </div>
+        </div>
+        <div class="card-body">
+            @if (!$domain->whois_checked_at)
+                <p class="text-secondary mb-0">{{ __('WHOIS bilgisi henüz kuyruğa alınmadı ya da worker tarafından işlenmedi.') }}</p>
+            @elseif ($domain->whois_error)
+                <p class="text-danger mb-0">{{ __('WHOIS sorgusu başarısız: :error', ['error' => $domain->whois_error]) }}</p>
+            @else
+                <div class="row">
+                    <div class="col-12 col-md-4">
+                        <div class="text-secondary small mb-1">{{ __('Domain Yaşı') }}</div>
+                        <div class="h3 mb-0">
+                            @if ($domain->whoisAgeInYears() !== null)
+                                {{ __(':years yıl', ['years' => $domain->whoisAgeInYears()]) }}
+                            @else
+                                <span class="text-secondary">—</span>
+                            @endif
+                        </div>
+                        @if ($domain->whois_registered_at)
+                            <div class="text-secondary small">{{ __('Kayıt tarihi:') }} {{ $domain->whois_registered_at->format('Y-m-d') }}</div>
+                        @endif
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="text-secondary small mb-1">{{ __('Registrar') }}</div>
+                        <div class="h3 mb-0">{{ $domain->whois_registrar ?: '—' }}</div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="text-secondary small mb-1">{{ __('Kayıt Süresi Sonu') }}</div>
+                        <div class="h3 mb-0">{{ $domain->whois_expires_at?->format('Y-m-d') ?: '—' }}</div>
+                    </div>
+                </div>
+                <div class="text-secondary small mt-3">{{ __('Son WHOIS kontrolü: :date', ['date' => $domain->whois_checked_at->format('Y-m-d H:i:s')]) }}</div>
+            @endif
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
             <h3 class="card-title">{{ __('Site Kontrolü') }}</h3>
         </div>
         <div class="card-body">
@@ -599,6 +645,52 @@
                     </div>
                 </div>
             @endunless
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3 class="card-title">{{ __('Rakip Analizi') }}</h3>
+        </div>
+        <div class="card-body">
+            @if ($competitorAnalysis['tracked_keyword_count'] === 0)
+                <p class="text-secondary mb-0">{{ __('Rakip analizi için en az bir anahtar kelimede engellenmemiş bir SERP kontrolü gerekir.') }}</p>
+            @elseif (empty($competitorAnalysis['competitors']))
+                <p class="text-secondary mb-0">{{ __('İzlenen anahtar kelimelerin SERP sonuçlarında tekrar eden bir rakip domain bulunamadı.') }}</p>
+            @else
+                <p class="text-secondary">
+                    {{ __('İzlenen :count anahtar kelimenin son SERP sonuçlarında sizinle birlikte en sık çıkan domainler:', ['count' => $competitorAnalysis['tracked_keyword_count']]) }}
+                </p>
+                <div class="table-responsive">
+                    <table class="table card-table table-vcenter">
+                        <thead>
+                            <tr>
+                                <th>Domain</th>
+                                <th>{{ __('Ortak anahtar kelime') }}</th>
+                                <th>{{ __('Ortalama pozisyon') }}</th>
+                                <th>{{ __('En iyi pozisyon') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($competitorAnalysis['competitors'] as $competitor)
+                                <tr>
+                                    <td class="fw-medium">{{ $competitor['domain'] }}</td>
+                                    <td>
+                                        <span
+                                            data-bs-toggle="tooltip"
+                                            data-bs-placement="top"
+                                            title="{{ implode(', ', $competitor['keywords']) }}"
+                                            style="cursor: help; border-bottom: 1px dotted currentColor;"
+                                        >{{ __(':count / :total', ['count' => $competitor['keyword_count'], 'total' => $competitorAnalysis['tracked_keyword_count']]) }}</span>
+                                    </td>
+                                    <td class="text-secondary">{{ $competitor['average_position'] }}</td>
+                                    <td class="text-secondary">{{ $competitor['best_position'] }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
         </div>
     </div>
 

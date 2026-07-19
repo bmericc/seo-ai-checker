@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Jobs\RunDomainWhoisLookup;
 use App\Models\Check;
 use App\Models\Domain;
+use App\Services\Analytics\CompetitorAnalyzer;
 use App\Services\Analytics\ScoreHistoryBuilder;
 use App\Services\DomainCheckRunner;
 use App\Services\Drift\DomainCheckDrift;
@@ -41,6 +43,8 @@ class DomainController extends Controller
 
         $record = $request->user()->domains()->create(['domain' => $domain]);
 
+        RunDomainWhoisLookup::dispatch($record->id);
+
         return redirect()
             ->route('domains.show', $record)
             ->with('flash', ['type' => 'success', 'message' => __(':domain eklendi.', ['domain' => $domain])]);
@@ -61,6 +65,12 @@ class DomainController extends Controller
 
         $keywordChecks = Check::query()
             ->whereIn('keyword_id', $domain->keywords->pluck('id'))
+            ->select([
+                'id', 'created_at',
+                'ai_overview_present', 'ai_overview_target_cited',
+                'lighthouse_performance', 'lighthouse_seo', 'lighthouse_accessibility', 'lighthouse_best_practices',
+                'target_position',
+            ])
             ->orderBy('created_at')
             ->orderBy('id')
             ->get();
@@ -84,8 +94,15 @@ class DomainController extends Controller
             : [];
 
         $domainCheckHistory = $scoreHistoryBuilder->domainCheckHistory(
-            $domain->domainChecks()->reorder()->orderBy('created_at')->orderBy('id')->get()
+            $domain->domainChecks()
+                ->reorder()
+                ->select(['id', 'domain_id', 'created_at', 'crux', 'gsc', 'ga4'])
+                ->orderBy('created_at')
+                ->orderBy('id')
+                ->get()
         );
+
+        $competitorAnalysis = (new CompetitorAnalyzer())->frequentCompetitors($domain->domain, $domain->keywords);
 
         return view('domains.show', [
             'domain' => $domain,
@@ -94,6 +111,7 @@ class DomainController extends Controller
             'driftChanges' => $driftChanges,
             'scoreHistory' => $scoreHistory,
             'domainCheckHistory' => $domainCheckHistory,
+            'competitorAnalysis' => $competitorAnalysis,
         ]);
     }
 
@@ -106,6 +124,17 @@ class DomainController extends Controller
         return redirect()
             ->route('domains.show', $domain)
             ->with('flash', ['type' => 'success', 'message' => __('Site kontrolü tamamlandı.')]);
+    }
+
+    public function refreshWhois(Request $request, Domain $domain): RedirectResponse
+    {
+        $this->ensureCanAccessDomain($request, $domain);
+
+        RunDomainWhoisLookup::dispatch($domain->id);
+
+        return redirect()
+            ->route('domains.show', $domain)
+            ->with('flash', ['type' => 'success', 'message' => __('WHOIS bilgisi kuyruğa alındı, birazdan güncellenecek.')]);
     }
 
     public function destroy(Request $request, Domain $domain): RedirectResponse

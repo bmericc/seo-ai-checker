@@ -22,7 +22,10 @@ use App\Services\SharedDomainCheckLookup;
 use App\Services\Sitemap\SharedSitemapUrlLookup;
 use App\Services\Sitemap\SitemapChecker;
 use App\Services\Sitemap\SitemapUrlSync;
+use App\Services\Whois\WhoisChecker;
 use App\Support\HttpClientFactory;
+use BahriCanli\DomainHunter\DomainParser;
+use BahriCanli\DomainHunter\WhoisService;
 use GuzzleHttp\Client;
 use Illuminate\Support\ServiceProvider;
 
@@ -109,6 +112,15 @@ class AppServiceProvider extends ServiceProvider
 
             return new PageSpeedInsightsClient($lh['psi_api_key'], $lh['psi_strategy']);
         });
+
+        $this->app->singleton(WhoisService::class, fn () => new WhoisService());
+
+        $this->app->singleton(DomainParser::class, fn ($app) => new DomainParser($app->make(WhoisService::class)));
+
+        $this->app->singleton(WhoisChecker::class, fn ($app) => new WhoisChecker(
+            $app->make(DomainParser::class),
+            $app->make(WhoisService::class),
+        ));
     }
 
     /**

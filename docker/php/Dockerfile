@@ -12,6 +12,7 @@ RUN apk add --no-cache \
         libxml2-dev \
         oniguruma-dev \
         sqlite-dev \
+        icu-dev \
     && docker-php-ext-install \
         pdo \
         pdo_sqlite \
@@ -20,6 +21,7 @@ RUN apk add --no-cache \
         xml \
         zip \
         pcntl \
+        intl \
     && docker-php-ext-enable opcache
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer

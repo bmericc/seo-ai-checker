@@ -47,6 +47,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/domains/{domain}/keyword-suggestions/dismiss', [DomainController::class, 'dismissKeywordSuggestion'])->name('domains.keyword-suggestions.dismiss');
     Route::patch('/domains/{domain}/ga4-property', [DomainController::class, 'updateGa4Property'])->name('domains.ga4-property.update');
     Route::post('/domains/{domain}/ga4-properties/fetch', [DomainController::class, 'fetchGa4Properties'])->name('domains.ga4-properties.fetch');
+    Route::post('/domains/{domain}/whois/refresh', [DomainController::class, 'refreshWhois'])->name('domains.whois.refresh');
     Route::get('/domains/{domain}/lighthouse-report', [LighthouseReportController::class, 'show'])->name('domains.lighthouse-report');
     Route::post('/domains/{domain}/lighthouse-report/start', [LighthouseReportController::class, 'start'])->name('domains.lighthouse-report.start');
     Route::post('/domains/{domain}/lighthouse-report/start-onpage', [LighthouseReportController::class, 'startOnPage'])->name('domains.lighthouse-report.start-onpage');

@@ -79,7 +79,10 @@ on-page SEO) audits can also be queued per sitemap URL — see
   and `locale` (auto-detected from the Google account on first login, kept
   in sync by `App\Http\Middleware\SetLocale`, see below).
 - `domains` — tracked domains, owned by a `user_id`; stores the selected
-  `ga4_property_id` and the list of dismissed keyword suggestions.
+  `ga4_property_id`, the list of dismissed keyword suggestions, and the
+  latest WHOIS lookup (`whois_registrar`, `whois_registered_at`,
+  `whois_expires_at`, the full raw response in `whois_raw`, `whois_error`,
+  `whois_checked_at`).
 - `keywords` — keywords attached to a domain (with an optional custom URL).
 - `checks` — the full result of every keyword-level "Check" run (SERP, AI
   Overview, on-page, Lighthouse).
@@ -118,6 +121,24 @@ take plain values in, return typed result objects out).
   equivalent: shares queued Lighthouse/on-page scan results for a given URL
   across users.
 
+### Analytics (derived from existing data, no new queries)
+
+Both of these are pure computation over `Check`/`DomainCheck` rows already
+collected by the services above - no new API calls or database tables.
+
+- `App\Services\Analytics\ScoreHistoryBuilder` — turns a domain's or
+  keyword's `Check` history (and a domain's `DomainCheck` history) into
+  day-bucketed time series for the domain/keyword pages' charts: AI
+  Overview visibility %, Lighthouse scores, average SERP position, CrUX
+  load-time metrics, Search Console clicks/impressions/CTR/position, GA4
+  sessions/users.
+- `App\Services\Analytics\CompetitorAnalyzer` — the "rakip analizi"
+  (competitor analysis) card: looks at each tracked keyword's *latest*
+  `Check.organic_results` and surfaces which domains recur most often
+  alongside the tracked domain (ranked by number of distinct keywords
+  shared, not raw appearance count, so one frequently-rechecked keyword
+  can't dominate the ranking), with their average/best position.
+
 ### SEO / SERP
 
 - `App\Services\Serp\GoogleSerpScraper` — Google SERP scraping + AI
@@ -148,6 +169,14 @@ take plain values in, return typed result objects out).
   for a domain (excluding ones already tracked or dismissed).
 - `App\Services\Drift\DomainCheckDrift` — compares consecutive
   `DomainCheck` records to surface what changed between runs.
+- `App\Services\Whois\WhoisChecker` — wraps the
+  [`bahricanli/domainhunter`](https://github.com/bahricanli/laravel-domainhunter)
+  package (WHOIS/RDAP lookup + domain-name parsing, requires the `intl` PHP
+  extension) to resolve a domain's registrar, registration date and
+  expiration date. Always run from `App\Jobs\RunDomainWhoisLookup` (see
+  [Background jobs](#background-jobs)), never inline in a request - WHOIS
+  lookups are direct TCP/RDAP connections to registrar servers and can be
+  slow or unreachable.
 
 ### Performance & real-user metrics
 
@@ -187,6 +216,18 @@ instead, dispatched per `SitemapUrl`:
 
 The `worker` Docker/Compose service (`php artisan queue:work`, see
 `docker-compose.yml`) must be running for these to actually process.
+
+### Domain WHOIS lookup
+
+`App\Jobs\RunDomainWhoisLookup` runs `WhoisChecker` for a `Domain` and
+writes the result (or the error, if the lookup failed) back onto that
+`Domain` — also via the `worker` service, for the same reason as the
+sitemap jobs above (WHOIS lookups are slow/unreliable network calls).
+It's dispatched automatically when a domain is added
+(`DomainController::store()`), and can be re-dispatched at any time from
+the domain page's "WHOIS Bilgisini Yenile" button
+(`DomainController::refreshWhois()`) — unlike "Site Kontrolü Yap", it
+never runs synchronously inside a web request.
 
 ## Auth, access control & localization
 
