@@ -17,6 +17,13 @@ use RuntimeException;
  * HTTP istegi) yavas/guvenilmez olabildigi icin bu servis her zaman
  * kuyruklu bir is icinden cagrilir, hicbir web istegi icinde dogrudan
  * calistirilmaz.
+ *
+ * v1.0.2 oncesi DomainParser::parse() subdomain iceren host'lari
+ * ("blog.example.com") reddediyordu (App\Support\Domain::fromFreeText()
+ * subdomain'lerin Domain olarak eklenmesine izin verdigi icin bu gercek
+ * bir sorundu) - composer.json artik >=1.0.2 gerektiriyor, o versiyonda
+ * bu paketin kendisinde duzeltildi (bkz. upstream commit), burada ayrica
+ * bir on-isleme/workaround'a gerek yok.
  */
 final class WhoisChecker
 {

@@ -16,18 +16,28 @@ class WhoisCheckerTest extends TestCase
      * WhoisService talks to real WHOIS/RDAP servers over the network
      * (fsockopen/curl), so lookup() is stubbed via a subclass instead of
      * hitting them in tests - compoundTlds() (a pure in-memory list, used
-     * by DomainParser for e.g. "example.com.tr") stays real.
+     * by DomainParser for e.g. "example.com.tr") stays real. The fake
+     * also records the label/tld it was called with, so tests can assert
+     * WhoisChecker resolved a subdomain down to the right registrable
+     * domain before calling lookup().
      */
-    private function checkerReturning(?WhoisResult $result, ?\Throwable $throw = null): WhoisChecker
+    private function fakeWhoisService(?WhoisResult $result, ?\Throwable $throw = null): WhoisService
     {
-        $whois = new class($result, $throw) extends WhoisService
+        return new class($result, $throw) extends WhoisService
         {
+            public ?string $lastLabel = null;
+
+            public ?string $lastTld = null;
+
             public function __construct(private readonly ?WhoisResult $result, private readonly ?\Throwable $throw)
             {
             }
 
             public function lookup(string $label, string $tld): ?WhoisResult
             {
+                $this->lastLabel = $label;
+                $this->lastTld = $tld;
+
                 if ($this->throw !== null) {
                     throw $this->throw;
                 }
@@ -35,6 +45,11 @@ class WhoisCheckerTest extends TestCase
                 return $this->result;
             }
         };
+    }
+
+    private function checkerReturning(?WhoisResult $result, ?\Throwable $throw = null): WhoisChecker
+    {
+        $whois = $this->fakeWhoisService($result, $throw);
 
         return new WhoisChecker(new DomainParser($whois), $whois);
     }
@@ -92,5 +107,42 @@ class WhoisCheckerTest extends TestCase
 
         $this->assertFalse($result->found);
         $this->assertNotNull($result->error);
+    }
+
+    public function test_subdomain_is_reduced_to_its_registrable_domain_before_lookup(): void
+    {
+        $whois = $this->fakeWhoisService(new WhoisResult());
+        $result = (new WhoisChecker(new DomainParser($whois), $whois))->check('blog.example.com');
+
+        $this->assertTrue($result->found);
+        $this->assertSame('example', $whois->lastLabel);
+        $this->assertSame('com', $whois->lastTld);
+    }
+
+    public function test_deeply_nested_subdomain_is_reduced_to_its_registrable_domain(): void
+    {
+        $whois = $this->fakeWhoisService(new WhoisResult());
+        (new WhoisChecker(new DomainParser($whois), $whois))->check('a.b.blog.example.com');
+
+        $this->assertSame('example', $whois->lastLabel);
+        $this->assertSame('com', $whois->lastTld);
+    }
+
+    public function test_subdomain_of_a_compound_tld_domain_keeps_the_compound_tld_intact(): void
+    {
+        $whois = $this->fakeWhoisService(new WhoisResult());
+        (new WhoisChecker(new DomainParser($whois), $whois))->check('blog.example.co.uk');
+
+        $this->assertSame('example', $whois->lastLabel);
+        $this->assertSame('co.uk', $whois->lastTld);
+    }
+
+    public function test_apex_domain_is_left_unchanged(): void
+    {
+        $whois = $this->fakeWhoisService(new WhoisResult());
+        (new WhoisChecker(new DomainParser($whois), $whois))->check('example.com');
+
+        $this->assertSame('example', $whois->lastLabel);
+        $this->assertSame('com', $whois->lastTld);
     }
 }

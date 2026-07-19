@@ -27,7 +27,15 @@ final class RunDomainWhoisLookup implements ShouldQueue
 
     public int $tries = 2;
 
-    public int $timeout = 30;
+    /**
+     * bahricanli/domainhunter'in port-43 WHOIS yolu iki deneme yapar
+     * (fsockopen timeout'u 15s + denemeler arasi 2s uyku) - kotu durumda
+     * ~32s surebilir. Bunun altinda bir job timeout, WhoisChecker sonuc
+     * donmeden once worker'in isi oldurmesine (ve whois_error/
+     * whois_checked_at hic yazilmamasina, kart sonsuza kadar "pending"
+     * kalmasina) yol acar.
+     */
+    public int $timeout = 45;
 
     public function __construct(public readonly int $domainId)
     {
