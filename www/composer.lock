@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "867a6814e020270cde87acdab5398655",
+    "content-hash": "a6bf45ac787dd57645b8e370fd80ed08",
     "packages": [
         {
             "name": "bahricanli/domainhunter",
-            "version": "1.0.2",
+            "version": "1.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/bahricanli/laravel-domainhunter.git",
-                "reference": "c3d4760a0c7921610d4578842201e512934ac74b"
+                "reference": "5fe176236b25b1e93110e0600d3820c2df337489"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/bahricanli/laravel-domainhunter/zipball/c3d4760a0c7921610d4578842201e512934ac74b",
-                "reference": "c3d4760a0c7921610d4578842201e512934ac74b",
+                "url": "https://api.github.com/repos/bahricanli/laravel-domainhunter/zipball/5fe176236b25b1e93110e0600d3820c2df337489",
+                "reference": "5fe176236b25b1e93110e0600d3820c2df337489",
                 "shasum": ""
             },
             "require": {
@@ -41,9 +41,9 @@
             "homepage": "https://github.com/bahricanli/laravel-domainhunter",
             "support": {
                 "issues": "https://github.com/bahricanli/laravel-domainhunter/issues",
-                "source": "https://github.com/bahricanli/laravel-domainhunter/tree/v1.0.2"
+                "source": "https://github.com/bahricanli/laravel-domainhunter/tree/v1.0.3"
             },
-            "time": "2026-07-19T12:30:07+00:00"
+            "time": "2026-07-19T13:35:02+00:00"
         },
         {
             "name": "brick/math",
