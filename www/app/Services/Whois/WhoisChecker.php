@@ -17,6 +17,13 @@ use RuntimeException;
  * HTTP istegi) yavas/guvenilmez olabildigi icin bu servis her zaman
  * kuyruklu bir is icinden cagrilir, hicbir web istegi icinde dogrudan
  * calistirilmaz.
+ *
+ * v1.0.2 oncesi DomainParser::parse() subdomain iceren host'lari
+ * ("blog.example.com") reddediyordu (App\Support\Domain::fromFreeText()
+ * subdomain'lerin Domain olarak eklenmesine izin verdigi icin bu gercek
+ * bir sorundu) - composer.json artik >=1.0.2 gerektiriyor, o versiyonda
+ * bu paketin kendisinde duzeltildi (bkz. upstream commit), burada ayrica
+ * bir on-isleme/workaround'a gerek yok.
  */
 final class WhoisChecker
 {
@@ -29,7 +36,7 @@ final class WhoisChecker
     public function check(string $domain): WhoisLookupResult
     {
         try {
-            ['label' => $label, 'tld' => $tld] = $this->parser->parse($this->registrableDomain($domain));
+            ['label' => $label, 'tld' => $tld] = $this->parser->parse($domain);
         } catch (InvalidArgumentException $e) {
             return new WhoisLookupResult(found: false, error: $e->getMessage());
         }
@@ -63,32 +70,5 @@ final class WhoisChecker
                 'expiration_date' => $result->expirationDate,
             ],
         );
-    }
-
-    /**
-     * DomainParser::parse() etiketin (label) noktasiz olmasini bekler -
-     * yani girdinin zaten kok/registrable domain oldugunu varsayar. Ancak
-     * App\Support\Domain::fromFreeText() alt alan adlarina (subdomain,
-     * ornegin "blog.example.com") izin veriyor ve bunlar Domain olarak
-     * eklenebiliyor - boyle bir host oldugu gibi parse()'a verilirse
-     * etiket "blog.example" gibi nokta icerir ve gecersiz sayilir.
-     * Sondan itibaren bilesik TLD listesine (compoundTlds - "co.uk",
-     * "com.tr" vb.) bakarak host'u kac etiketin domain'e ait oldugunu
-     * (2 ya da 3) belirleyip kok domain'e indirger - boylece
-     * "blog.example.com" icin "example.com" WHOIS'u sorgulanir.
-     */
-    private function registrableDomain(string $host): string
-    {
-        $parts = explode('.', strtolower(trim($host)));
-        if (count($parts) <= 2) {
-            return $host;
-        }
-
-        $lastTwo = $parts[count($parts) - 2] . '.' . $parts[count($parts) - 1];
-        if (in_array($lastTwo, $this->whois->compoundTlds(), true)) {
-            return implode('.', array_slice($parts, -3));
-        }
-
-        return $lastTwo;
     }
 }
