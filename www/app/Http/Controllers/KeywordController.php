@@ -40,7 +40,17 @@ class KeywordController extends Controller
 
         $keyword->load(['domain', 'checks']);
 
-        $ascendingChecks = $keyword->checks()->reorder()->orderBy('created_at')->orderBy('id')->get();
+        $ascendingChecks = $keyword->checks()
+            ->reorder()
+            ->select([
+                'id', 'created_at',
+                'ai_overview_present', 'ai_overview_target_cited',
+                'lighthouse_performance', 'lighthouse_seo', 'lighthouse_accessibility', 'lighthouse_best_practices',
+                'target_position',
+            ])
+            ->orderBy('created_at')
+            ->orderBy('id')
+            ->get();
         $scoreHistory = $scoreHistoryBuilder->groupedByDay($ascendingChecks);
 
         return view('keywords.show', ['keyword' => $keyword, 'scoreHistory' => $scoreHistory]);

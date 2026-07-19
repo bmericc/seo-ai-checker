@@ -65,6 +65,12 @@ class DomainController extends Controller
 
         $keywordChecks = Check::query()
             ->whereIn('keyword_id', $domain->keywords->pluck('id'))
+            ->select([
+                'id', 'created_at',
+                'ai_overview_present', 'ai_overview_target_cited',
+                'lighthouse_performance', 'lighthouse_seo', 'lighthouse_accessibility', 'lighthouse_best_practices',
+                'target_position',
+            ])
             ->orderBy('created_at')
             ->orderBy('id')
             ->get();
@@ -88,7 +94,12 @@ class DomainController extends Controller
             : [];
 
         $domainCheckHistory = $scoreHistoryBuilder->domainCheckHistory(
-            $domain->domainChecks()->reorder()->orderBy('created_at')->orderBy('id')->get()
+            $domain->domainChecks()
+                ->reorder()
+                ->select(['id', 'domain_id', 'created_at', 'crux', 'gsc', 'ga4'])
+                ->orderBy('created_at')
+                ->orderBy('id')
+                ->get()
         );
 
         $competitorAnalysis = (new CompetitorAnalyzer())->frequentCompetitors($domain->domain, $domain->keywords);
