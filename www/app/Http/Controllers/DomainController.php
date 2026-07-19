@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\Check;
 use App\Models\Domain;
+use App\Services\Analytics\ScoreHistoryBuilder;
 use App\Services\DomainCheckRunner;
 use App\Services\Drift\DomainCheckDrift;
 use App\Services\Ga4\Ga4Property;
@@ -46,7 +48,7 @@ class DomainController extends Controller
 
     private const MAX_SITEMAP_URLS_DISPLAYED = 200;
 
-    public function show(Request $request, Domain $domain): View
+    public function show(Request $request, Domain $domain, ScoreHistoryBuilder $scoreHistoryBuilder): View
     {
         $this->ensureCanAccessDomain($request, $domain);
 
@@ -56,6 +58,13 @@ class DomainController extends Controller
             'latestDomainCheck',
             'user',
         ]);
+
+        $keywordChecks = Check::query()
+            ->whereIn('keyword_id', $domain->keywords->pluck('id'))
+            ->orderBy('created_at')
+            ->orderBy('id')
+            ->get();
+        $scoreHistory = $scoreHistoryBuilder->groupedByDay($keywordChecks);
 
         $sitemapUrlCounts = [
             'active' => $domain->sitemapUrls()->whereNull('removed_at')->count(),
@@ -74,11 +83,17 @@ class DomainController extends Controller
             ? (new DomainCheckDrift())->diff($recentChecks[0], $recentChecks[1])
             : [];
 
+        $domainCheckHistory = $scoreHistoryBuilder->domainCheckHistory(
+            $domain->domainChecks()->reorder()->orderBy('created_at')->orderBy('id')->get()
+        );
+
         return view('domains.show', [
             'domain' => $domain,
             'sitemapUrls' => $sitemapUrls,
             'sitemapUrlCounts' => $sitemapUrlCounts,
             'driftChanges' => $driftChanges,
+            'scoreHistory' => $scoreHistory,
+            'domainCheckHistory' => $domainCheckHistory,
         ]);
     }
 
