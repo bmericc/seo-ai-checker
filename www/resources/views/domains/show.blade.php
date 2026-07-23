@@ -70,6 +70,84 @@
         </div>
     </div>
 
+    @if (auth()->user()->is_admin)
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="card-title">{{ __('AI Görünürlük Kontrolü (ChatGPT/Claude/Gemini)') }}</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ route('domains.llm-visibility.update', $domain) }}" class="mb-4">
+                    @csrf
+                    @method('patch')
+                    <input type="hidden" name="llm_visibility_enabled" value="{{ $domain->llm_visibility_enabled ? '0' : '1' }}">
+                    <label class="form-check form-switch">
+                        <input type="checkbox" class="form-check-input" onchange="this.form.submit()" {{ $domain->llm_visibility_enabled ? 'checked' : '' }}>
+                        <span class="form-check-label">{{ __('Bu domain için AI görünürlük kontrolü aktif') }}</span>
+                    </label>
+                </form>
+
+                <h4 class="mb-3">{{ __('API Key\'ler') }}</h4>
+                @if ($domain->llmApiKeys->isEmpty())
+                    <p class="text-secondary small">{{ __('Henüz hiçbir sağlayıcı için API key girilmedi.') }}</p>
+                @else
+                    <table class="table table-vcenter mb-4">
+                        <thead>
+                            <tr>
+                                <th>{{ __('Sağlayıcı') }}</th>
+                                <th>{{ __('Etiket') }}</th>
+                                <th>{{ __('Key') }}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($domain->llmApiKeys as $llmApiKey)
+                                <tr>
+                                    <td>{{ $llmApiKey->provider }}</td>
+                                    <td><span class="badge bg-{{ $llmApiKey->label === 'bireysel' ? 'blue-lt' : 'green-lt' }}">{{ $llmApiKey->label }}</span></td>
+                                    <td><code>{{ $llmApiKey->maskedKey() }}</code></td>
+                                    <td class="text-end">
+                                        <form method="post" action="{{ route('domains.llm-api-keys.destroy', [$domain, $llmApiKey]) }}" onsubmit="return confirm({{ json_encode(__('Bu API key silinsin mi?')) }});">
+                                            @csrf
+                                            @method('delete')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">{{ __('Sil') }}</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @endif
+
+                <form method="post" action="{{ route('domains.llm-api-keys.store', $domain) }}" class="row g-2 align-items-end">
+                    @csrf
+                    <div class="col-auto">
+                        <label class="form-label">{{ __('Sağlayıcı') }}</label>
+                        <select name="provider" class="form-select" required>
+                            @foreach (\App\Models\DomainLlmApiKey::PROVIDERS as $provider)
+                                <option value="{{ $provider }}">{{ $provider }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <label class="form-label">{{ __('Etiket') }}</label>
+                        <select name="label" class="form-select" required>
+                            @foreach (\App\Models\DomainLlmApiKey::LABELS as $label)
+                                <option value="{{ $label }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col">
+                        <label class="form-label">{{ __('API Key') }}</label>
+                        <input type="text" name="api_key" class="form-control" placeholder="sk-..." required>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary">{{ __('Kaydet') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
+
     <div class="card mb-4">
         <div class="card-header">
             <h3 class="card-title">{{ __('Site Kontrolü') }}</h3>

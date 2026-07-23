@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Jobs\RunDomainWhoisLookup;
 use App\Models\Check;
 use App\Models\Domain;
+use App\Models\DomainLlmApiKey;
 use App\Services\Analytics\CompetitorAnalyzer;
 use App\Services\Analytics\ScoreHistoryBuilder;
 use App\Services\DomainCheckRunner;
@@ -18,6 +19,7 @@ use App\Support\Domain as DomainHelper;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class DomainController extends Controller
 {
@@ -213,5 +215,50 @@ class DomainController extends Controller
                 ],
                 $result->properties,
             ));
+    }
+
+    public function updateLlmVisibility(Request $request, Domain $domain): RedirectResponse
+    {
+        $this->ensureIsAdmin($request);
+
+        $data = $request->validate(['llm_visibility_enabled' => ['required', 'boolean']]);
+
+        $domain->update(['llm_visibility_enabled' => $data['llm_visibility_enabled']]);
+
+        return redirect()
+            ->route('domains.show', $domain)
+            ->with('flash', ['type' => 'success', 'message' => __('AI görünürlük kontrolü ayarı güncellendi.')]);
+    }
+
+    public function storeLlmApiKey(Request $request, Domain $domain): RedirectResponse
+    {
+        $this->ensureIsAdmin($request);
+
+        $data = $request->validate([
+            'provider' => ['required', 'string', Rule::in(DomainLlmApiKey::PROVIDERS)],
+            'label' => ['required', 'string', Rule::in(DomainLlmApiKey::LABELS)],
+            'api_key' => ['required', 'string', 'max:255'],
+        ]);
+
+        $domain->llmApiKeys()->updateOrCreate(
+            ['provider' => $data['provider']],
+            ['label' => $data['label'], 'api_key' => $data['api_key']],
+        );
+
+        return redirect()
+            ->route('domains.show', $domain)
+            ->with('flash', ['type' => 'success', 'message' => __('API key kaydedildi.')]);
+    }
+
+    public function destroyLlmApiKey(Request $request, Domain $domain, DomainLlmApiKey $llmApiKey): RedirectResponse
+    {
+        $this->ensureIsAdmin($request);
+        abort_unless($llmApiKey->domain_id === $domain->id, 404);
+
+        $llmApiKey->delete();
+
+        return redirect()
+            ->route('domains.show', $domain)
+            ->with('flash', ['type' => 'success', 'message' => __('API key silindi.')]);
     }
 }

@@ -16,6 +16,7 @@ class Domain extends Model
         'user_id',
         'dismissed_keyword_suggestions',
         'ga4_property_id',
+        'llm_visibility_enabled',
         'whois_registrar',
         'whois_registered_at',
         'whois_expires_at',
@@ -26,6 +27,7 @@ class Domain extends Model
 
     protected $casts = [
         'dismissed_keyword_suggestions' => 'array',
+        'llm_visibility_enabled' => 'boolean',
         'whois_registered_at' => 'date',
         'whois_expires_at' => 'date',
         'whois_raw' => 'array',
@@ -54,6 +56,11 @@ class Domain extends Model
     public function sitemapUrls(): HasMany
     {
         return $this->hasMany(SitemapUrl::class);
+    }
+
+    public function llmApiKeys(): HasMany
+    {
+        return $this->hasMany(DomainLlmApiKey::class);
     }
 
     public function latestDomainCheck(): HasOne

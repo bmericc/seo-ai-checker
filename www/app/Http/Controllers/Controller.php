@@ -23,4 +23,9 @@ abstract class Controller
     {
         abort_unless($check->isVisibleTo($request->user()), 403);
     }
+
+    protected function ensureIsAdmin(Request $request): void
+    {
+        abort_unless((bool) $request->user()?->is_admin, 403);
+    }
 }
