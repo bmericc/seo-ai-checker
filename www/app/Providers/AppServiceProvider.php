@@ -12,6 +12,9 @@ use App\Services\Google\GoogleTokenService;
 use App\Services\Gsc\GscChecker;
 use App\Services\Keywords\KeywordSuggester;
 use App\Services\Lighthouse\PageSpeedInsightsClient;
+use App\Services\Llm\AnthropicVisibilityChecker;
+use App\Services\Llm\GeminiVisibilityChecker;
+use App\Services\Llm\OpenAiVisibilityChecker;
 use App\Services\Llms\LlmsTxtChecker;
 use App\Services\OnPage\OnPageSeoAnalyzer;
 use App\Services\Robots\RobotsTxtChecker;
@@ -88,6 +91,21 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(OnPageSeoAnalyzer::class, fn ($app) => new OnPageSeoAnalyzer($app->make(Client::class)));
+
+        $this->app->singleton(OpenAiVisibilityChecker::class, fn ($app) => new OpenAiVisibilityChecker(
+            $app->make(Client::class),
+            config('seo.llm_visibility.openai_model'),
+        ));
+
+        $this->app->singleton(AnthropicVisibilityChecker::class, fn ($app) => new AnthropicVisibilityChecker(
+            $app->make(Client::class),
+            config('seo.llm_visibility.anthropic_model'),
+        ));
+
+        $this->app->singleton(GeminiVisibilityChecker::class, fn ($app) => new GeminiVisibilityChecker(
+            $app->make(Client::class),
+            config('seo.llm_visibility.gemini_model'),
+        ));
 
         $this->app->singleton(RobotsTxtChecker::class, fn ($app) => new RobotsTxtChecker($app->make(Client::class)));
 

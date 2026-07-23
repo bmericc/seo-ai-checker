@@ -39,6 +39,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | AI gorunurluk kontrolu (ChatGPT/Claude/Gemini) - opsiyonel
+    |--------------------------------------------------------------------------
+    | API key'ler burada degil, domain basina domain_llm_api_keys tablosunda
+    | tutulur (bkz. DomainLlmApiKey, admin paneli). Burada yalnizca hangi
+    | modelin kullanilacagi ayarlanir - saglayicilarin ucuz/hafif modelleri
+    | varsayilan; fiyatlar zamanla degistigi icin env ile override edilebilir.
+    */
+    'llm_visibility' => [
+        'openai_model' => env('OPENAI_VISIBILITY_MODEL', 'gpt-4.1-nano'),
+        'anthropic_model' => env('ANTHROPIC_VISIBILITY_MODEL', 'claude-haiku-4-5-20251001'),
+        'gemini_model' => env('GEMINI_VISIBILITY_MODEL', 'gemini-3.1-flash-lite'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | AI Overview tespiti
     |--------------------------------------------------------------------------
     | Google SERP HTML'inde AI Overview kutusunun varligini tespit etmek icin

@@ -931,6 +931,9 @@
                             <th>{{ __('Sayfa') }}</th>
                             <th>{{ __('Son sıralama') }}</th>
                             <th>AI Overview</th>
+                            @if ($domain->llm_visibility_enabled)
+                                <th>{{ __('AI Görünürlük Kontrolü (ChatGPT/Claude/Gemini)') }}</th>
+                            @endif
                             <th>{{ __('Lighthouse (Perf/SEO/Eris/BP)') }}</th>
                             <th>{{ __('Son kontrol') }}</th>
                             <th class="w-1"></th>
@@ -968,6 +971,25 @@
                                         <span class="text-secondary">{{ __('yok') }}</span>
                                     @endif
                                 </td>
+                                @if ($domain->llm_visibility_enabled)
+                                    <td>
+                                        @if (!$last || empty($last->llm_visibility))
+                                            <span class="text-secondary">-</span>
+                                        @else
+                                            <div class="d-flex flex-wrap gap-1">
+                                                @foreach ($last->llm_visibility as $provider => $result)
+                                                    @if ($result['error'])
+                                                        <span class="badge bg-danger-lt" data-bs-toggle="tooltip" title="{{ $result['error'] }}">{{ $provider }}</span>
+                                                    @elseif ($result['present'])
+                                                        <span class="badge bg-success-lt">{{ $provider }}</span>
+                                                    @else
+                                                        <span class="badge bg-secondary-lt">{{ $provider }}</span>
+                                                    @endif
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </td>
+                                @endif
                                 <td class="text-secondary">
                                     @if (!$last)
                                         -

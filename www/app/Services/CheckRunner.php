@@ -7,6 +7,9 @@ namespace App\Services;
 use App\Models\Check;
 use App\Models\Keyword;
 use App\Services\Lighthouse\PageSpeedInsightsClient;
+use App\Services\Llm\AnthropicVisibilityChecker;
+use App\Services\Llm\GeminiVisibilityChecker;
+use App\Services\Llm\OpenAiVisibilityChecker;
 use App\Services\OnPage\OnPageSeoAnalyzer;
 use App\Services\Serp\AiOverviewResult;
 use App\Services\Serp\SerpResult;
@@ -23,6 +26,9 @@ final class CheckRunner
         private readonly SerpScraper $serpScraper,
         private readonly OnPageSeoAnalyzer $onPageAnalyzer,
         private readonly PageSpeedInsightsClient $lighthouseClient,
+        private readonly OpenAiVisibilityChecker $openAiChecker,
+        private readonly AnthropicVisibilityChecker $anthropicChecker,
+        private readonly GeminiVisibilityChecker $geminiChecker,
     ) {
     }
 
@@ -85,6 +91,7 @@ final class CheckRunner
             'ai_overview_cited_domains' => $serp->aiOverview->citedDomains,
             'ai_overview_target_cited' => $serp->aiOverview->present ? $serp->aiOverview->citesDomain($domain) : null,
             'ai_overview_note' => $serp->aiOverview->note,
+            'llm_visibility' => $this->buildLlmVisibility($keyword, $domain),
             'onpage' => $onPageData,
             'onpage_error' => $onPageError,
             'lighthouse_performance' => $lighthouse->performanceScore,
@@ -94,6 +101,59 @@ final class CheckRunner
             'lighthouse_error' => $lighthouse->error,
             'lighthouse_raw' => $lighthouse->raw,
         ]);
+    }
+
+    /**
+     * Domain'de AI gorunurluk kontrolu kapaliysa ya da hicbir saglayici icin
+     * API key girilmemisse null doner (hic calistirilmaz, maliyet olusmaz).
+     * Yalnizca gercekten yapilandirilmis saglayicilar icin sonuc uretilir.
+     *
+     * @return ?array<string, array{present: bool, response: ?string, error: ?string}>
+     */
+    private function buildLlmVisibility(Keyword $keyword, string $domain): ?array
+    {
+        if (!$keyword->domain->llm_visibility_enabled) {
+            return null;
+        }
+
+        $apiKeys = $keyword->domain->llmApiKeys->keyBy('provider');
+        if ($apiKeys->isEmpty()) {
+            return null;
+        }
+
+        $results = [];
+
+        if ($apiKeys->has('openai')) {
+            $results['openai'] = $this->safeCheckLlmVisibility(
+                fn () => $this->openAiChecker->check($keyword->keyword, $domain, $apiKeys['openai']->api_key),
+            );
+        }
+
+        if ($apiKeys->has('anthropic')) {
+            $results['anthropic'] = $this->safeCheckLlmVisibility(
+                fn () => $this->anthropicChecker->check($keyword->keyword, $domain, $apiKeys['anthropic']->api_key),
+            );
+        }
+
+        if ($apiKeys->has('gemini')) {
+            $results['gemini'] = $this->safeCheckLlmVisibility(
+                fn () => $this->geminiChecker->check($keyword->keyword, $domain, $apiKeys['gemini']->api_key),
+            );
+        }
+
+        return $results;
+    }
+
+    /**
+     * @return array{present: bool, response: ?string, error: ?string}
+     */
+    private function safeCheckLlmVisibility(callable $check): array
+    {
+        try {
+            return $check()->toArray();
+        } catch (GuzzleException $e) {
+            return ['present' => false, 'response' => null, 'error' => $e->getMessage()];
+        }
     }
 
     private function safeSearch(string $keyword): SerpResult

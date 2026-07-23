@@ -20,6 +20,7 @@ class Check extends Model
         'ai_overview_cited_domains',
         'ai_overview_target_cited',
         'ai_overview_note',
+        'llm_visibility',
         'onpage',
         'onpage_error',
         'lighthouse_performance',
@@ -36,6 +37,7 @@ class Check extends Model
         'ai_overview_present' => 'boolean',
         'ai_overview_cited_domains' => 'array',
         'ai_overview_target_cited' => 'boolean',
+        'llm_visibility' => 'array',
         'onpage' => 'array',
         'lighthouse_raw' => 'array',
     ];
