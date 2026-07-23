@@ -119,6 +119,23 @@
                             <a href="{{ route('bing.connect') }}" class="alert-link">{{ __('Bing hesabını bağla') }}</a>
                             <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
                         </div>
+                    @else
+                        {{--
+                            Bing'in refresh token akisi kendi tarafinda
+                            arizali (bkz. BingTokenService) - bir kez
+                            baglanildiktan sonra token, kullaniciya hicbir
+                            hata gostermeden sessizce kullanilamaz hale
+                            gelebiliyor. hasBingOfflineAccess() yalnizca
+                            refresh_token'in VAR OLUP OLMADIGINI kontrol
+                            eder, hala CALISIP CALISMADIGINI degil - bu
+                            yuzden "bagli" durumda da yeniden baglanma
+                            linkini gizlemek yerine hep erisilebilir
+                            tutuyoruz.
+                        --}}
+                        <p class="text-secondary small mb-2">
+                            {{ __('Bing hesabınız bağlı.') }}
+                            <a href="{{ route('bing.connect') }}">{{ __('Sorun yaşıyorsanız yeniden bağlayın') }}</a>
+                        </p>
                     @endif
                 @endauth
                 @if (session('flash'))

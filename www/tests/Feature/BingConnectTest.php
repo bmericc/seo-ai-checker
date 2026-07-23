@@ -70,4 +70,32 @@ class BingConnectTest extends TestCase
         $this->assertSame('access-token', $user->fresh()->bing_access_token);
         $this->assertSame('refresh-token', $user->fresh()->bing_refresh_token);
     }
+
+    public function test_dashboard_shows_the_connect_banner_when_bing_is_never_connected(): void
+    {
+        $user = User::factory()->create(['approved_at' => now(), 'bing_refresh_token' => null]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertSee('Kendi doğruladığınız sitelerin backlink verisini görebilmek için Bing hesabınızı bağlamanız gerekiyor.');
+        $response->assertDontSee('Bing hesabınız bağlı.');
+    }
+
+    /**
+     * Bing'in refresh token akisi kendi tarafinda arizali oldugundan
+     * (bkz. BingTokenService), bir kullanicinin bing_refresh_token'i olmasi
+     * onun HALA calistigi anlamina gelmez - bu yuzden "yeniden baglan"
+     * linki, refresh_token zaten var olsa da her zaman erisilebilir
+     * kalmali, alarm niteliginde olmayan bir bicimde.
+     */
+    public function test_dashboard_shows_a_low_key_reconnect_link_when_bing_is_already_connected(): void
+    {
+        $user = User::factory()->create(['approved_at' => now(), 'bing_refresh_token' => 'refresh-token']);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertSee('Bing hesabınız bağlı.');
+        $response->assertSee('Sorun yaşıyorsanız yeniden bağlayın');
+        $response->assertDontSee('Kendi doğruladığınız sitelerin backlink verisini görebilmek için Bing hesabınızı bağlamanız gerekiyor.');
+    }
 }
