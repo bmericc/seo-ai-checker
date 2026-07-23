@@ -15,9 +15,11 @@ use App\Services\Lighthouse\PageSpeedInsightsClient;
 use App\Services\Llms\LlmsTxtChecker;
 use App\Services\OnPage\OnPageSeoAnalyzer;
 use App\Services\Robots\RobotsTxtChecker;
+use App\Services\Serp\DataForSeoSerpScraper;
 use App\Services\Serp\GoogleRequestThrottle;
 use App\Services\Security\SecurityHeadersChecker;
 use App\Services\Serp\GoogleSerpScraper;
+use App\Services\Serp\SerpScraper;
 use App\Services\SharedDomainCheckLookup;
 use App\Services\Sitemap\SharedSitemapUrlLookup;
 use App\Services\Sitemap\SitemapChecker;
@@ -57,6 +59,26 @@ class AppServiceProvider extends ServiceProvider
                 $serp['hl'],
                 $serp['gl'],
             );
+        });
+
+        $this->app->singleton(DataForSeoSerpScraper::class, function ($app) {
+            $dataForSeo = config('seo.dataforseo');
+
+            return new DataForSeoSerpScraper(
+                $app->make(Client::class),
+                (string) $dataForSeo['login'],
+                (string) $dataForSeo['password'],
+                $dataForSeo['location_code'],
+                config('seo.serp.hl'),
+            );
+        });
+
+        $this->app->singleton(SerpScraper::class, function ($app) {
+            $dataForSeo = config('seo.dataforseo');
+
+            return ($dataForSeo['login'] && $dataForSeo['password'])
+                ? $app->make(DataForSeoSerpScraper::class)
+                : $app->make(GoogleSerpScraper::class);
         });
 
         $this->app->singleton(GoogleRequestThrottle::class, function ($app) {

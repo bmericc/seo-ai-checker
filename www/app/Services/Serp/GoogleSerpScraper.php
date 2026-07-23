@@ -19,7 +19,7 @@ use Symfony\Component\DomCrawler\Crawler;
  * yakalanamayabilir. Guvenilir sonuc icin headless tarayici (Playwright vb.)
  * veya resmi bir SERP API'si degerlendirilmelidir.
  */
-final class GoogleSerpScraper
+final class GoogleSerpScraper implements SerpScraper
 {
     /** @var string[] */
     private array $aiOverviewMarkers;

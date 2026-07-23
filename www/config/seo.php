@@ -19,6 +19,26 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | DataForSEO SERP API (opsiyonel)
+    |--------------------------------------------------------------------------
+    | Google'i dogrudan kazimak "unusual traffic"/CAPTCHA engellemesine
+    | siklikla takiliyor - DATAFORSEO_LOGIN/DATAFORSEO_PASSWORD tanimlanirsa
+    | SERP sorgulari bunun yerine DataForSEO'nun ucretli Live Advanced Google
+    | Organic API'sine gider (bkz. AppServiceProvider, DataForSeoSerpScraper).
+    | Tanimlanmazsa uygulama otomatik olarak dogrudan kazima (GoogleSerpScraper)
+    | yontemine geri doner.
+    */
+    'dataforseo' => [
+        'login' => env('DATAFORSEO_LOGIN'),
+        'password' => env('DATAFORSEO_PASSWORD'),
+        // 2792 = Turkiye (ulke geneli) - bkz. GET /v3/serp/google/locations/tr.
+        // DataForSEO "Turkey" degil "Turkiye" ismini kullaniyor; sayisal kod
+        // isim degisikliklerinden bagimsiz oldugu icin ismi degil kodu kullaniyoruz.
+        'location_code' => (int) env('DATAFORSEO_LOCATION_CODE', 2792),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | AI Overview tespiti
     |--------------------------------------------------------------------------
     | Google SERP HTML'inde AI Overview kutusunun varligini tespit etmek icin

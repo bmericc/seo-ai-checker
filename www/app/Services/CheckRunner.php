@@ -9,8 +9,8 @@ use App\Models\Keyword;
 use App\Services\Lighthouse\PageSpeedInsightsClient;
 use App\Services\OnPage\OnPageSeoAnalyzer;
 use App\Services\Serp\AiOverviewResult;
-use App\Services\Serp\GoogleSerpScraper;
 use App\Services\Serp\SerpResult;
+use App\Services\Serp\SerpScraper;
 use GuzzleHttp\Exception\GuzzleException;
 
 /**
@@ -20,7 +20,7 @@ use GuzzleHttp\Exception\GuzzleException;
 final class CheckRunner
 {
     public function __construct(
-        private readonly GoogleSerpScraper $serpScraper,
+        private readonly SerpScraper $serpScraper,
         private readonly OnPageSeoAnalyzer $onPageAnalyzer,
         private readonly PageSpeedInsightsClient $lighthouseClient,
     ) {
