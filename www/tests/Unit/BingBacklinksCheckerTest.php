@@ -65,6 +65,43 @@ class BingBacklinksCheckerTest extends TestCase
         $this->assertSame(30, $result->topPages[0]['count']);
     }
 
+    /**
+     * Bing bir siteyi "www." ile ya da onsuz dogrulayabiliyor -
+     * GetUserSites'in gercek ciktisinda bunlar birbirinden bagimsiz karisik
+     * halde donuyor (bkz. BingBacklinksChecker::matchSite). Domain'imiz
+     * "www"siz saklansa da Bing'de "www." ile dogrulanmis olabilir.
+     */
+    public function test_site_verified_with_a_www_prefix_still_matches_a_bare_domain(): void
+    {
+        $checker = $this->checkerWithResponses([
+            new Response(200, [], json_encode(['http://www.example.com/'])),
+            new Response(200, [], json_encode([['Url' => 'http://www.example.com/a', 'Count' => 7]])),
+        ]);
+
+        $result = $checker->check('https://example.com/', 'token');
+
+        $this->assertTrue($result->verified);
+        $this->assertSame('http://www.example.com/', $result->siteUrl);
+        $this->assertSame(7, $result->totalLinks);
+    }
+
+    /**
+     * Simetrik durum: domain'imiz "www." ile saklansa da Bing'de "www"siz
+     * dogrulanmis olabilir.
+     */
+    public function test_bare_domain_verified_in_bing_still_matches_a_www_prefixed_root_url(): void
+    {
+        $checker = $this->checkerWithResponses([
+            new Response(200, [], json_encode(['https://example.com/'])),
+            new Response(200, [], json_encode([['Url' => 'https://example.com/a', 'Count' => 3]])),
+        ]);
+
+        $result = $checker->check('https://www.example.com/', 'token');
+
+        $this->assertTrue($result->verified);
+        $this->assertSame('https://example.com/', $result->siteUrl);
+    }
+
     public function test_wrapped_d_response_is_unwrapped(): void
     {
         $sitesBody = json_encode(['d' => ['https://example.com/']]);

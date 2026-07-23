@@ -120,12 +120,23 @@ final class BingBacklinksChecker
      */
     private function matchSite(array $siteEntries, string $host): ?string
     {
-        $candidates = [
-            'https://' . $host . '/',
-            'http://' . $host . '/',
-            'https://' . $host,
-            'http://' . $host,
-        ];
+        // Bing Webmaster Tools kullanicilar bir siteyi "www." ile ya da
+        // onsuz dogrulayabiliyor, birbirinden bagimsiz iki ayri kayit
+        // olarak (bkz. GetUserSites cikti - "https://tarti.com/" ve
+        // "https://www.avustralyarehberi.tr/" ayni hesapta karisik
+        // halde donuyor). Domain'imiz "www"siz saklansa da dogrulama
+        // "www." ile yapilmis olabilir - bu yuzden her iki varyanti da
+        // adayllar arasina ekliyoruz, hangi tarafta oldugundan bagimsiz.
+        $bareHost = preg_replace('/^www\./i', '', $host);
+        $hosts = array_unique([$host, $bareHost, 'www.' . $bareHost]);
+
+        $candidates = [];
+        foreach ($hosts as $h) {
+            $candidates[] = 'https://' . $h . '/';
+            $candidates[] = 'http://' . $h . '/';
+            $candidates[] = 'https://' . $h;
+            $candidates[] = 'http://' . $h;
+        }
 
         foreach ($siteEntries as $entry) {
             $siteUrl = is_string($entry) ? $entry : ($entry['Url'] ?? $entry['url'] ?? null);
