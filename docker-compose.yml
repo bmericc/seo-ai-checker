@@ -54,6 +54,15 @@ services:
     <<: *app-build
     command: ["php", "artisan", "queue:work", "--tries=2", "--sleep=3", "--max-time=3600"]
 
+  # Laravel'in zamanlanmis gorevlerini (bkz. routes/console.php - gunluk
+  # site kontrolu) calistirir. Host'ta cron kurmak yerine "app" ile ayni
+  # image/volume'leri kullanan bu konteyner, schedule:work ile sureklilik
+  # arz eden bir foreground process olarak dakikada bir zamani gelen
+  # gorevleri tetikler.
+  scheduler:
+    <<: *app-build
+    command: ["php", "artisan", "schedule:work"]
+
   webserver:
     image: nginx:1.27-alpine
     restart: ${RESTART_POLICY:-no}

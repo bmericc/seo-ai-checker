@@ -16,11 +16,11 @@
     };
 
     $allValues = collect($series)->flatMap(fn ($s) => $s['values'])->filter(fn ($v) => $v !== null)->values();
-    $hasData = $allValues->isNotEmpty() && count($labels) > 1;
+    $hasData = $allValues->isNotEmpty();
 @endphp
 
 @if (!$hasData)
-    <p class="text-secondary small mb-0">{{ __('Henüz yeterli veri yok (en az 2 farklı günde kontrol gerekir).') }}</p>
+    <p class="text-secondary small mb-0">{{ __('Henüz veri yok.') }}</p>
 @else
     @php
         $dataMin = $allValues->min();
@@ -72,7 +72,20 @@
         $xLabelIndexes = $count <= 6 ? range(0, $count - 1) : [0, (int) round(($count - 1) / 2), $count - 1];
     @endphp
 
-    <svg viewBox="0 0 {{ $width }} {{ $height }}" preserveAspectRatio="none" style="width: 100%; height: {{ $height }}px;" role="img" aria-label="{{ collect($series)->pluck('label')->implode(', ') }}">
+    @once
+        <style>
+            .line-chart-svg .chart-point {
+                cursor: pointer;
+                transition: r 0.1s ease-out;
+            }
+            .line-chart-svg .chart-point:hover,
+            .line-chart-svg .chart-point:focus {
+                r: 5;
+            }
+        </style>
+    @endonce
+
+    <svg class="line-chart-svg" viewBox="0 0 {{ $width }} {{ $height }}" preserveAspectRatio="none" style="width: 100%; height: {{ $height }}px; overflow: visible;" role="img" aria-label="{{ collect($series)->pluck('label')->implode(', ') }}">
         @foreach ($gridValues as $g)
             @php $gy = $yFor((float) $g); @endphp
             <line x1="{{ $paddingLeft }}" y1="{{ $gy }}" x2="{{ $width - $paddingRight }}" y2="{{ $gy }}" stroke="currentColor" stroke-opacity="0.12" stroke-width="1"></line>
@@ -86,7 +99,7 @@
                 font-size="9"
                 fill="currentColor"
                 fill-opacity="0.6"
-                text-anchor="{{ $i === 0 ? 'start' : ($i === $count - 1 ? 'end' : 'middle') }}"
+                text-anchor="{{ $count === 1 ? 'middle' : ($i === 0 ? 'start' : ($i === $count - 1 ? 'end' : 'middle')) }}"
             >{{ $labels[$i] }}</text>
         @endforeach
 
@@ -103,9 +116,17 @@
             @endforeach
             @foreach ($p['values'] as $i => $v)
                 @continue($v === null)
-                <circle cx="{{ $xFor($i) }}" cy="{{ $yFor((float) $v) }}" r="2.5" fill="{{ $p['color'] }}">
-                    <title>{{ $p['label'] }}: {{ $format((float) $v) }}{{ $valueSuffix }} ({{ $labels[$i] }})</title>
-                </circle>
+                <circle
+                    class="chart-point"
+                    cx="{{ $xFor($i) }}"
+                    cy="{{ $yFor((float) $v) }}"
+                    r="2.5"
+                    fill="{{ $p['color'] }}"
+                    tabindex="0"
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="top"
+                    title="{{ $p['label'] }}: {{ $format((float) $v) }}{{ $valueSuffix }} ({{ $labels[$i] }})"
+                ></circle>
             @endforeach
         @endforeach
     </svg>

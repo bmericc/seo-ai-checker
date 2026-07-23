@@ -73,7 +73,7 @@ class ScoreHistoryChartsTest extends TestCase
         $response = $this->actingAs($user)->get(route('domains.show', $domain));
 
         $response->assertOk();
-        $response->assertDontSee('Grafikler için en az iki farklı günde tamamlanmış kontrol gerekir.');
+        $response->assertDontSee('Grafikler için tamamlanmış en az bir kontrol gerekir.');
         $response->assertSee('<svg', false);
     }
 
@@ -114,7 +114,7 @@ class ScoreHistoryChartsTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Henüz hiçbir anahtar kelimede AI Overview gözlemlenmedi.');
-        $response->assertSee('Grafikler için en az iki farklı günde tamamlanmış kontrol gerekir.');
+        $response->assertSee('Grafikler için tamamlanmış en az bir kontrol gerekir.');
         $response->assertDontSee('Site Kontrolü Geçmişi');
     }
 
@@ -137,16 +137,33 @@ class ScoreHistoryChartsTest extends TestCase
         $response->assertSee('<svg', false);
     }
 
-    public function test_keyword_page_with_a_single_check_hides_the_trend_card(): void
+    public function test_keyword_page_with_a_single_check_still_shows_the_trend_card(): void
     {
         $user = User::factory()->create(['approved_at' => now()]);
         $domain = Domain::query()->create(['domain' => 'example.com', 'user_id' => $user->id]);
         $keyword = $domain->keywords()->create(['keyword' => 'örnek kelime']);
-        $keyword->checks()->create(['target_position' => 4]);
+        $keyword->checks()->create(['target_position' => 4, 'lighthouse_performance' => 70]);
 
         $response = $this->actingAs($user)->get(route('keywords.show', $keyword));
 
         $response->assertOk();
-        $response->assertDontSee('Geçmiş Skor Trendi');
+        $response->assertSee('Geçmiş Skor Trendi');
+        // Tek nokta icin polyline yerine yalnizca bir <circle> noktasi
+        // cizilir - cizgi olusmasa da veri gorsellestirilir.
+        $response->assertSee('<circle', false);
+    }
+
+    public function test_domain_page_with_a_single_check_still_shows_the_trend_charts(): void
+    {
+        $user = User::factory()->create(['approved_at' => now()]);
+        $domain = Domain::query()->create(['domain' => 'example.com', 'user_id' => $user->id]);
+        $keyword = $domain->keywords()->create(['keyword' => 'örnek kelime']);
+        $keyword->checks()->create(['target_position' => 4, 'lighthouse_performance' => 70]);
+
+        $response = $this->actingAs($user)->get(route('domains.show', $domain));
+
+        $response->assertOk();
+        $response->assertDontSee('Grafikler için tamamlanmış en az bir kontrol gerekir.');
+        $response->assertSee('<circle', false);
     }
 }
