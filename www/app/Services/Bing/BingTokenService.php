@@ -23,6 +23,7 @@ final class BingTokenService
         private readonly Client $client,
         private readonly ?string $clientId,
         private readonly ?string $clientSecret,
+        private readonly string $appUrl,
     ) {
     }
 
@@ -48,6 +49,17 @@ final class BingTokenService
 
         try {
             $response = $this->client->post(self::TOKEN_ENDPOINT, [
+                // Bing'in token endpoint'i, tarayici disi (sunucu-sunucu)
+                // isteklerde bile Origin/Referer header'i olmadan
+                // "Origin and Referer request headers are both
+                // absent/empty" hatasiyla HTTP 400 donuyor - bu yuzden
+                // uygulamanin kendi URL'sini bu iki header olarak elle
+                // ekliyoruz (2026-07-23'te prod'da tum refresh cagrilari
+                // bu yuzden sessizce basarisiz oluyordu).
+                'headers' => [
+                    'Origin' => $this->appUrl,
+                    'Referer' => $this->appUrl,
+                ],
                 'form_params' => [
                     'grant_type' => 'refresh_token',
                     'refresh_token' => $user->bing_refresh_token,

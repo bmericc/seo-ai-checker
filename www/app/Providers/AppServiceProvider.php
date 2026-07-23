@@ -91,6 +91,7 @@ class AppServiceProvider extends ServiceProvider
             $app->make(Client::class),
             config('services.bing.client_id'),
             config('services.bing.client_secret'),
+            config('app.url'),
         ));
 
         $this->app->singleton(GoogleTokenService::class, fn ($app) => new GoogleTokenService(

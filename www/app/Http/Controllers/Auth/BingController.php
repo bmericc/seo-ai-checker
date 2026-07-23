@@ -70,6 +70,13 @@ class BingController extends Controller
 
         try {
             $response = $this->client->post(self::TOKEN_ENDPOINT, [
+                // BingTokenService::refresh() ile ayni sebep: Bing'in token
+                // endpoint'i Origin/Referer header'i olmadan HTTP 400
+                // donebiliyor.
+                'headers' => [
+                    'Origin' => config('app.url'),
+                    'Referer' => config('app.url'),
+                ],
                 'form_params' => [
                     'client_id' => config('services.bing.client_id'),
                     'client_secret' => config('services.bing.client_secret'),
