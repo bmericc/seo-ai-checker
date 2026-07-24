@@ -17,21 +17,11 @@ class Domain extends Model
         'dismissed_keyword_suggestions',
         'ga4_property_id',
         'llm_visibility_enabled',
-        'whois_registrar',
-        'whois_registered_at',
-        'whois_expires_at',
-        'whois_raw',
-        'whois_error',
-        'whois_checked_at',
     ];
 
     protected $casts = [
         'dismissed_keyword_suggestions' => 'array',
         'llm_visibility_enabled' => 'boolean',
-        'whois_registered_at' => 'date',
-        'whois_expires_at' => 'date',
-        'whois_raw' => 'array',
-        'whois_checked_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -69,8 +59,19 @@ class Domain extends Model
     }
 
     /**
+     * Ayni domain string'ini (ornegin farkli kullanicilar) takip eden TUM
+     * Domain kayitlarinin paylastigi ortak gercekler - bkz. DomainFact.
+     * Domain.id'ye degil domain STRING'ine bagli oldugu icin normal bir
+     * foreign key degil, "domain" kolonuyla eslesen tek satirdir.
+     */
+    public function fact(): BelongsTo
+    {
+        return $this->belongsTo(DomainFact::class, 'domain', 'domain');
+    }
+
+    /**
      * Girilen domain'in kok URL'i. Bilinen bir kalici (301/308) yonlendirme
-     * varsa (bkz. CanonicalHostChecker, DomainCheck.canonical_host) girilen
+     * varsa (bkz. CanonicalHostChecker, DomainFact.canonical_host) girilen
      * domain yerine gercek trafigin gittigi host kullanilir - ornegin
      * "domain.com" yerine "www.domain.com". Site kontrolu hic
      * calistirilmadiysa (kanonik host henuz bilinmiyorsa) girilen domain'e
@@ -79,7 +80,7 @@ class Domain extends Model
      */
     public function rootUrl(): string
     {
-        $canonicalHost = $this->latestDomainCheck?->canonical_host['canonical_host'] ?? null;
+        $canonicalHost = $this->fact?->canonical_host['canonical_host'] ?? null;
         $host = is_string($canonicalHost) && $canonicalHost !== '' ? $canonicalHost : $this->domain;
 
         return sprintf('https://%s/', $host);
@@ -110,14 +111,13 @@ class Domain extends Model
     }
 
     /**
-     * whois_registered_at bilinmiyorsa (WHOIS henuz cekilmediyse, ya da
-     * kayit tarihini raporlamayan bir TLD icin bulunamadiysa) null doner.
+     * WHOIS artik domain string'ine gore paylasilan DomainFact'te tutulur -
+     * bkz. Domain::fact(). Henuz hic sorgulanmadiysa (fact yok ya da
+     * whois_registered_at bilinmiyorsa) null doner.
      */
     public function whoisAgeInYears(): ?int
     {
-        return $this->whois_registered_at === null
-            ? null
-            : (int) $this->whois_registered_at->diffInYears(now());
+        return $this->fact?->whoisAgeInYears();
     }
 
     public function dismissKeywordSuggestion(string $phrase): void

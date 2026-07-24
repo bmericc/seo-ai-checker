@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Domain;
+use App\Models\DomainFact;
 use App\Models\Keyword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -21,7 +22,7 @@ class CanonicalTargetUrlTest extends TestCase
     public function test_domain_root_url_uses_the_canonical_host_when_a_redirect_is_known(): void
     {
         $domain = Domain::query()->create(['domain' => 'example.com']);
-        $domain->domainChecks()->create([
+        DomainFact::forDomain('example.com')->update([
             'canonical_host' => [
                 'original_host' => 'example.com',
                 'canonical_host' => 'www.example.com',
@@ -36,7 +37,7 @@ class CanonicalTargetUrlTest extends TestCase
     public function test_keyword_without_its_own_url_targets_the_domains_canonical_root(): void
     {
         $domain = Domain::query()->create(['domain' => 'example.com']);
-        $domain->domainChecks()->create([
+        DomainFact::forDomain('example.com')->update([
             'canonical_host' => [
                 'original_host' => 'example.com',
                 'canonical_host' => 'www.example.com',
@@ -52,7 +53,7 @@ class CanonicalTargetUrlTest extends TestCase
     public function test_keyword_with_its_own_url_ignores_the_canonical_host(): void
     {
         $domain = Domain::query()->create(['domain' => 'example.com']);
-        $domain->domainChecks()->create([
+        DomainFact::forDomain('example.com')->update([
             'canonical_host' => [
                 'original_host' => 'example.com',
                 'canonical_host' => 'www.example.com',

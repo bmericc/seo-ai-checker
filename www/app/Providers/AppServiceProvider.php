@@ -23,7 +23,6 @@ use App\Services\Serp\GoogleRequestThrottle;
 use App\Services\Security\SecurityHeadersChecker;
 use App\Services\Serp\GoogleSerpScraper;
 use App\Services\Serp\SerpScraper;
-use App\Services\SharedDomainCheckLookup;
 use App\Services\Sitemap\SharedSitemapUrlLookup;
 use App\Services\Sitemap\SitemapChecker;
 use App\Services\Sitemap\SitemapUrlSync;
@@ -143,8 +142,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(SharedSitemapUrlLookup::class, fn () => new SharedSitemapUrlLookup());
 
         $this->app->singleton(SitemapUrlSync::class, fn ($app) => new SitemapUrlSync($app->make(SharedSitemapUrlLookup::class)));
-
-        $this->app->singleton(SharedDomainCheckLookup::class, fn () => new SharedDomainCheckLookup());
 
         $this->app->singleton(KeywordSuggester::class, fn ($app) => new KeywordSuggester($app->make(Client::class)));
 

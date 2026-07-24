@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Models\Domain;
+use App\Models\DomainFact;
 use App\Services\Whois\WhoisChecker;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -12,12 +13,15 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 
 /**
- * Bir domain icin WHOIS/RDAP sorgusunu calistirip sonucu Domain kaydina
- * yazar. WHOIS sorgulari (TCP port 43 ya da RDAP HTTP istegi, registrar
- * sunucusuna dogrudan baglanti) yavas ve zaman zaman ulasilamaz
- * olabildigi icin bu her zaman kuyruk uzerinden calisir - "Domain Ekle"
- * ve "WHOIS Bilgisini Yenile" aksiyonlari sadece bu isi kuyruga birakir,
- * web istegi icinde WHOIS sorgusu asla dogrudan calistirilmaz.
+ * Bir domain icin WHOIS/RDAP sorgusunu calistirip sonucu domain STRING'ine
+ * ait paylasilan DomainFact satirina yazar (Domain kaydina degil - ayni
+ * domain'i takip eden farkli kullanicilarin hepsi bu tek satiri paylasir,
+ * bkz. Domain::fact()). WHOIS sorgulari (TCP port 43 ya da RDAP HTTP
+ * istegi, registrar sunucusuna dogrudan baglanti) yavas ve zaman zaman
+ * ulasilamaz olabildigi icin bu her zaman kuyruk uzerinden calisir -
+ * "Domain Ekle" ve "WHOIS Bilgisini Yenile" aksiyonlari sadece bu isi
+ * kuyruga birakir, web istegi icinde WHOIS sorgusu asla dogrudan
+ * calistirilmaz.
  */
 final class RunDomainWhoisLookup implements ShouldQueue
 {
@@ -51,7 +55,7 @@ final class RunDomainWhoisLookup implements ShouldQueue
 
         $result = $checker->check($domain->domain);
 
-        $domain->update([
+        DomainFact::forDomain($domain->domain)->update([
             'whois_registrar' => $result->registrar,
             'whois_registered_at' => $result->registeredAt,
             'whois_expires_at' => $result->expiresAt,

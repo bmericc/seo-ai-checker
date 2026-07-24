@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Jobs\RunDomainWhoisLookup;
 use App\Models\Domain;
+use App\Models\DomainFact;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
@@ -66,9 +67,8 @@ class DomainWhoisTest extends TestCase
     public function test_domain_page_shows_age_and_registrar_once_whois_data_is_saved(): void
     {
         $user = User::factory()->create(['approved_at' => now()]);
-        $domain = Domain::query()->create([
-            'domain' => 'example.com',
-            'user_id' => $user->id,
+        $domain = Domain::query()->create(['domain' => 'example.com', 'user_id' => $user->id]);
+        DomainFact::forDomain('example.com')->update([
             'whois_registrar' => 'Example Registrar Inc.',
             'whois_registered_at' => now()->subYears(5),
             'whois_expires_at' => now()->addYear(),
@@ -86,9 +86,8 @@ class DomainWhoisTest extends TestCase
     public function test_domain_page_shows_the_error_when_the_last_whois_lookup_failed(): void
     {
         $user = User::factory()->create(['approved_at' => now()]);
-        $domain = Domain::query()->create([
-            'domain' => 'example.zzz',
-            'user_id' => $user->id,
+        $domain = Domain::query()->create(['domain' => 'example.zzz', 'user_id' => $user->id]);
+        DomainFact::forDomain('example.zzz')->update([
             'whois_error' => 'TLD .zzz is not supported.',
             'whois_checked_at' => now(),
         ]);
@@ -97,5 +96,28 @@ class DomainWhoisTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('TLD .zzz is not supported.');
+    }
+
+    /**
+     * Ayni domain string'ini takip eden iki farkli kullanicidan biri hic
+     * WHOIS sorgulamadi bile - digerinin WHOIS'i onceden kaydedilmisse
+     * (paylasilan DomainFact uzerinden) her ikisi de ayni sonucu gormeli.
+     */
+    public function test_whois_data_is_shared_across_domain_rows_with_the_same_domain_string(): void
+    {
+        $userA = User::factory()->create(['approved_at' => now()]);
+        $userB = User::factory()->create(['approved_at' => now()]);
+        Domain::query()->create(['domain' => 'tarti.com', 'user_id' => $userA->id]);
+        $domainB = Domain::query()->create(['domain' => 'tarti.com', 'user_id' => $userB->id]);
+
+        DomainFact::forDomain('tarti.com')->update([
+            'whois_registrar' => 'Shared Registrar Inc.',
+            'whois_checked_at' => now(),
+        ]);
+
+        $response = $this->actingAs($userB)->get(route('domains.show', $domainB));
+
+        $response->assertOk();
+        $response->assertSee('Shared Registrar Inc.');
     }
 }

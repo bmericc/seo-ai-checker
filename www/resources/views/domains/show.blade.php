@@ -37,10 +37,10 @@
             </div>
         </div>
         <div class="card-body">
-            @if (!$domain->whois_checked_at)
+            @if (!$domain->fact?->whois_checked_at)
                 <p class="text-secondary mb-0">{{ __('WHOIS bilgisi henüz kuyruğa alınmadı ya da worker tarafından işlenmedi.') }}</p>
-            @elseif ($domain->whois_error)
-                <p class="text-danger mb-0">{{ __('WHOIS sorgusu başarısız: :error', ['error' => $domain->whois_error]) }}</p>
+            @elseif ($domain->fact->whois_error)
+                <p class="text-danger mb-0">{{ __('WHOIS sorgusu başarısız: :error', ['error' => $domain->fact->whois_error]) }}</p>
             @else
                 <div class="row">
                     <div class="col-12 col-md-4">
@@ -52,20 +52,20 @@
                                 <span class="text-secondary">—</span>
                             @endif
                         </div>
-                        @if ($domain->whois_registered_at)
-                            <div class="text-secondary small">{{ __('Kayıt tarihi:') }} {{ $domain->whois_registered_at->format('Y-m-d') }}</div>
+                        @if ($domain->fact->whois_registered_at)
+                            <div class="text-secondary small">{{ __('Kayıt tarihi:') }} {{ $domain->fact->whois_registered_at->format('Y-m-d') }}</div>
                         @endif
                     </div>
                     <div class="col-12 col-md-4">
                         <div class="text-secondary small mb-1">{{ __('Registrar') }}</div>
-                        <div class="h3 mb-0">{{ $domain->whois_registrar ?: '—' }}</div>
+                        <div class="h3 mb-0">{{ $domain->fact->whois_registrar ?: '—' }}</div>
                     </div>
                     <div class="col-12 col-md-4">
                         <div class="text-secondary small mb-1">{{ __('Kayıt Süresi Sonu') }}</div>
-                        <div class="h3 mb-0">{{ $domain->whois_expires_at?->format('Y-m-d') ?: '—' }}</div>
+                        <div class="h3 mb-0">{{ $domain->fact->whois_expires_at?->format('Y-m-d') ?: '—' }}</div>
                     </div>
                 </div>
-                <div class="text-secondary small mt-3">{{ __('Son WHOIS kontrolü: :date', ['date' => $domain->whois_checked_at->format('Y-m-d H:i:s')]) }}</div>
+                <div class="text-secondary small mt-3">{{ __('Son WHOIS kontrolü: :date', ['date' => $domain->fact->whois_checked_at->format('Y-m-d H:i:s')]) }}</div>
             @endif
         </div>
     </div>
@@ -157,23 +157,36 @@
                 {{ __("Belirli bir anahtar kelimeye değil, domain'in tamamına ait kontroller: AI crawler'ların robots.txt erişimi, sitemap.xml, llms.txt ve güvenlik header'ları.") }}
             </p>
 
-            @if ($domain->latestDomainCheck)
+            @if ($domain->fact?->checked_at || $domain->latestDomainCheck)
                 @php
+                    // $fact, ayni domain string'ini takip eden HERHANGI bir
+                    // kullanicinin kontrolunden gelen ortak/paylasilan
+                    // bilgidir (bkz. Domain::fact()) - bu Domain kaydinin
+                    // kendi kontrolu hic calismamis olsa bile guncel
+                    // gorunur. $domainCheck ise SADECE bu Domain kaydina ozel
+                    // (sitemap/GSC/GA4/Bing) - hic calismadiysa null olabilir.
+                    $fact = $domain->fact;
                     $domainCheck = $domain->latestDomainCheck;
-                    $aiCrawlers = $domainCheck->ai_crawlers ?? [];
-                    $sitemapData = $domainCheck->sitemap ?? [];
-                    $llmsTxt = $domainCheck->llms_txt ?? [];
-                    $securityHeaders = $domainCheck->security_headers ?? [];
-                    $canonicalHostData = $domainCheck->canonical_host ?? [];
-                    $cruxData = $domainCheck->crux ?? [];
-                    $gscData = $domainCheck->gsc ?? [];
-                    $ga4Data = $domainCheck->ga4 ?? [];
-                    $bingData = $domainCheck->bing_backlinks ?? [];
+                    $aiCrawlers = $fact?->ai_crawlers ?? [];
+                    $sitemapData = $domainCheck?->sitemap ?? [];
+                    $llmsTxt = $fact?->llms_txt ?? [];
+                    $securityHeaders = $fact?->security_headers ?? [];
+                    $canonicalHostData = $fact?->canonical_host ?? [];
+                    $cruxData = $fact?->crux ?? [];
+                    $gscData = $domainCheck?->gsc ?? [];
+                    $ga4Data = $domainCheck?->ga4 ?? [];
+                    $bingData = $domainCheck?->bing_backlinks ?? [];
                 @endphp
 
-                <div class="text-secondary small mb-2">{{ __('Son kontrol: :date', ['date' => $domainCheck->created_at->format('Y-m-d H:i:s')]) }}</div>
+                <div class="text-secondary small mb-2">
+                    @if ($domainCheck)
+                        {{ __('Son kontrol: :date', ['date' => $domainCheck->created_at->format('Y-m-d H:i:s')]) }}
+                    @else
+                        {{ __('Bu domain için henüz kendi kontrolünüz çalışmadı — aşağıdaki ortak bilgiler aynı domain\'in başka bir kaydından geliyor.') }}
+                    @endif
+                </div>
                 <div class="mb-3">
-                    @include('domains._check-badges', ['domainCheck' => $domainCheck])
+                    @include('domains._check-badges', ['domainCheck' => $domainCheck, 'fact' => $fact])
                 </div>
 
                 @if (!empty($driftChanges))

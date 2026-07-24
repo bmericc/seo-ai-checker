@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\Domain;
 use App\Models\DomainCheck;
+use App\Models\DomainFact;
 use App\Services\Bing\BingBacklinksChecker;
 use App\Services\Bing\BingTokenService;
 use App\Services\CanonicalHost\CanonicalHostChecker;
@@ -30,12 +31,17 @@ use App\Services\Sitemap\SitemapUrlSync;
  *
  * ai_crawlers/llms_txt/security_headers/canonical_host/crux hangi
  * kullanicinin sordugundan bagimsiz, domain-genelinde sabit gerceklerdir -
- * ayni domain string'ini baska bir kullanici yakin zamanda kontrol ettiyse
- * (bkz. SharedDomainCheckLookup) bu alanlar tekrar taranmaz, o sonuc
- * kopyalanir. Sitemap (SitemapUrl senkronizasyonu icin URL listesi
- * gerekir), GSC/GA4/Bing backlink (kullaniciya ozel OAuth) ve anahtar
- * kelime onerileri (kullaniciya ozel disleme listesi) bu paylasima dahil
- * degildir, her zaman taze calisir.
+ * bu yuzden domain string'ine ait TEK bir DomainFact satirinda tutulur
+ * (bkz. Domain::fact()). Bu satir 7 gunden daha taze ise ($forceFresh
+ * verilmedigi surece) tekrar taranmaz, dogrudan kullanilir - ayni domain'i
+ * takip eden HERHANGI bir kullanicinin tetikledigi bir tazeleme, o
+ * domain'i takip eden HERKESTE anlik olarak gorunur (eskiden
+ * SharedDomainCheckLookup ile her Domain kaydi kendi DomainCheck
+ * gecmisinde ayri ayri kopyalardi, bu paylasim tek yonlu ve gecikmeliydi).
+ * Sitemap (SitemapUrl senkronizasyonu icin URL listesi gerekir), GSC/GA4/
+ * Bing backlink (kullaniciya ozel OAuth) ve anahtar kelime onerileri
+ * (kullaniciya ozel disleme listesi) bu paylasima dahil degildir, her
+ * zaman taze calisir.
  */
 final class DomainCheckRunner
 {
@@ -61,22 +67,51 @@ final class DomainCheckRunner
         private readonly BingTokenService $bingTokenService,
         private readonly SitemapUrlSync $sitemapUrlSync,
         private readonly KeywordSuggester $keywordSuggester,
-        private readonly SharedDomainCheckLookup $sharedDomainCheckLookup,
     ) {
     }
 
-    public function run(Domain $domain): DomainCheck
+    /**
+     * $forceFresh, kullanicinin "Site Kontrolu Yap" butonuyla ACIKCA
+     * istedigi kontroller icin true gecilir - kendi sitesinde robots.txt/
+     * guvenlik header/kanonik host gibi bir seyi duzeltip hemen sonucunu
+     * gormek isteyen bir domain sahibi, DomainFact'in 7 gune kadar eski
+     * olabilen halini gormemeli. Gunluk zamanlanmis otomatik kontrol
+     * (RunDomainSiteCheck) bu parametreyi gecmez - orada gereksiz taramadan
+     * kacinmak asil amactir, kullanici o an bir seyi dogrulamaya
+     * calismiyordur.
+     */
+    public function run(Domain $domain, bool $forceFresh = false): DomainCheck
     {
-        $shared = $this->sharedDomainCheckLookup->find($domain);
+        $fact = DomainFact::forDomain($domain->domain);
 
-        $canonicalHostData = $shared?->canonical_host ?? $this->freshCanonicalHost($domain->domain);
-        $canonicalHost = $canonicalHostData['canonical_host'] ?: $domain->domain;
-        $rootUrl = sprintf('https://%s/', $canonicalHost);
+        if ($forceFresh || $fact->isStale()) {
+            $canonicalHostData = $this->freshCanonicalHost($domain->domain);
+            $canonicalHost = $canonicalHostData['canonical_host'] ?: $domain->domain;
+            $rootUrl = sprintf('https://%s/', $canonicalHost);
 
-        $aiCrawlersData = $shared?->ai_crawlers ?? $this->freshAiCrawlers($rootUrl);
-        $llmsTxtData = $shared?->llms_txt ?? $this->freshLlmsTxt($rootUrl);
-        $securityHeadersData = $shared?->security_headers ?? $this->freshSecurityHeaders($domain->domain);
-        $cruxData = $shared?->crux ?? $this->freshCrux($canonicalHost);
+            $aiCrawlersData = $this->freshAiCrawlers($rootUrl);
+            $llmsTxtData = $this->freshLlmsTxt($rootUrl);
+            $securityHeadersData = $this->freshSecurityHeaders($domain->domain);
+            $cruxData = $this->freshCrux($canonicalHost);
+
+            $fact->update([
+                'ai_crawlers' => $aiCrawlersData,
+                'llms_txt' => $llmsTxtData,
+                'security_headers' => $securityHeadersData,
+                'canonical_host' => $canonicalHostData,
+                'crux' => $cruxData,
+                'checked_at' => now(),
+            ]);
+        } else {
+            $canonicalHostData = $fact->canonical_host;
+            $canonicalHost = $canonicalHostData['canonical_host'] ?: $domain->domain;
+            $rootUrl = sprintf('https://%s/', $canonicalHost);
+
+            $aiCrawlersData = $fact->ai_crawlers;
+            $llmsTxtData = $fact->llms_txt;
+            $securityHeadersData = $fact->security_headers;
+            $cruxData = $fact->crux;
+        }
 
         $sitemap = $this->sitemapChecker->check($rootUrl);
         if ($sitemap->found && $sitemap->isValidXml) {

@@ -92,6 +92,7 @@
     "Bu API key silinsin mi?": "Delete this API key?",
     "Bu anahtar kelime silinsin mi?": "Delete this keyword?",
     "Bu domain için AI görünürlük kontrolü aktif": "AI visibility check active for this domain",
+    "Bu domain için henüz kendi kontrolünüz çalışmadı — aşağıdaki ortak bilgiler aynı domain'in başka bir kaydından geliyor.": "Your own check for this domain hasn't run yet — the shared info below comes from another record of the same domain.",
     "Bu domain, bağlı Bing hesabınızda doğrulanmış bir site olarak bulunamadı. Not: bu, genel bir backlink indeksi değildir — yalnızca kendi Bing Webmaster hesabınızda doğruladığınız siteler için veri döner.": "This domain was not found as a verified site in your connected Bing account. Note: this is not a general backlink index — it only returns data for sites you've verified in your own Bing Webmaster account.",
     "Bu domain, bağlı Google hesabınızın Search Console'unda doğrulanmış bir mülk (property) olarak bulunamadı.": "This domain was not found as a verified property in your connected Google account's Search Console.",
     "Bu panel herkese açık değildir; yalnızca site sahibi tarafından önceden izin verilmiş Google hesaplarıyla giriş yapılabilir. Erişiminiz varsa aşağıdan giriş yapabilirsiniz.": "This panel is not publicly accessible; only Google accounts pre-authorized by the site owner can sign in. If you have access, you can sign in below.",

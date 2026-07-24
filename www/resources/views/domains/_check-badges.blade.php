@@ -1,13 +1,20 @@
 @php
-    $aiCrawlers = $domainCheck->ai_crawlers ?? [];
-    $sitemapData = $domainCheck->sitemap ?? [];
-    $llmsTxt = $domainCheck->llms_txt ?? [];
-    $securityHeaders = $domainCheck->security_headers ?? [];
-    $canonicalHostData = $domainCheck->canonical_host ?? [];
-    $cruxData = $domainCheck->crux ?? [];
-    $gscData = $domainCheck->gsc ?? [];
-    $ga4Data = $domainCheck->ga4 ?? [];
-    $bingData = $domainCheck->bing_backlinks ?? [];
+    // ai_crawlers/llms_txt/security_headers/canonical_host/crux domain
+    // string'ine ait ortak DomainFact'ten gelir (bkz. Domain::fact()) - bu
+    // sayede bu Domain kaydinin kendi kontrolu hic calismamis olsa bile,
+    // ayni domain'i baska bir kullanicinin taze kontrol etmis olmasi
+    // durumunda burada gorunur. sitemap/gsc/ga4/bing_backlinks ise
+    // kullaniciya/kayda ozel oldugundan $domainCheck'ten (bu Domain
+    // kaydinin kendi en son kontrolu, olmayabilir) gelir.
+    $aiCrawlers = $fact?->ai_crawlers ?? [];
+    $sitemapData = $domainCheck?->sitemap ?? [];
+    $llmsTxt = $fact?->llms_txt ?? [];
+    $securityHeaders = $fact?->security_headers ?? [];
+    $canonicalHostData = $fact?->canonical_host ?? [];
+    $cruxData = $fact?->crux ?? [];
+    $gscData = $domainCheck?->gsc ?? [];
+    $ga4Data = $domainCheck?->ga4 ?? [];
+    $bingData = $domainCheck?->bing_backlinks ?? [];
     $blockedCrawlers = collect($aiCrawlers['crawlers'] ?? [])->filter(fn ($c) => !$c['allowed']);
     $cruxRatings = collect($cruxData['metrics'] ?? [])->pluck('rating');
 @endphp

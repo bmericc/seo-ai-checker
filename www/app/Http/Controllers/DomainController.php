@@ -62,6 +62,7 @@ class DomainController extends Controller
             'keywords' => fn ($q) => $q->orderBy('keyword'),
             'keywords.latestCheck',
             'latestDomainCheck',
+            'fact',
             'user',
         ]);
 
@@ -121,7 +122,7 @@ class DomainController extends Controller
     {
         $this->ensureCanAccessDomain($request, $domain);
 
-        $checkRunner->run($domain);
+        $checkRunner->run($domain, forceFresh: true);
 
         return redirect()
             ->route('domains.show', $domain)
