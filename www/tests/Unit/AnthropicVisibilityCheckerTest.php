@@ -37,7 +37,7 @@ class AnthropicVisibilityCheckerTest extends TestCase
         $this->assertSame('2023-06-01', $capturedRequest->getHeaderLine('anthropic-version'));
         $sent = json_decode((string) $capturedRequest->getBody(), true);
         $this->assertSame('claude-haiku-4-5-20251001', $sent['model']);
-        $this->assertSame('örnek kelime', $sent['messages'][0]['content']);
+        $this->assertSame('örnek kelime konusunda hangi web sitelerine bakmalıyım?', $sent['messages'][0]['content']);
     }
 
     public function test_domain_mentioned_in_response_is_detected(): void

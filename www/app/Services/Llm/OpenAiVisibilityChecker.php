@@ -17,9 +17,6 @@ final class OpenAiVisibilityChecker
 {
     private const ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 
-    private const SYSTEM_PROMPT = 'Bir kullanıcı bir konuda arama yapıyor. Ona yardımcı olacak, '
-        . 'güncel ve güvenilir bilgi veren web sitelerini de belirterek kısa ve öz bir cevap ver.';
-
     public function __construct(
         private readonly Client $client,
         private readonly string $model = 'gpt-4.1-nano',
@@ -37,8 +34,8 @@ final class OpenAiVisibilityChecker
                 'json' => [
                     'model' => $this->model,
                     'messages' => [
-                        ['role' => 'system', 'content' => self::SYSTEM_PROMPT],
-                        ['role' => 'user', 'content' => $keyword],
+                        ['role' => 'system', 'content' => LlmVisibilityPrompt::SYSTEM_PROMPT],
+                        ['role' => 'user', 'content' => LlmVisibilityPrompt::userPrompt($keyword)],
                     ],
                     'max_tokens' => 400,
                 ],

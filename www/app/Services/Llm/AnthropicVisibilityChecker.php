@@ -17,9 +17,6 @@ final class AnthropicVisibilityChecker
 
     private const API_VERSION = '2023-06-01';
 
-    private const SYSTEM_PROMPT = 'Bir kullanıcı bir konuda arama yapıyor. Ona yardımcı olacak, '
-        . 'güncel ve güvenilir bilgi veren web sitelerini de belirterek kısa ve öz bir cevap ver.';
-
     public function __construct(
         private readonly Client $client,
         private readonly string $model = 'claude-haiku-4-5-20251001',
@@ -38,9 +35,9 @@ final class AnthropicVisibilityChecker
                 'json' => [
                     'model' => $this->model,
                     'max_tokens' => 400,
-                    'system' => self::SYSTEM_PROMPT,
+                    'system' => LlmVisibilityPrompt::SYSTEM_PROMPT,
                     'messages' => [
-                        ['role' => 'user', 'content' => $keyword],
+                        ['role' => 'user', 'content' => LlmVisibilityPrompt::userPrompt($keyword)],
                     ],
                 ],
                 'http_errors' => false,

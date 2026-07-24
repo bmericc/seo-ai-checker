@@ -36,7 +36,7 @@ class OpenAiVisibilityCheckerTest extends TestCase
         $this->assertSame('Bearer sk-test-key', $capturedRequest->getHeaderLine('Authorization'));
         $sent = json_decode((string) $capturedRequest->getBody(), true);
         $this->assertSame('gpt-4.1-nano', $sent['model']);
-        $this->assertSame('örnek kelime', $sent['messages'][1]['content']);
+        $this->assertSame('örnek kelime konusunda hangi web sitelerine bakmalıyım?', $sent['messages'][1]['content']);
     }
 
     public function test_domain_mentioned_in_response_is_detected_case_insensitively(): void

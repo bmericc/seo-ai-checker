@@ -36,7 +36,7 @@ class GeminiVisibilityCheckerTest extends TestCase
         $this->assertStringContainsString('key=gm-test-key', $capturedRequest->getUri()->getQuery());
         $this->assertStringContainsString('gemini-3.1-flash-lite', (string) $capturedRequest->getUri());
         $sent = json_decode((string) $capturedRequest->getBody(), true);
-        $this->assertSame('örnek kelime', $sent['contents'][0]['parts'][0]['text']);
+        $this->assertSame('örnek kelime konusunda hangi web sitelerine bakmalıyım?', $sent['contents'][0]['parts'][0]['text']);
     }
 
     public function test_domain_mentioned_in_response_is_detected(): void

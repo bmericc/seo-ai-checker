@@ -15,9 +15,6 @@ final class GeminiVisibilityChecker
 {
     private const ENDPOINT_TEMPLATE = 'https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent';
 
-    private const SYSTEM_PROMPT = 'Bir kullanıcı bir konuda arama yapıyor. Ona yardımcı olacak, '
-        . 'güncel ve güvenilir bilgi veren web sitelerini de belirterek kısa ve öz bir cevap ver.';
-
     public function __construct(
         private readonly Client $client,
         private readonly string $model = 'gemini-3.1-flash-lite',
@@ -33,9 +30,9 @@ final class GeminiVisibilityChecker
                 'query' => ['key' => $apiKey],
                 'headers' => ['Content-Type' => 'application/json'],
                 'json' => [
-                    'system_instruction' => ['parts' => [['text' => self::SYSTEM_PROMPT]]],
+                    'system_instruction' => ['parts' => [['text' => LlmVisibilityPrompt::SYSTEM_PROMPT]]],
                     'contents' => [
-                        ['role' => 'user', 'parts' => [['text' => $keyword]]],
+                        ['role' => 'user', 'parts' => [['text' => LlmVisibilityPrompt::userPrompt($keyword)]]],
                     ],
                     'generationConfig' => ['maxOutputTokens' => 400],
                 ],
