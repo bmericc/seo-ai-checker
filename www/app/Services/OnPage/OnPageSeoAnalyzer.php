@@ -111,6 +111,18 @@ final class OnPageSeoAnalyzer
         $hreflangCodes = $this->hreflangLangCodes($crawler);
         $hreflangIssues = $this->hreflangIssues($hreflangTags, $hreflangCodes, $url);
 
+        $author = $this->detectAuthor($crawler);
+        $publishedDate = $this->detectPublishedDate($crawler);
+        $aboutContact = $this->detectAboutContactLinks($crawler);
+        $recommendedSchemaTypes = $this->recommendSchemaTypes(
+            $crawler,
+            $schemaTypes,
+            $normalizedText,
+            $author['detected'],
+            $publishedDate['detected'],
+            $url,
+        );
+
         return new OnPageSeoResult(
             url: $url,
             title: $title,
@@ -139,6 +151,13 @@ final class OnPageSeoAnalyzer
             hreflangTags: $hreflangTags,
             hreflangIssues: $hreflangIssues,
             imageStats: $imageStats,
+            authorDetected: $author['detected'],
+            authorName: $author['name'],
+            publishedDateDetected: $publishedDate['detected'],
+            publishedDate: $publishedDate['value'],
+            aboutPageLinked: $aboutContact['about'],
+            contactPageLinked: $aboutContact['contact'],
+            recommendedSchemaTypes: $recommendedSchemaTypes,
         );
     }
 
@@ -255,14 +274,8 @@ final class OnPageSeoAnalyzer
      */
     private function extractTypesFromJsonLd(array $data): array
     {
-        // JSON-LD ya tek bir nesne, ya bir nesne listesi, ya da "@graph"
-        // altinda bir nesne listesi olabilir.
-        $nodes = isset($data['@graph']) && is_array($data['@graph'])
-            ? $data['@graph']
-            : (array_is_list($data) ? $data : [$data]);
-
         $types = [];
-        foreach ($nodes as $node) {
+        foreach ($this->normalizeJsonLdNodes($data) as $node) {
             if (!is_array($node) || !isset($node['@type'])) {
                 continue;
             }
@@ -280,6 +293,212 @@ final class OnPageSeoAnalyzer
         }
 
         return $types;
+    }
+
+    /**
+     * JSON-LD ya tek bir nesne, ya bir nesne listesi, ya da "@graph"
+     * altinda bir nesne listesi olabilir - schema tip cikarimi ve
+     * author/date cikarimi ayni normalizasyona ihtiyac duyar.
+     *
+     * @param  array<mixed>  $data
+     * @return array<mixed>
+     */
+    private function normalizeJsonLdNodes(array $data): array
+    {
+        return isset($data['@graph']) && is_array($data['@graph'])
+            ? $data['@graph']
+            : (array_is_list($data) ? $data : [$data]);
+    }
+
+    /**
+     * @return array{detected: bool, name: ?string}
+     */
+    private function detectAuthor(Crawler $crawler): array
+    {
+        $metaAuthor = $this->metaContent($crawler, 'author');
+        if ($metaAuthor !== null) {
+            return ['detected' => true, 'name' => $metaAuthor];
+        }
+
+        foreach ($crawler->filter('script[type="application/ld+json"]') as $node) {
+            $data = json_decode($node->textContent ?? '', true);
+            if (!is_array($data)) {
+                continue;
+            }
+
+            foreach ($this->normalizeJsonLdNodes($data) as $ldNode) {
+                $authorName = $this->extractJsonLdAuthorName($ldNode);
+                if ($authorName !== null) {
+                    return ['detected' => true, 'name' => $authorName];
+                }
+            }
+        }
+
+        $bylineNode = $crawler->filter('[rel="author"], .author, .byline, [itemprop="author"]');
+        if ($bylineNode->count() > 0) {
+            $name = trim($bylineNode->first()->text(''));
+
+            return ['detected' => true, 'name' => $name !== '' ? mb_substr($name, 0, 100) : null];
+        }
+
+        return ['detected' => false, 'name' => null];
+    }
+
+    private function extractJsonLdAuthorName(mixed $node): ?string
+    {
+        if (!is_array($node) || !isset($node['author'])) {
+            return null;
+        }
+
+        $author = $node['author'];
+        if (is_string($author) && trim($author) !== '') {
+            return trim($author);
+        }
+
+        if (is_array($author)) {
+            // author bir nesne ({"name": "..."}) ya da nesne listesi olabilir.
+            $first = array_is_list($author) ? ($author[0] ?? null) : $author;
+            if (is_array($first) && isset($first['name']) && is_string($first['name']) && trim($first['name']) !== '') {
+                return trim($first['name']);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array{detected: bool, value: ?string}
+     */
+    private function detectPublishedDate(Crawler $crawler): array
+    {
+        foreach ($crawler->filter('script[type="application/ld+json"]') as $node) {
+            $data = json_decode($node->textContent ?? '', true);
+            if (!is_array($data)) {
+                continue;
+            }
+
+            foreach ($this->normalizeJsonLdNodes($data) as $ldNode) {
+                if (!is_array($ldNode)) {
+                    continue;
+                }
+
+                $date = $ldNode['datePublished'] ?? $ldNode['dateModified'] ?? null;
+                if (is_string($date) && trim($date) !== '') {
+                    return ['detected' => true, 'value' => trim($date)];
+                }
+            }
+        }
+
+        $metaDate = $this->metaProperty($crawler, 'article:published_time');
+        if ($metaDate !== null) {
+            return ['detected' => true, 'value' => $metaDate];
+        }
+
+        $timeNode = $crawler->filter('time[datetime]');
+        if ($timeNode->count() > 0) {
+            $datetime = trim((string) $timeNode->first()->attr('datetime'));
+            if ($datetime !== '') {
+                return ['detected' => true, 'value' => $datetime];
+            }
+        }
+
+        return ['detected' => false, 'value' => null];
+    }
+
+    /**
+     * @return array{about: bool, contact: bool}
+     */
+    private function detectAboutContactLinks(Crawler $crawler): array
+    {
+        $about = false;
+        $contact = false;
+
+        foreach ($crawler->filter('a[href]') as $node) {
+            $href = mb_strtolower(trim((string) $node->getAttribute('href')));
+            $text = mb_strtolower(trim($node->textContent ?? ''));
+
+            if (!$about && (str_contains($href, '/about') || str_contains($text, 'hakkımızda') || str_contains($text, 'hakkimizda') || str_contains($text, 'about us') || $text === 'about')) {
+                $about = true;
+            }
+
+            if (!$contact && (str_contains($href, '/contact') || str_contains($href, '/iletisim') || str_contains($text, 'iletişim') || str_contains($text, 'iletisim') || str_contains($text, 'contact'))) {
+                $contact = true;
+            }
+
+            if ($about && $contact) {
+                break;
+            }
+        }
+
+        return ['about' => $about, 'contact' => $contact];
+    }
+
+    /**
+     * Eksik olabilecek, sayfa iceriginden makul olcude cikarilabilecek
+     * schema.org tiplerini onerir - kesin bir tespit degil, "bu kaliba
+     * benziyor" seviyesinde bir sezgiseldir (ornegin gercek FAQ icerigi
+     * olmadan sonu "?" ile biten iki baslik da tetikleyebilir).
+     *
+     * @param  string[]  $existingSchemaTypes
+     * @return array<int, array{type: string, reason_key: string, reason_params: array<string, int|string>}>
+     */
+    private function recommendSchemaTypes(Crawler $crawler, array $existingSchemaTypes, string $bodyText, bool $hasAuthor, bool $hasPublishedDate, string $pageUrl): array
+    {
+        $recommendations = [];
+        $lowerBodyText = mb_strtolower($bodyText);
+
+        if (!in_array('FAQPage', $existingSchemaTypes, true)) {
+            $questionHeadings = 0;
+            foreach ($crawler->filter('h2, h3, h4') as $node) {
+                if (str_ends_with(trim($node->textContent ?? ''), '?')) {
+                    $questionHeadings++;
+                }
+            }
+            if ($questionHeadings >= 2) {
+                $recommendations[] = ['type' => 'FAQPage', 'reason_key' => 'faq_headings_found', 'reason_params' => ['count' => $questionHeadings]];
+            }
+        }
+
+        if (!in_array('HowTo', $existingSchemaTypes, true)) {
+            $hasStepKeyword = false;
+            foreach ($crawler->filter('h1, h2, h3, h4') as $node) {
+                $heading = mb_strtolower(trim($node->textContent ?? ''));
+                if (str_contains($heading, 'adım') || str_contains($heading, 'nasıl') || str_contains($heading, 'step') || str_contains($heading, 'how to')) {
+                    $hasStepKeyword = true;
+                    break;
+                }
+            }
+            $orderedListItems = $crawler->filter('ol > li')->count();
+            if ($hasStepKeyword && $orderedListItems >= 3) {
+                $recommendations[] = ['type' => 'HowTo', 'reason_key' => 'howto_steps_found', 'reason_params' => ['count' => $orderedListItems]];
+            }
+        }
+
+        if (!in_array('Product', $existingSchemaTypes, true)) {
+            $hasPrice = (bool) preg_match('/(₺|\$)\s?\d|\d+[.,]\d{2}\s?(₺|TL|\$)|\b\d+\s?TL\b/u', $lowerBodyText);
+            $hasCartIndicator = str_contains($lowerBodyText, 'sepete ekle') || str_contains($lowerBodyText, 'add to cart') || str_contains($lowerBodyText, 'satın al') || str_contains($lowerBodyText, 'buy now');
+            if ($hasPrice && $hasCartIndicator) {
+                $recommendations[] = ['type' => 'Product', 'reason_key' => 'product_indicators_found', 'reason_params' => []];
+            }
+        }
+
+        if (!in_array('Review', $existingSchemaTypes, true) && !in_array('AggregateRating', $existingSchemaTypes, true)) {
+            $hasRatingPattern = (bool) preg_match('/\b\d(\.\d)?\s?\/\s?5\b|\b\d(\.\d)?\s?\/\s?10\b|yıldız|star-rating/u', $lowerBodyText);
+            if ($hasRatingPattern) {
+                $recommendations[] = ['type' => 'Review', 'reason_key' => 'rating_indicators_found', 'reason_params' => []];
+            }
+        }
+
+        if (!in_array('Article', $existingSchemaTypes, true) && !in_array('BlogPosting', $existingSchemaTypes, true) && $hasAuthor && $hasPublishedDate) {
+            $recommendations[] = ['type' => 'Article', 'reason_key' => 'author_and_date_present', 'reason_params' => []];
+        }
+
+        $path = parse_url($pageUrl, PHP_URL_PATH) ?: '/';
+        if (($path === '' || $path === '/') && !in_array('Organization', $existingSchemaTypes, true) && !in_array('WebSite', $existingSchemaTypes, true)) {
+            $recommendations[] = ['type' => 'Organization', 'reason_key' => 'homepage_missing_org_schema', 'reason_params' => []];
+        }
+
+        return $recommendations;
     }
 
     /**

@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\Check;
 use App\Models\Keyword;
+use App\Services\Eeat\EeatScorer;
 use App\Services\Lighthouse\PageSpeedInsightsClient;
 use App\Services\Llm\AnthropicVisibilityChecker;
 use App\Services\Llm\GeminiVisibilityChecker;
@@ -29,6 +30,7 @@ final class CheckRunner
         private readonly OpenAiVisibilityChecker $openAiChecker,
         private readonly AnthropicVisibilityChecker $anthropicChecker,
         private readonly GeminiVisibilityChecker $geminiChecker,
+        private readonly EeatScorer $eeatScorer,
     ) {
     }
 
@@ -41,6 +43,7 @@ final class CheckRunner
 
         $onPageData = null;
         $onPageError = null;
+        $eeat = null;
         try {
             $onPage = $this->onPageAnalyzer->analyze($targetUrl, $keyword->keyword);
             $onPageData = [
@@ -69,10 +72,23 @@ final class CheckRunner
                 'twitter_card' => $onPage->twitterCard,
                 'schema_types' => $onPage->schemaTypes,
                 'deprecated_schema_types' => $onPage->deprecatedSchemaTypes,
+                'recommended_schema_types' => $onPage->recommendedSchemaTypes,
                 'hreflang_tags' => $onPage->hreflangTags,
                 'hreflang_issues' => $onPage->hreflangIssues,
                 'image_stats' => $onPage->imageStats,
+                'author_detected' => $onPage->authorDetected,
+                'author_name' => $onPage->authorName,
+                'published_date_detected' => $onPage->publishedDateDetected,
+                'published_date' => $onPage->publishedDate,
+                'about_page_linked' => $onPage->aboutPageLinked,
+                'contact_page_linked' => $onPage->contactPageLinked,
             ];
+
+            $eeat = $this->eeatScorer->score(
+                $onPage,
+                $keyword->domain->fact,
+                $keyword->domain->latestDomainCheck?->bing_backlinks,
+            );
         } catch (GuzzleException $e) {
             $onPageError = sprintf('On-page analiz basarisiz: %s', $e->getMessage());
         }
@@ -94,6 +110,8 @@ final class CheckRunner
             'llm_visibility' => $this->buildLlmVisibility($keyword, $domain),
             'onpage' => $onPageData,
             'onpage_error' => $onPageError,
+            'eeat_score' => $eeat?->score,
+            'eeat_breakdown' => $eeat?->toArray(),
             'lighthouse_performance' => $lighthouse->performanceScore,
             'lighthouse_seo' => $lighthouse->seoScore,
             'lighthouse_accessibility' => $lighthouse->accessibilityScore,

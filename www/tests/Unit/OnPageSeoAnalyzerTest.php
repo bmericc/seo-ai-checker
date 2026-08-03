@@ -195,4 +195,172 @@ class OnPageSeoAnalyzerTest extends TestCase
         $this->assertSame(2, $result->imageStats['not_lazy']);
         $this->assertSame(2, $result->imageStats['legacy_format']);
     }
+
+    public function test_author_is_detected_from_meta_tag(): void
+    {
+        $analyzer = $this->analyzerWithHtml('<html><head><meta name="author" content="Ayşe Yılmaz"></head><body></body></html>');
+
+        $result = $analyzer->analyze('https://example.com/');
+
+        $this->assertTrue($result->authorDetected);
+        $this->assertSame('Ayşe Yılmaz', $result->authorName);
+    }
+
+    public function test_author_is_detected_from_json_ld(): void
+    {
+        $analyzer = $this->analyzerWithHtml(<<<'HTML'
+            <html><head>
+                <script type="application/ld+json">{"@type": "Article", "author": {"name": "Ayşe Yılmaz"}}</script>
+            </head><body></body></html>
+            HTML);
+
+        $result = $analyzer->analyze('https://example.com/');
+
+        $this->assertTrue($result->authorDetected);
+        $this->assertSame('Ayşe Yılmaz', $result->authorName);
+    }
+
+    public function test_author_is_detected_from_byline_class(): void
+    {
+        $analyzer = $this->analyzerWithHtml('<html><body><span class="byline">Ayşe Yılmaz</span></body></html>');
+
+        $result = $analyzer->analyze('https://example.com/');
+
+        $this->assertTrue($result->authorDetected);
+    }
+
+    public function test_no_author_signal_means_not_detected(): void
+    {
+        $analyzer = $this->analyzerWithHtml('<html><body><p>Merhaba dünya</p></body></html>');
+
+        $result = $analyzer->analyze('https://example.com/');
+
+        $this->assertFalse($result->authorDetected);
+        $this->assertNull($result->authorName);
+    }
+
+    public function test_published_date_is_detected_from_json_ld(): void
+    {
+        $analyzer = $this->analyzerWithHtml(<<<'HTML'
+            <html><head>
+                <script type="application/ld+json">{"@type": "Article", "datePublished": "2026-01-15"}</script>
+            </head><body></body></html>
+            HTML);
+
+        $result = $analyzer->analyze('https://example.com/');
+
+        $this->assertTrue($result->publishedDateDetected);
+        $this->assertSame('2026-01-15', $result->publishedDate);
+    }
+
+    public function test_published_date_is_detected_from_time_tag(): void
+    {
+        $analyzer = $this->analyzerWithHtml('<html><body><time datetime="2026-02-01">1 Şubat</time></body></html>');
+
+        $result = $analyzer->analyze('https://example.com/');
+
+        $this->assertTrue($result->publishedDateDetected);
+        $this->assertSame('2026-02-01', $result->publishedDate);
+    }
+
+    public function test_about_and_contact_links_are_detected(): void
+    {
+        $analyzer = $this->analyzerWithHtml(<<<'HTML'
+            <html><body>
+                <a href="/hakkimizda">Hakkımızda</a>
+                <a href="/iletisim">İletişim</a>
+            </body></html>
+            HTML);
+
+        $result = $analyzer->analyze('https://example.com/');
+
+        $this->assertTrue($result->aboutPageLinked);
+        $this->assertTrue($result->contactPageLinked);
+    }
+
+    public function test_no_about_or_contact_link_means_not_detected(): void
+    {
+        $analyzer = $this->analyzerWithHtml('<html><body><a href="/blog">Blog</a></body></html>');
+
+        $result = $analyzer->analyze('https://example.com/');
+
+        $this->assertFalse($result->aboutPageLinked);
+        $this->assertFalse($result->contactPageLinked);
+    }
+
+    public function test_faq_schema_is_recommended_when_question_headings_exist_and_faqpage_is_missing(): void
+    {
+        $analyzer = $this->analyzerWithHtml(<<<'HTML'
+            <html><body>
+                <h2>Bu ürün nasıl çalışır?</h2>
+                <h2>Kargo ne zaman gelir?</h2>
+            </body></html>
+            HTML);
+
+        $result = $analyzer->analyze('https://example.com/');
+
+        $this->assertTrue(collect($result->recommendedSchemaTypes)->contains(fn ($r) => $r['type'] === 'FAQPage'));
+    }
+
+    public function test_faq_schema_is_not_recommended_when_already_present(): void
+    {
+        $analyzer = $this->analyzerWithHtml(<<<'HTML'
+            <html><head>
+                <script type="application/ld+json">{"@type": "FAQPage"}</script>
+            </head><body>
+                <h2>Bu ürün nasıl çalışır?</h2>
+                <h2>Kargo ne zaman gelir?</h2>
+            </body></html>
+            HTML);
+
+        $result = $analyzer->analyze('https://example.com/');
+
+        $this->assertFalse(collect($result->recommendedSchemaTypes)->contains(fn ($r) => $r['type'] === 'FAQPage'));
+    }
+
+    public function test_howto_schema_is_recommended_for_step_by_step_content(): void
+    {
+        $analyzer = $this->analyzerWithHtml(<<<'HTML'
+            <html><body>
+                <h1>Nasıl yapılır: Adım adım rehber</h1>
+                <ol><li>Birinci adım</li><li>İkinci adım</li><li>Üçüncü adım</li></ol>
+            </body></html>
+            HTML);
+
+        $result = $analyzer->analyze('https://example.com/');
+
+        $this->assertTrue(collect($result->recommendedSchemaTypes)->contains(fn ($r) => $r['type'] === 'HowTo'));
+    }
+
+    public function test_article_schema_is_recommended_when_author_and_date_are_present(): void
+    {
+        $analyzer = $this->analyzerWithHtml(<<<'HTML'
+            <html><head>
+                <meta name="author" content="Ayşe Yılmaz">
+                <script type="application/ld+json">{"datePublished": "2026-01-15"}</script>
+            </head><body></body></html>
+            HTML);
+
+        $result = $analyzer->analyze('https://example.com/');
+
+        $this->assertTrue(collect($result->recommendedSchemaTypes)->contains(fn ($r) => $r['type'] === 'Article'));
+    }
+
+    public function test_organization_schema_is_recommended_on_the_root_page_when_missing(): void
+    {
+        $analyzer = $this->analyzerWithHtml('<html><body></body></html>');
+
+        $result = $analyzer->analyze('https://example.com/');
+
+        $this->assertTrue(collect($result->recommendedSchemaTypes)->contains(fn ($r) => $r['type'] === 'Organization'));
+    }
+
+    public function test_organization_schema_is_not_recommended_on_a_non_root_page(): void
+    {
+        $analyzer = $this->analyzerWithHtml('<html><body></body></html>');
+
+        $result = $analyzer->analyze('https://example.com/blog/post');
+
+        $this->assertFalse(collect($result->recommendedSchemaTypes)->contains(fn ($r) => $r['type'] === 'Organization'));
+    }
 }

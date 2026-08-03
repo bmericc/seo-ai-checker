@@ -43,6 +43,14 @@ final class OnPageSeoResult
         public readonly array $hreflangTags = [],
         public readonly array $hreflangIssues = [],
         public readonly array $imageStats = ['total' => 0, 'missing_alt' => 0, 'missing_dimensions' => 0, 'not_lazy' => 0, 'legacy_format' => 0],
+        public readonly bool $authorDetected = false,
+        public readonly ?string $authorName = null,
+        public readonly bool $publishedDateDetected = false,
+        public readonly ?string $publishedDate = null,
+        public readonly bool $aboutPageLinked = false,
+        public readonly bool $contactPageLinked = false,
+        /** @var array<int, array{type: string, reason_key: string, reason_params: array<string, int|string>}> */
+        public readonly array $recommendedSchemaTypes = [],
     ) {
     }
 

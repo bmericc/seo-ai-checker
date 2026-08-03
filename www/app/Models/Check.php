@@ -23,6 +23,8 @@ class Check extends Model
         'llm_visibility',
         'onpage',
         'onpage_error',
+        'eeat_score',
+        'eeat_breakdown',
         'lighthouse_performance',
         'lighthouse_seo',
         'lighthouse_accessibility',
@@ -39,6 +41,7 @@ class Check extends Model
         'ai_overview_target_cited' => 'boolean',
         'llm_visibility' => 'array',
         'onpage' => 'array',
+        'eeat_breakdown' => 'array',
         'lighthouse_raw' => 'array',
     ];
 

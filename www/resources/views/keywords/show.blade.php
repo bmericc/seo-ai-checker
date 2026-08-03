@@ -91,6 +91,12 @@
                     @else
                         <span class="badge bg-secondary-lt">{{ __('AI Overview yok') }}</span>
                     @endif
+
+                    @if ($check->eeat_score !== null)
+                        <span class="badge {{ $check->eeat_score >= 70 ? 'bg-success-lt' : ($check->eeat_score >= 40 ? 'bg-warning-lt' : 'bg-danger-lt') }}">
+                            E-E-A-T: {{ $check->eeat_score }}/100
+                        </span>
+                    @endif
                 </div>
                 <div class="card-body">
                     @if ($check->blocked)
@@ -257,6 +263,30 @@
                                                             @endif
                                                         </td>
                                                     </tr>
+                                                    @if (!empty($check->onpage['recommended_schema_types']))
+                                                        <tr>
+                                                            <th>{{ __('Önerilen şema tipleri') }}</th>
+                                                            <td>
+                                                                @foreach ($check->onpage['recommended_schema_types'] as $recommendation)
+                                                                    @php
+                                                                        $reason = match ($recommendation['reason_key']) {
+                                                                            'faq_headings_found' => __(':count soru-cevap başlığı bulundu', ['count' => $recommendation['reason_params']['count'] ?? 0]),
+                                                                            'howto_steps_found' => __('Adım adım talimat yapısı tespit edildi (:count adım)', ['count' => $recommendation['reason_params']['count'] ?? 0]),
+                                                                            'product_indicators_found' => __('Fiyat ve satın alma göstergesi bulundu'),
+                                                                            'rating_indicators_found' => __('Puanlama/yıldız göstergesi bulundu'),
+                                                                            'author_and_date_present' => __('Yazar ve yayın tarihi bilgisi var'),
+                                                                            'homepage_missing_org_schema' => __('Ana sayfada Organization/WebSite şeması bulunamadı'),
+                                                                            default => '',
+                                                                        };
+                                                                    @endphp
+                                                                    <div class="mb-1">
+                                                                        <span class="badge bg-lime-lt">{{ $recommendation['type'] }}</span>
+                                                                        <span class="text-secondary small">{{ $reason }}</span>
+                                                                    </div>
+                                                                @endforeach
+                                                            </td>
+                                                        </tr>
+                                                    @endif
                                                     <tr>
                                                         <th>hreflang</th>
                                                         <td>
@@ -301,6 +331,59 @@
                                                             @endif
                                                         </td>
                                                     </tr>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+
+                            @if (!empty($check->eeat_breakdown))
+                                @php
+                                    $eeatLabels = [
+                                        'author' => __('Yazar bilgisi'),
+                                        'published_date' => __('Yayın/güncelleme tarihi'),
+                                        'domain_age' => __('Domain yaşı'),
+                                        'backlinks' => __('Backlink mevcut'),
+                                        'https' => __('HTTPS zorunlu'),
+                                        'security_headers' => __("Güvenlik header'ları"),
+                                        'about_contact' => __('Hakkımızda/İletişim sayfası'),
+                                        'content_depth' => __('İçerik derinliği (300+ kelime)'),
+                                        'structured_data' => __('Yapılandırılmış veri'),
+                                    ];
+                                @endphp
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#eeat-{{ $check->id }}">
+                                            {{ __('E-E-A-T skoru detayı') }}
+                                        </button>
+                                    </h2>
+                                    <div id="eeat-{{ $check->id }}" class="accordion-collapse collapse" data-bs-parent="#check-accordion-{{ $check->id }}">
+                                        <div class="accordion-body">
+                                            <div class="d-flex flex-wrap gap-1 mb-3">
+                                                <span class="badge bg-azure-lt">{{ __('Uzmanlık') }} {{ $check->eeat_breakdown['expertise_score'] }}/25</span>
+                                                <span class="badge bg-azure-lt">{{ __('Otorite') }} {{ $check->eeat_breakdown['authority_score'] }}/25</span>
+                                                <span class="badge bg-azure-lt">{{ __('Güvenilirlik') }} {{ $check->eeat_breakdown['trust_score'] }}/30</span>
+                                                <span class="badge bg-azure-lt">{{ __('Deneyim') }} {{ $check->eeat_breakdown['experience_score'] }}/20</span>
+                                            </div>
+                                            <div class="table-responsive">
+                                                <table class="table table-vcenter">
+                                                    <thead><tr><th>{{ __('Sinyal') }}</th><th>{{ __('Durum') }}</th><th>{{ __('Puan') }}</th></tr></thead>
+                                                    <tbody>
+                                                    @foreach ($check->eeat_breakdown['signals'] as $key => $signal)
+                                                        <tr>
+                                                            <td>{{ $eeatLabels[$key] ?? $key }}</td>
+                                                            <td>
+                                                                @if ($signal['present'])
+                                                                    <span class="badge bg-success-lt">{{ __('var') }}</span>
+                                                                @else
+                                                                    <span class="badge bg-secondary-lt">{{ __('yok') }}</span>
+                                                                @endif
+                                                            </td>
+                                                            <td>{{ $signal['points'] }}/{{ $signal['max'] }}</td>
+                                                        </tr>
+                                                    @endforeach
+                                                    </tbody>
                                                 </table>
                                             </div>
                                         </div>
