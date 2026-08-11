@@ -45,8 +45,8 @@
                                     <td class="text-secondary">{{ $domain->user?->email ?? '—' }}</td>
                                 @endif
                                 <td>
-                                    @if ($domain->latestDomainCheck)
-                                        @include('domains._check-badges', ['domainCheck' => $domain->latestDomainCheck])
+                                    @if ($domain->fact?->checked_at || $domain->latestDomainCheck)
+                                        @include('domains._check-badges', ['domainCheck' => $domain->latestDomainCheck, 'fact' => $domain->fact])
                                     @else
                                         <span class="text-secondary">-</span>
                                     @endif
