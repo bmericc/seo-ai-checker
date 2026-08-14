@@ -29,7 +29,7 @@ class AnthropicVisibilityCheckerTest extends TestCase
     {
         $capturedRequest = null;
         $body = json_encode(['content' => [['text' => 'no mention here']]]);
-        $checker = $this->checkerWithResponses([new Response(200, [], $body)], $capturedRequest);
+        $checker = $this->checkerWithResponses([new Response(200, [], $body), new Response(200, [], $body)], $capturedRequest);
 
         $checker->check('örnek kelime', 'example.com', 'sk-ant-test');
 
@@ -43,7 +43,7 @@ class AnthropicVisibilityCheckerTest extends TestCase
     public function test_domain_mentioned_in_response_is_detected(): void
     {
         $body = json_encode(['content' => [['text' => 'example.com adresini ziyaret edebilirsin.']]]);
-        $checker = $this->checkerWithResponses([new Response(200, [], $body)]);
+        $checker = $this->checkerWithResponses([new Response(200, [], $body), new Response(200, [], $body)]);
 
         $result = $checker->check('kelime', 'example.com', 'sk-ant-test');
 
@@ -53,7 +53,7 @@ class AnthropicVisibilityCheckerTest extends TestCase
     public function test_domain_not_mentioned_is_reported_as_absent(): void
     {
         $body = json_encode(['content' => [['text' => 'other-site.com adresini ziyaret edebilirsin.']]]);
-        $checker = $this->checkerWithResponses([new Response(200, [], $body)]);
+        $checker = $this->checkerWithResponses([new Response(200, [], $body), new Response(200, [], $body)]);
 
         $result = $checker->check('kelime', 'example.com', 'sk-ant-test');
 

@@ -21,6 +21,13 @@ final class LlmVisibilityPrompt
         . 'Kullanıcıya soru sorma, ek açıklama isteme - doğrudan cevap ver ve mutlaka konuyla '
         . 'ilgili, güvenilir web sitelerinin isimlerini/adreslerini say.';
 
+    /**
+     * Ilk yanittan sonra sorulan, sonuclari daraltan ikinci-tur soru -
+     * sohbeti gercek bir kullanicinin yapacagi gibi ilk cevaba gore
+     * derinlestirmek icin (bkz. LlmVisibilityResult::$followUpPrompt).
+     */
+    public const FOLLOW_UP_PROMPT = 'Bunlardan sadece Türkiye\'den olanları listeler misin?';
+
     public static function userPrompt(string $keyword): string
     {
         return sprintf('%s konusunda hangi web sitelerine bakmalıyım?', $keyword);

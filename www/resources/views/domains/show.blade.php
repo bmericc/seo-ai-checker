@@ -998,6 +998,13 @@
                                                     @else
                                                         <span class="badge bg-secondary-lt">{{ $provider }}</span>
                                                     @endif
+                                                    @if ($result['follow_up_response'] ?? null)
+                                                        @if ($result['follow_up_present'] ?? false)
+                                                            <span class="badge bg-success-lt" data-bs-toggle="tooltip" title="{{ __("Türkiye'den:") }}">{{ $provider }} TR</span>
+                                                        @else
+                                                            <span class="badge bg-secondary-lt" data-bs-toggle="tooltip" title="{{ __("Türkiye'den:") }}">{{ $provider }} TR</span>
+                                                        @endif
+                                                    @endif
                                                 @endforeach
                                             </div>
                                         @endif

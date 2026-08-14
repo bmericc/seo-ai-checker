@@ -37,7 +37,7 @@ final class OpenAiVisibilityChecker
                     'model' => $this->model,
                     'messages' => [
                         ['role' => 'system', 'content' => LlmVisibilityPrompt::SYSTEM_PROMPT],
-                        ['role' => 'user', 'content' => LlmVisibilityPrompt::userPrompt($keyword)],
+                        ['role' => 'user', 'content' => $prompt],
                     ],
                     'max_tokens' => 400,
                 ],
@@ -59,11 +59,55 @@ final class OpenAiVisibilityChecker
             return new LlmVisibilityResult(present: false, error: $this->describeError($status, $body), prompt: $prompt);
         }
 
+        $followUpPrompt = LlmVisibilityPrompt::FOLLOW_UP_PROMPT;
+        $followUpResponse = $this->askFollowUp($apiKey, $prompt, $text, $followUpPrompt);
+
         return new LlmVisibilityResult(
             present: str_contains(mb_strtolower($text), mb_strtolower($domain)),
             response: $text,
             prompt: $prompt,
+            followUpPrompt: $followUpPrompt,
+            followUpResponse: $followUpResponse,
+            followUpPresent: $followUpResponse !== null && str_contains(mb_strtolower($followUpResponse), mb_strtolower($domain)),
         );
+    }
+
+    /**
+     * Ilk cevabi konusma gecmisine ekleyip ikinci-tur soruyu sorar - basarisiz
+     * olursa (agdan/API'den) null doner, bu ana sonucu bozmaz (bkz. check()).
+     */
+    private function askFollowUp(string $apiKey, string $firstPrompt, string $firstResponse, string $followUpPrompt): ?string
+    {
+        try {
+            $response = $this->client->post(self::ENDPOINT, [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $apiKey,
+                    'Content-Type' => 'application/json',
+                ],
+                'json' => [
+                    'model' => $this->model,
+                    'messages' => [
+                        ['role' => 'system', 'content' => LlmVisibilityPrompt::SYSTEM_PROMPT],
+                        ['role' => 'user', 'content' => $firstPrompt],
+                        ['role' => 'assistant', 'content' => $firstResponse],
+                        ['role' => 'user', 'content' => $followUpPrompt],
+                    ],
+                    'max_tokens' => 400,
+                ],
+                'http_errors' => false,
+            ]);
+        } catch (GuzzleException) {
+            return null;
+        }
+
+        if ($response->getStatusCode() !== 200) {
+            return null;
+        }
+
+        $body = json_decode((string) $response->getBody(), true);
+        $text = is_array($body) ? ($body['choices'][0]['message']['content'] ?? null) : null;
+
+        return is_string($text) && $text !== '' ? $text : null;
     }
 
     private function describeError(int $status, mixed $body): string

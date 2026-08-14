@@ -40,10 +40,14 @@ class CheckRunnerLlmVisibilityTest extends TestCase
         $this->app->instance(Client::class, new Client(['handler' => HandlerStack::create(new MockHandler($responses))]));
     }
 
-    private function fakeOpenAi(string $responseText): void
+    private function fakeOpenAi(string $responseText, string $followUpText = 'takip sorusu yanıtı'): void
     {
         $body = json_encode(['choices' => [['message' => ['content' => $responseText]]]]);
-        $client = new Client(['handler' => HandlerStack::create(new MockHandler([new Response(200, [], $body)]))]);
+        $followUpBody = json_encode(['choices' => [['message' => ['content' => $followUpText]]]]);
+        $client = new Client(['handler' => HandlerStack::create(new MockHandler([
+            new Response(200, [], $body),
+            new Response(200, [], $followUpBody),
+        ]))]);
 
         $this->app->instance(OpenAiVisibilityChecker::class, new OpenAiVisibilityChecker($client, 'gpt-4.1-nano'));
     }
@@ -96,7 +100,7 @@ class CheckRunnerLlmVisibilityTest extends TestCase
         $domain->llmApiKeys()->create(['provider' => 'openai', 'label' => 'musteri', 'api_key' => 'sk-test']);
         $keyword = $domain->keywords()->create(['keyword' => 'örnek kelime']);
 
-        $this->fakeOpenAi('Bunun için example.com adresine bakabilirsin.');
+        $this->fakeOpenAi('Bunun için example.com adresine bakabilirsin.', 'Türkiye kaynaklı: example.com.');
 
         $check = app(CheckRunner::class)->run($keyword);
 
@@ -104,5 +108,8 @@ class CheckRunnerLlmVisibilityTest extends TestCase
         $this->assertStringContainsString('example.com', $check->llm_visibility['openai']['response']);
         $this->assertNull($check->llm_visibility['openai']['error']);
         $this->assertStringContainsString('örnek kelime', $check->llm_visibility['openai']['prompt']);
+        $this->assertSame('Türkiye kaynaklı: example.com.', $check->llm_visibility['openai']['follow_up_response']);
+        $this->assertNotNull($check->llm_visibility['openai']['follow_up_prompt']);
+        $this->assertTrue($check->llm_visibility['openai']['follow_up_present']);
     }
 }

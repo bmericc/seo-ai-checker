@@ -39,7 +39,7 @@ final class AnthropicVisibilityChecker
                     'max_tokens' => 400,
                     'system' => LlmVisibilityPrompt::SYSTEM_PROMPT,
                     'messages' => [
-                        ['role' => 'user', 'content' => LlmVisibilityPrompt::userPrompt($keyword)],
+                        ['role' => 'user', 'content' => $prompt],
                     ],
                 ],
                 'http_errors' => false,
@@ -60,11 +60,56 @@ final class AnthropicVisibilityChecker
             return new LlmVisibilityResult(present: false, error: $this->describeError($status, $body), prompt: $prompt);
         }
 
+        $followUpPrompt = LlmVisibilityPrompt::FOLLOW_UP_PROMPT;
+        $followUpResponse = $this->askFollowUp($apiKey, $prompt, $text, $followUpPrompt);
+
         return new LlmVisibilityResult(
             present: str_contains(mb_strtolower($text), mb_strtolower($domain)),
             response: $text,
             prompt: $prompt,
+            followUpPrompt: $followUpPrompt,
+            followUpResponse: $followUpResponse,
+            followUpPresent: $followUpResponse !== null && str_contains(mb_strtolower($followUpResponse), mb_strtolower($domain)),
         );
+    }
+
+    /**
+     * Ilk cevabi konusma gecmisine ekleyip ikinci-tur soruyu sorar - basarisiz
+     * olursa (agdan/API'den) null doner, bu ana sonucu bozmaz (bkz. check()).
+     */
+    private function askFollowUp(string $apiKey, string $firstPrompt, string $firstResponse, string $followUpPrompt): ?string
+    {
+        try {
+            $response = $this->client->post(self::ENDPOINT, [
+                'headers' => [
+                    'x-api-key' => $apiKey,
+                    'anthropic-version' => self::API_VERSION,
+                    'Content-Type' => 'application/json',
+                ],
+                'json' => [
+                    'model' => $this->model,
+                    'max_tokens' => 400,
+                    'system' => LlmVisibilityPrompt::SYSTEM_PROMPT,
+                    'messages' => [
+                        ['role' => 'user', 'content' => $firstPrompt],
+                        ['role' => 'assistant', 'content' => $firstResponse],
+                        ['role' => 'user', 'content' => $followUpPrompt],
+                    ],
+                ],
+                'http_errors' => false,
+            ]);
+        } catch (GuzzleException) {
+            return null;
+        }
+
+        if ($response->getStatusCode() !== 200) {
+            return null;
+        }
+
+        $body = json_decode((string) $response->getBody(), true);
+        $text = is_array($body) ? ($body['content'][0]['text'] ?? null) : null;
+
+        return is_string($text) && $text !== '' ? $text : null;
     }
 
     private function describeError(int $status, mixed $body): string

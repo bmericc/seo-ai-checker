@@ -137,7 +137,12 @@
                             @foreach ($check->llm_visibility as $provider => $result)
                                 @if ($result['response'])
                                     <div class="small text-secondary mb-1" style="white-space: pre-wrap;">
-                                        <strong>{{ $provider }}:</strong> {{ $result['response'] }}
+                                        <strong>{{ $provider }} — {{ __('Genel cevap:') }}</strong> {{ $result['response'] }}
+                                    </div>
+                                @endif
+                                @if ($result['follow_up_response'] ?? null)
+                                    <div class="small text-secondary mb-1 ps-3 border-start" style="white-space: pre-wrap;">
+                                        <strong>{{ $provider }} — {{ __("Türkiye'den:") }}</strong> {{ $result['follow_up_response'] }}
                                     </div>
                                 @endif
                             @endforeach
