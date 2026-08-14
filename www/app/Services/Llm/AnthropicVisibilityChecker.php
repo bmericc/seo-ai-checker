@@ -25,6 +25,8 @@ final class AnthropicVisibilityChecker
 
     public function check(string $keyword, string $domain, string $apiKey): LlmVisibilityResult
     {
+        $prompt = LlmVisibilityPrompt::userPrompt($keyword);
+
         try {
             $response = $this->client->post(self::ENDPOINT, [
                 'headers' => [
@@ -43,24 +45,25 @@ final class AnthropicVisibilityChecker
                 'http_errors' => false,
             ]);
         } catch (GuzzleException $e) {
-            return new LlmVisibilityResult(present: false, error: $e->getMessage());
+            return new LlmVisibilityResult(present: false, error: $e->getMessage(), prompt: $prompt);
         }
 
         $status = $response->getStatusCode();
         $body = json_decode((string) $response->getBody(), true);
 
         if ($status !== 200 || !is_array($body)) {
-            return new LlmVisibilityResult(present: false, error: $this->describeError($status, $body));
+            return new LlmVisibilityResult(present: false, error: $this->describeError($status, $body), prompt: $prompt);
         }
 
         $text = $body['content'][0]['text'] ?? null;
         if (!is_string($text) || $text === '') {
-            return new LlmVisibilityResult(present: false, error: $this->describeError($status, $body));
+            return new LlmVisibilityResult(present: false, error: $this->describeError($status, $body), prompt: $prompt);
         }
 
         return new LlmVisibilityResult(
             present: str_contains(mb_strtolower($text), mb_strtolower($domain)),
             response: $text,
+            prompt: $prompt,
         );
     }
 

@@ -117,6 +117,12 @@
                     @if (!empty($check->llm_visibility))
                         <div class="mb-2">
                             <div class="text-secondary small mb-1">{{ __('AI Görünürlük Kontrolü (ChatGPT/Claude/Gemini)') }}</div>
+                            @php
+                                $llmPrompt = collect($check->llm_visibility)->pluck('prompt')->filter()->first();
+                            @endphp
+                            @if ($llmPrompt)
+                                <div class="small text-secondary mb-1"><strong>{{ __('Soru:') }}</strong> {{ $llmPrompt }}</div>
+                            @endif
                             <div class="d-flex flex-wrap gap-1 mb-1">
                                 @foreach ($check->llm_visibility as $provider => $result)
                                     @if ($result['error'])
@@ -130,8 +136,8 @@
                             </div>
                             @foreach ($check->llm_visibility as $provider => $result)
                                 @if ($result['response'])
-                                    <div class="small text-secondary mb-1">
-                                        <strong>{{ $provider }}:</strong> {{ \Illuminate\Support\Str::limit($result['response'], 220) }}
+                                    <div class="small text-secondary mb-1" style="white-space: pre-wrap;">
+                                        <strong>{{ $provider }}:</strong> {{ $result['response'] }}
                                     </div>
                                 @endif
                             @endforeach

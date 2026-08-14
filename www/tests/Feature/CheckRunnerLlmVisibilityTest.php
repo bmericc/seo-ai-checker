@@ -103,5 +103,6 @@ class CheckRunnerLlmVisibilityTest extends TestCase
         $this->assertTrue($check->llm_visibility['openai']['present']);
         $this->assertStringContainsString('example.com', $check->llm_visibility['openai']['response']);
         $this->assertNull($check->llm_visibility['openai']['error']);
+        $this->assertStringContainsString('örnek kelime', $check->llm_visibility['openai']['prompt']);
     }
 }

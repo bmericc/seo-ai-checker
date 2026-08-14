@@ -286,6 +286,7 @@
     "Son kontrol: :date": "Last check: :date",
     "Son sıralama": "Last ranking",
     "Sonuç sayfasında bir AI Overview kutusu olup olmadığını, varsa hangi domainlerin kaynak gösterildiğini raporlar.": "Reports whether an AI Overview box is present on the results page, and if so, which domains are cited as sources.",
+    "Soru:": "Prompt:",
     "Sorun yaşıyorsanız yeniden bağlayın": "Reconnect if you're having issues",
     "Sıralama: :position": "Ranking: :position",
     "Takibe başlamak için bir domain ekleyin.": "Add a domain to start tracking.",

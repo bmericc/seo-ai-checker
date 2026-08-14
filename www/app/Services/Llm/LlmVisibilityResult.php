@@ -10,11 +10,12 @@ final class LlmVisibilityResult
         public readonly bool $present,
         public readonly ?string $response = null,
         public readonly ?string $error = null,
+        public readonly ?string $prompt = null,
     ) {
     }
 
     /**
-     * @return array{present: bool, response: ?string, error: ?string}
+     * @return array{present: bool, response: ?string, error: ?string, prompt: ?string}
      */
     public function toArray(): array
     {
@@ -22,6 +23,7 @@ final class LlmVisibilityResult
             'present' => $this->present,
             'response' => $this->response,
             'error' => $this->error,
+            'prompt' => $this->prompt,
         ];
     }
 }
