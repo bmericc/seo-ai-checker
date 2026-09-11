@@ -11,3 +11,7 @@ Artisan::command('inspire', function () {
 Schedule::command('domains:run-daily-checks')
     ->dailyAt('03:00')
     ->withoutOverlapping();
+
+Schedule::command('reports:send-weekly')
+    ->weeklyOn(1, '08:00')
+    ->withoutOverlapping();
