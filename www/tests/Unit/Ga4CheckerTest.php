@@ -59,6 +59,7 @@ class Ga4CheckerTest extends TestCase
         $this->assertSame(120.0, $result->totalSessions);
         $this->assertSame(80.0, $result->organicSessions);
         $this->assertSame(90.0, $result->activeUsers);
+        $this->assertSame(['Organic Search' => 80.0, 'Direct' => 40.0], $result->channelSessions);
     }
 
     public function test_http_error_is_reported(): void

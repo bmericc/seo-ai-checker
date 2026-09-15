@@ -144,7 +144,9 @@ class ScoreHistoryBuilderTest extends TestCase
                     'cumulative_layout_shift' => ['label' => 'CLS', 'p75' => 0.05, 'rating' => 'good'],
                 ]],
                 'gsc' => ['clicks' => 100, 'impressions' => 1000, 'ctr' => 0.1, 'average_position' => 8.0],
-                'ga4' => ['total_sessions' => 500, 'organic_sessions' => 300, 'active_users' => 200],
+                'ga4' => ['total_sessions' => 500, 'organic_sessions' => 300, 'active_users' => 200, 'channel_sessions' => [
+                    'Organic Search' => 300, 'Direct' => 120, 'Referral' => 40, 'Organic Social' => 20, 'Paid Social' => 15, 'Email' => 5,
+                ]],
             ]),
             $this->domainCheck('2026-07-11', [
                 'crux' => ['metrics' => [
@@ -164,6 +166,12 @@ class ScoreHistoryBuilderTest extends TestCase
         $this->assertSame([100.0, 200.0], $result['gsc_clicks']);
         $this->assertSame([10.0, 20.0], $result['gsc_ctr']);
         $this->assertSame([500.0, null], $result['ga4_total_sessions']);
+        $this->assertSame([200.0, null], $result['ga4_non_organic_sessions']);
+        $this->assertSame([120.0, null], $result['ga4_direct_sessions']);
+        $this->assertSame([40.0, null], $result['ga4_referral_sessions']);
+        $this->assertSame([20.0, null], $result['ga4_social_sessions']);
+        $this->assertSame([15.0, null], $result['ga4_paid_sessions']);
+        $this->assertSame([5.0, null], $result['ga4_other_sessions']);
     }
 
     public function test_domain_check_history_ignores_null_json_columns(): void

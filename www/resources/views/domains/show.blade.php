@@ -491,6 +491,14 @@
                                             <tbody>
                                                 <tr><td>{{ __('Toplam oturum (28 gün)') }}</td><td>{{ number_format($ga4Data['total_sessions'] ?? 0) }}</td></tr>
                                                 <tr><td>{{ __('Organik arama oturumu') }}</td><td>{{ number_format($ga4Data['organic_sessions'] ?? 0) }}</td></tr>
+                                                <tr><td>{{ __('Organik olmayan oturum') }}</td><td>{{ number_format(max(0, ($ga4Data['total_sessions'] ?? 0) - ($ga4Data['organic_sessions'] ?? 0))) }}</td></tr>
+                                                @if ($ga4ChannelGroups = \App\Services\Ga4\Ga4ChannelGroups::group($ga4Data['channel_sessions'] ?? null))
+                                                    <tr><td class="ps-4 text-secondary">{{ __('Doğrudan (Direct)') }}</td><td>{{ number_format($ga4ChannelGroups['direct']) }}</td></tr>
+                                                    <tr><td class="ps-4 text-secondary">{{ __('Yönlendirme (Referral)') }}</td><td>{{ number_format($ga4ChannelGroups['referral']) }}</td></tr>
+                                                    <tr><td class="ps-4 text-secondary">{{ __('Sosyal (Social)') }}</td><td>{{ number_format($ga4ChannelGroups['social']) }}</td></tr>
+                                                    <tr><td class="ps-4 text-secondary">{{ __('Ücretli (Paid)') }}</td><td>{{ number_format($ga4ChannelGroups['paid']) }}</td></tr>
+                                                    <tr><td class="ps-4 text-secondary">{{ __('Diğer kanallar') }}</td><td>{{ number_format($ga4ChannelGroups['other']) }}</td></tr>
+                                                @endif
                                                 <tr><td>{{ __('Aktif kullanıcı') }}</td><td>{{ number_format($ga4Data['active_users'] ?? 0) }}</td></tr>
                                             </tbody>
                                         </table>
@@ -758,7 +766,7 @@
                     </div>
                 </div>
                 <div class="row row-cards">
-                    <div class="col-12">
+                    <div class="col-12 col-lg-6">
                         <div class="card card-sm">
                             <div class="card-body">
                                 <div class="text-secondary small mb-2">{{ __('GA4 oturum ve kullanıcı trendi') }}</div>
@@ -767,7 +775,27 @@
                                     :series="[
                                         ['label' => __('Toplam oturum'), 'color' => '#206bc4', 'values' => $domainCheckHistory['ga4_total_sessions']],
                                         ['label' => __('Organik oturum'), 'color' => '#2fb344', 'values' => $domainCheckHistory['ga4_organic_sessions']],
+                                        ['label' => __('Organik olmayan oturum'), 'color' => '#ae3ec9', 'values' => $domainCheckHistory['ga4_non_organic_sessions']],
                                         ['label' => __('Aktif kullanıcı'), 'color' => '#f76707', 'values' => $domainCheckHistory['ga4_active_users']],
+                                    ]"
+                                    :min="0"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <div class="card card-sm">
+                            <div class="card-body">
+                                <div class="text-secondary small mb-2">{{ __('GA4 kanal bazında oturum trendi') }}</div>
+                                <x-line-chart
+                                    :labels="$domainCheckHistory['labels']"
+                                    :series="[
+                                        ['label' => __('Organik oturum'), 'color' => '#2fb344', 'values' => $domainCheckHistory['ga4_organic_sessions']],
+                                        ['label' => __('Doğrudan (Direct)'), 'color' => '#4263eb', 'values' => $domainCheckHistory['ga4_direct_sessions']],
+                                        ['label' => __('Yönlendirme (Referral)'), 'color' => '#f59f00', 'values' => $domainCheckHistory['ga4_referral_sessions']],
+                                        ['label' => __('Sosyal (Social)'), 'color' => '#d6336c', 'values' => $domainCheckHistory['ga4_social_sessions']],
+                                        ['label' => __('Ücretli (Paid)'), 'color' => '#f76707', 'values' => $domainCheckHistory['ga4_paid_sessions']],
+                                        ['label' => __('Diğer kanallar'), 'color' => '#667382', 'values' => $domainCheckHistory['ga4_other_sessions']],
                                     ]"
                                     :min="0"
                                 />

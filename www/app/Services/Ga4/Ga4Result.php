@@ -12,6 +12,8 @@ final class Ga4Result
         public readonly ?float $totalSessions = null,
         public readonly ?float $organicSessions = null,
         public readonly ?float $activeUsers = null,
+        /** @var array<string, float>|null GA4 default channel group -> oturum */
+        public readonly ?array $channelSessions = null,
         public readonly ?string $periodStart = null,
         public readonly ?string $periodEnd = null,
         public readonly ?string $error = null,

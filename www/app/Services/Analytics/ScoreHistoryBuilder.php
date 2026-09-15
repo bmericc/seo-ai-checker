@@ -6,6 +6,7 @@ namespace App\Services\Analytics;
 
 use App\Models\Check;
 use App\Models\DomainCheck;
+use App\Services\Ga4\Ga4ChannelGroups;
 use Illuminate\Support\Collection;
 
 /**
@@ -72,7 +73,7 @@ final class ScoreHistoryBuilder
      * method - farkli bir model, farkli sutunlar.
      *
      * @param  Collection<int, DomainCheck>  $domainChecks  Sirasi onemli degil, kendi icinde tarihe gore gruplanir.
-     * @return array{labels: list<string>, crux_lcp: list<?float>, crux_fcp: list<?float>, crux_ttfb: list<?float>, crux_inp: list<?float>, crux_cls: list<?float>, gsc_clicks: list<?float>, gsc_impressions: list<?float>, gsc_ctr: list<?float>, gsc_average_position: list<?float>, ga4_total_sessions: list<?float>, ga4_organic_sessions: list<?float>, ga4_active_users: list<?float>}
+     * @return array{labels: list<string>, crux_lcp: list<?float>, crux_fcp: list<?float>, crux_ttfb: list<?float>, crux_inp: list<?float>, crux_cls: list<?float>, gsc_clicks: list<?float>, gsc_impressions: list<?float>, gsc_ctr: list<?float>, gsc_average_position: list<?float>, ga4_total_sessions: list<?float>, ga4_organic_sessions: list<?float>, ga4_non_organic_sessions: list<?float>, ga4_active_users: list<?float>, ga4_direct_sessions: list<?float>, ga4_referral_sessions: list<?float>, ga4_social_sessions: list<?float>, ga4_paid_sessions: list<?float>, ga4_other_sessions: list<?float>}
      */
     public function domainCheckHistory(Collection $domainChecks): array
     {
@@ -88,7 +89,9 @@ final class ScoreHistoryBuilder
         $gscAveragePosition = [];
         $ga4TotalSessions = [];
         $ga4OrganicSessions = [];
+        $ga4NonOrganicSessions = [];
         $ga4ActiveUsers = [];
+        $ga4ChannelBuckets = array_fill_keys(Ga4ChannelGroups::BUCKETS, []);
 
         $byDay = $domainChecks
             ->groupBy(fn (DomainCheck $check) => $check->created_at->format('Y-m-d'))
@@ -114,7 +117,19 @@ final class ScoreHistoryBuilder
 
             $ga4TotalSessions[] = $this->average($dayChecks->map(fn (DomainCheck $c) => $c->ga4['total_sessions'] ?? null));
             $ga4OrganicSessions[] = $this->average($dayChecks->map(fn (DomainCheck $c) => $c->ga4['organic_sessions'] ?? null));
+            // Not stored separately - derived from total minus organic so
+            // checks recorded before this series existed still plot it.
+            $ga4NonOrganicSessions[] = $this->average($dayChecks->map(fn (DomainCheck $c) => isset($c->ga4['total_sessions'], $c->ga4['organic_sessions'])
+                ? max(0, $c->ga4['total_sessions'] - $c->ga4['organic_sessions'])
+                : null));
             $ga4ActiveUsers[] = $this->average($dayChecks->map(fn (DomainCheck $c) => $c->ga4['active_users'] ?? null));
+
+            // Checks recorded before channel_sessions was stored group to
+            // null, so those days stay gaps instead of dropping to 0.
+            $dayGroups = $dayChecks->map(fn (DomainCheck $c) => Ga4ChannelGroups::group($c->ga4['channel_sessions'] ?? null));
+            foreach (Ga4ChannelGroups::BUCKETS as $bucket) {
+                $ga4ChannelBuckets[$bucket][] = $this->average($dayGroups->map(fn (?array $groups) => $groups[$bucket] ?? null));
+            }
         }
 
         return [
@@ -130,7 +145,13 @@ final class ScoreHistoryBuilder
             'gsc_average_position' => $gscAveragePosition,
             'ga4_total_sessions' => $ga4TotalSessions,
             'ga4_organic_sessions' => $ga4OrganicSessions,
+            'ga4_non_organic_sessions' => $ga4NonOrganicSessions,
             'ga4_active_users' => $ga4ActiveUsers,
+            'ga4_direct_sessions' => $ga4ChannelBuckets[Ga4ChannelGroups::DIRECT],
+            'ga4_referral_sessions' => $ga4ChannelBuckets[Ga4ChannelGroups::REFERRAL],
+            'ga4_social_sessions' => $ga4ChannelBuckets[Ga4ChannelGroups::SOCIAL],
+            'ga4_paid_sessions' => $ga4ChannelBuckets[Ga4ChannelGroups::PAID],
+            'ga4_other_sessions' => $ga4ChannelBuckets[Ga4ChannelGroups::OTHER],
         ];
     }
 

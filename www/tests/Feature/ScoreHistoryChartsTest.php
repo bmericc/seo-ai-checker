@@ -103,6 +103,7 @@ class ScoreHistoryChartsTest extends TestCase
         $response->assertSee('Site Kontrolü Geçmişi');
         $response->assertSee('CrUX yükleme süresi trendi (ms)');
         $response->assertSee('GA4 oturum ve kullanıcı trendi');
+        $response->assertSee('GA4 kanal bazında oturum trendi');
     }
 
     public function test_domain_page_without_any_check_history_shows_empty_state_instead_of_error(): void

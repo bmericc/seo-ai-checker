@@ -166,6 +166,7 @@ final class DomainCheckRunner
                 'total_sessions' => $ga4->totalSessions,
                 'organic_sessions' => $ga4->organicSessions,
                 'active_users' => $ga4->activeUsers,
+                'channel_sessions' => $ga4->channelSessions,
                 'period_start' => $ga4->periodStart,
                 'period_end' => $ga4->periodEnd,
                 'error' => $ga4->error,

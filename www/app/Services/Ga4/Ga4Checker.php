@@ -62,6 +62,7 @@ final class Ga4Checker
         $totalSessions = 0.0;
         $totalActiveUsers = 0.0;
         $organicSessions = 0.0;
+        $channelSessions = [];
 
         foreach ($rows as $row) {
             $channel = $row['dimensionValues'][0]['value'] ?? null;
@@ -70,6 +71,10 @@ final class Ga4Checker
 
             $totalSessions += $sessions;
             $totalActiveUsers += $activeUsers;
+
+            if ($channel !== null) {
+                $channelSessions[$channel] = ($channelSessions[$channel] ?? 0.0) + $sessions;
+            }
 
             if ($channel === self::ORGANIC_CHANNEL) {
                 $organicSessions += $sessions;
@@ -82,6 +87,7 @@ final class Ga4Checker
             totalSessions: $totalSessions,
             organicSessions: $organicSessions,
             activeUsers: $totalActiveUsers,
+            channelSessions: $channelSessions,
             periodStart: $startDate,
             periodEnd: $endDate,
         );
