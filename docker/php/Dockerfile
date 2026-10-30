@@ -10,20 +10,13 @@ RUN apk add --no-cache \
         libpng-dev \
         libzip-dev \
         libxml2-dev \
-        lexbor-dev \
         oniguruma-dev \
         sqlite-dev \
         icu-dev \
     && docker-php-ext-install \
-        pdo \
-        pdo_sqlite \
-        mbstring \
-        dom \
-        xml \
         zip \
         pcntl \
-        intl \
-    && docker-php-ext-enable opcache
+        intl
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
