@@ -1,4 +1,4 @@
-FROM php:8.4-fpm-alpine
+FROM php:8.5-fpm-alpine
 
 # Prod'da COMPOSER_INSTALL_FLAGS=--no-dev gecirilir (.env.prod), dev deps
 # (phpunit, pint, pail...) imaja dahil edilmez.
@@ -10,6 +10,7 @@ RUN apk add --no-cache \
         libpng-dev \
         libzip-dev \
         libxml2-dev \
+        lexbor-dev \
         oniguruma-dev \
         sqlite-dev \
         icu-dev \
