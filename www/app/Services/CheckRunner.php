@@ -170,7 +170,7 @@ final class CheckRunner
         try {
             return $check()->toArray();
         } catch (GuzzleException $e) {
-            return ['present' => false, 'response' => null, 'error' => $e->getMessage()];
+            return ['present' => false, 'response' => null, 'error' => $e->getMessage(), 'model' => null];
         }
     }
 

@@ -14,12 +14,12 @@ use GuzzleHttp\Exception\GuzzleException;
 final class AnthropicVisibilityChecker
 {
     private const ENDPOINT = 'https://api.anthropic.com/v1/messages';
-
     private const API_VERSION = '2023-06-01';
+    private const MAX_TOKENS = 1500;
 
     public function __construct(
         private readonly Client $client,
-        private readonly string $model = 'claude-haiku-4-5-20251001',
+        private readonly string $model = 'claude-haiku-5-5',
     ) {
     }
 
@@ -36,7 +36,8 @@ final class AnthropicVisibilityChecker
                 ],
                 'json' => [
                     'model' => $this->model,
-                    'max_tokens' => 400,
+                    'max_tokens' => self::MAX_TOKENS,
+                    'thinking' => ['type' => 'disabled'],
                     'system' => LlmVisibilityPrompt::SYSTEM_PROMPT,
                     'messages' => [
                         ['role' => 'user', 'content' => $prompt],
@@ -45,19 +46,19 @@ final class AnthropicVisibilityChecker
                 'http_errors' => false,
             ]);
         } catch (GuzzleException $e) {
-            return new LlmVisibilityResult(present: false, error: $e->getMessage(), prompt: $prompt);
+            return new LlmVisibilityResult(present: false, error: $e->getMessage(), prompt: $prompt, model: $this->model);
         }
 
         $status = $response->getStatusCode();
         $body = json_decode((string) $response->getBody(), true);
 
         if ($status !== 200 || !is_array($body)) {
-            return new LlmVisibilityResult(present: false, error: $this->describeError($status, $body), prompt: $prompt);
+            return new LlmVisibilityResult(present: false, error: $this->describeError($status, $body), prompt: $prompt, model: $this->model);
         }
 
-        $text = $body['content'][0]['text'] ?? null;
+        $text = $this->extractText($body);
         if (!is_string($text) || $text === '') {
-            return new LlmVisibilityResult(present: false, error: $this->describeError($status, $body), prompt: $prompt);
+            return new LlmVisibilityResult(present: false, error: $this->describeError($status, $body), prompt: $prompt, model: $this->model);
         }
 
         $followUpPrompt = LlmVisibilityPrompt::FOLLOW_UP_PROMPT;
@@ -70,6 +71,7 @@ final class AnthropicVisibilityChecker
             followUpPrompt: $followUpPrompt,
             followUpResponse: $followUpResponse,
             followUpPresent: $followUpResponse !== null && str_contains(mb_strtolower($followUpResponse), mb_strtolower($domain)),
+            model: $this->model,
         );
     }
 
@@ -88,7 +90,8 @@ final class AnthropicVisibilityChecker
                 ],
                 'json' => [
                     'model' => $this->model,
-                    'max_tokens' => 400,
+                    'max_tokens' => self::MAX_TOKENS,
+                    'thinking' => ['type' => 'disabled'],
                     'system' => LlmVisibilityPrompt::SYSTEM_PROMPT,
                     'messages' => [
                         ['role' => 'user', 'content' => $firstPrompt],
@@ -107,17 +110,44 @@ final class AnthropicVisibilityChecker
         }
 
         $body = json_decode((string) $response->getBody(), true);
-        $text = is_array($body) ? ($body['content'][0]['text'] ?? null) : null;
 
-        return is_string($text) && $text !== '' ? $text : null;
+        return $this->extractText($body);
+    }
+
+    /**
+     * Anthropic yanıtı içerisindeki metin bloğunu arar.
+     */
+    private function extractText(mixed $body): ?string
+    {
+        if (!is_array($body) || empty($body['content']) || !is_array($body['content'])) {
+            return null;
+        }
+
+        foreach ($body['content'] as $block) {
+            if (is_array($block) && ($block['type'] ?? '') === 'text' && is_string($block['text'] ?? null) && $block['text'] !== '') {
+                return $block['text'];
+            }
+        }
+
+        return null;
     }
 
     private function describeError(int $status, mixed $body): string
     {
-        $message = is_array($body) ? ($body['error']['message'] ?? null) : null;
+        if (is_array($body)) {
+            $message = $body['error']['message'] ?? null;
+            if (is_string($message) && $message !== '') {
+                return sprintf('Anthropic HTTP %d: %s', $status, $message);
+            }
 
-        return is_string($message) && $message !== ''
-            ? sprintf('Anthropic HTTP %d: %s', $status, $message)
+            $stopReason = $body['stop_reason'] ?? null;
+            if ($stopReason === 'max_tokens') {
+                return 'Anthropic token sınırı aşıldı (stop_reason: max_tokens).';
+            }
+        }
+
+        return $status === 200
+            ? 'Anthropic boş yanıt döndü.'
             : sprintf('Anthropic HTTP %d', $status);
     }
 }

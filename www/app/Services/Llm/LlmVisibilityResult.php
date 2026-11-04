@@ -14,11 +14,12 @@ final class LlmVisibilityResult
         public readonly ?string $followUpPrompt = null,
         public readonly ?string $followUpResponse = null,
         public readonly bool $followUpPresent = false,
+        public readonly ?string $model = null,
     ) {
     }
 
     /**
-     * @return array{present: bool, response: ?string, error: ?string, prompt: ?string, follow_up_prompt: ?string, follow_up_response: ?string, follow_up_present: bool}
+     * @return array{present: bool, response: ?string, error: ?string, prompt: ?string, follow_up_prompt: ?string, follow_up_response: ?string, follow_up_present: bool, model: ?string}
      */
     public function toArray(): array
     {
@@ -30,6 +31,7 @@ final class LlmVisibilityResult
             'follow_up_prompt' => $this->followUpPrompt,
             'follow_up_response' => $this->followUpResponse,
             'follow_up_present' => $this->followUpPresent,
+            'model' => $this->model,
         ];
     }
 }

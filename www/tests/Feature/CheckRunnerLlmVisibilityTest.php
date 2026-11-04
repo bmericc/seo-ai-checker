@@ -111,5 +111,6 @@ class CheckRunnerLlmVisibilityTest extends TestCase
         $this->assertSame('Türkiye kaynaklı: example.com.', $check->llm_visibility['openai']['follow_up_response']);
         $this->assertNotNull($check->llm_visibility['openai']['follow_up_prompt']);
         $this->assertTrue($check->llm_visibility['openai']['follow_up_present']);
+        $this->assertSame('gpt-5.6-luna', $check->llm_visibility['openai']['model']);
     }
 }

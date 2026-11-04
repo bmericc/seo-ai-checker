@@ -13,7 +13,7 @@ use Psr\Http\Message\RequestInterface;
 
 class GeminiVisibilityCheckerTest extends TestCase
 {
-    private function checkerWithResponses(array $responses, ?RequestInterface &$capturedRequest = null): GeminiVisibilityChecker
+    private function checkerWithResponses(array $responses, ?RequestInterface &$capturedRequest = null, string $model = 'gemini-3.8-flash'): GeminiVisibilityChecker
     {
         $mock = new MockHandler($responses);
         $stack = HandlerStack::create($mock);
@@ -22,7 +22,7 @@ class GeminiVisibilityCheckerTest extends TestCase
         }));
         $client = new Client(['handler' => $stack]);
 
-        return new GeminiVisibilityChecker($client, 'gemini-3.1-flash-lite');
+        return new GeminiVisibilityChecker($client, $model);
     }
 
     public function test_sends_api_key_as_query_param_and_keyword_as_content(): void
@@ -31,12 +31,14 @@ class GeminiVisibilityCheckerTest extends TestCase
         $body = json_encode(['candidates' => [['content' => ['parts' => [['text' => 'no mention here']]]]]]);
         $checker = $this->checkerWithResponses([new Response(200, [], $body), new Response(200, [], $body)], $capturedRequest);
 
-        $checker->check('örnek kelime', 'example.com', 'gm-test-key');
+        $result = $checker->check('örnek kelime', 'example.com', 'gm-test-key');
 
         $this->assertStringContainsString('key=gm-test-key', $capturedRequest->getUri()->getQuery());
-        $this->assertStringContainsString('gemini-3.1-flash-lite', (string) $capturedRequest->getUri());
+        $this->assertStringContainsString('gemini-3.8-flash', (string) $capturedRequest->getUri());
         $sent = json_decode((string) $capturedRequest->getBody(), true);
         $this->assertSame('örnek kelime konusunda hangi web sitelerine bakmalıyım?', $sent['contents'][0]['parts'][0]['text']);
+        $this->assertSame(1500, $sent['generationConfig']['maxOutputTokens']);
+        $this->assertSame('gemini-3.8-flash', $result->model);
     }
 
     public function test_domain_mentioned_in_response_is_detected(): void
@@ -47,6 +49,7 @@ class GeminiVisibilityCheckerTest extends TestCase
         $result = $checker->check('kelime', 'example.com', 'gm-test');
 
         $this->assertTrue($result->present);
+        $this->assertSame('gemini-3.8-flash', $result->model);
     }
 
     public function test_domain_not_mentioned_is_reported_as_absent(): void

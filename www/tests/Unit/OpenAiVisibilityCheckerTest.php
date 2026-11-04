@@ -64,6 +64,7 @@ class OpenAiVisibilityCheckerTest extends TestCase
         $result = $checker->check('kelime', 'example.com', 'sk-test');
 
         $this->assertTrue($result->present);
+        $this->assertSame('gpt-5.6-luna', $result->model);
         $this->assertStringContainsString('EXAMPLE.com', $result->response);
     }
 

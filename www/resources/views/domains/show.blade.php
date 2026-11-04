@@ -1019,18 +1019,27 @@
                                         @else
                                             <div class="d-flex flex-wrap gap-1">
                                                 @foreach ($last->llm_visibility as $provider => $result)
+                                                    @php
+                                                        $model = $result['model'] ?? null;
+                                                    @endphp
                                                     @if ($result['error'])
-                                                        <span class="badge bg-danger-lt" data-bs-toggle="tooltip" title="{{ $result['error'] }}">{{ $provider }}</span>
+                                                        <span class="badge bg-danger-lt" data-bs-toggle="tooltip" title="{{ ($model ? '[' . $model . '] ' : '') . $result['error'] }}">
+                                                            {{ $provider }}@if ($model) <span class="fw-normal text-muted" style="font-size: 0.75em;">({{ $model }})</span>@endif
+                                                        </span>
                                                     @elseif ($result['present'])
-                                                        <span class="badge bg-success-lt">{{ $provider }}</span>
+                                                        <span class="badge bg-success-lt" data-bs-toggle="tooltip" title="{{ $model ? '[' . $model . '] ' . __('Domain geçiyor') : '' }}">
+                                                            {{ $provider }}@if ($model) <span class="fw-normal text-muted" style="font-size: 0.75em;">({{ $model }})</span>@endif
+                                                        </span>
                                                     @else
-                                                        <span class="badge bg-secondary-lt">{{ $provider }}</span>
+                                                        <span class="badge bg-secondary-lt" data-bs-toggle="tooltip" title="{{ $model ? '[' . $model . '] ' . __('Domain geçmiyor') : '' }}">
+                                                            {{ $provider }}@if ($model) <span class="fw-normal text-muted" style="font-size: 0.75em;">({{ $model }})</span>@endif
+                                                        </span>
                                                     @endif
                                                     @if ($result['follow_up_response'] ?? null)
                                                         @if ($result['follow_up_present'] ?? false)
-                                                            <span class="badge bg-success-lt" data-bs-toggle="tooltip" title="{{ __("Türkiye'den:") }}">{{ $provider }} TR</span>
+                                                            <span class="badge bg-success-lt" data-bs-toggle="tooltip" title="{{ __("Türkiye'den:") }}{{ $model ? ' [' . $model . ']' : '' }}">{{ $provider }} TR</span>
                                                         @else
-                                                            <span class="badge bg-secondary-lt" data-bs-toggle="tooltip" title="{{ __("Türkiye'den:") }}">{{ $provider }} TR</span>
+                                                            <span class="badge bg-secondary-lt" data-bs-toggle="tooltip" title="{{ __("Türkiye'den:") }}{{ $model ? ' [' . $model . ']' : '' }}">{{ $provider }} TR</span>
                                                         @endif
                                                     @endif
                                                 @endforeach
