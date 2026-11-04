@@ -39,7 +39,7 @@ final class OpenAiVisibilityChecker
                         ['role' => 'system', 'content' => LlmVisibilityPrompt::SYSTEM_PROMPT],
                         ['role' => 'user', 'content' => $prompt],
                     ],
-                    'max_tokens' => 400,
+                    'max_completion_tokens' => 400,
                 ],
                 'http_errors' => false,
             ]);
@@ -92,7 +92,7 @@ final class OpenAiVisibilityChecker
                         ['role' => 'assistant', 'content' => $firstResponse],
                         ['role' => 'user', 'content' => $followUpPrompt],
                     ],
-                    'max_tokens' => 400,
+                    'max_completion_tokens' => 400,
                 ],
                 'http_errors' => false,
             ]);

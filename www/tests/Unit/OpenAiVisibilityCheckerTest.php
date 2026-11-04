@@ -37,6 +37,8 @@ class OpenAiVisibilityCheckerTest extends TestCase
         $sent = json_decode((string) $capturedRequest->getBody(), true);
         $this->assertSame('gpt-5.6-luna', $sent['model']);
         $this->assertSame('örnek kelime konusunda hangi web sitelerine bakmalıyım?', $sent['messages'][1]['content']);
+        $this->assertSame(400, $sent['max_completion_tokens']);
+        $this->assertArrayNotHasKey('max_tokens', $sent);
     }
 
     public function test_domain_mentioned_in_response_is_detected_case_insensitively(): void
