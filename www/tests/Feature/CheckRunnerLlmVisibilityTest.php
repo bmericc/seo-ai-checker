@@ -49,7 +49,7 @@ class CheckRunnerLlmVisibilityTest extends TestCase
             new Response(200, [], $followUpBody),
         ]))]);
 
-        $this->app->instance(OpenAiVisibilityChecker::class, new OpenAiVisibilityChecker($client, 'gpt-4.1-nano'));
+        $this->app->instance(OpenAiVisibilityChecker::class, new OpenAiVisibilityChecker($client, 'gpt-5.6-luna'));
     }
 
     public function test_llm_visibility_is_null_when_domain_has_it_disabled(): void

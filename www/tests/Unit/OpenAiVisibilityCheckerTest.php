@@ -22,7 +22,7 @@ class OpenAiVisibilityCheckerTest extends TestCase
         }));
         $client = new Client(['handler' => $stack]);
 
-        return new OpenAiVisibilityChecker($client, 'gpt-4.1-nano');
+        return new OpenAiVisibilityChecker($client, 'gpt-5.6-luna');
     }
 
     public function test_sends_bearer_token_and_keyword_as_user_message(): void
@@ -35,7 +35,7 @@ class OpenAiVisibilityCheckerTest extends TestCase
 
         $this->assertSame('Bearer sk-test-key', $capturedRequest->getHeaderLine('Authorization'));
         $sent = json_decode((string) $capturedRequest->getBody(), true);
-        $this->assertSame('gpt-4.1-nano', $sent['model']);
+        $this->assertSame('gpt-5.6-luna', $sent['model']);
         $this->assertSame('örnek kelime konusunda hangi web sitelerine bakmalıyım?', $sent['messages'][1]['content']);
     }
 

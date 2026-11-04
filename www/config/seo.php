@@ -47,7 +47,7 @@ return [
     | varsayilan; fiyatlar zamanla degistigi icin env ile override edilebilir.
     */
     'llm_visibility' => [
-        'openai_model' => env('OPENAI_VISIBILITY_MODEL', 'gpt-4.1-nano'),
+        'openai_model' => env('OPENAI_VISIBILITY_MODEL', 'gpt-5.6-luna'),
         'anthropic_model' => env('ANTHROPIC_VISIBILITY_MODEL', 'claude-haiku-4-5-20251001'),
         'gemini_model' => env('GEMINI_VISIBILITY_MODEL', 'gemini-3.1-flash-lite'),
     ],

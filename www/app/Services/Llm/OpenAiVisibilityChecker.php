@@ -19,7 +19,7 @@ final class OpenAiVisibilityChecker
 
     public function __construct(
         private readonly Client $client,
-        private readonly string $model = 'gpt-4.1-nano',
+        private readonly string $model = 'gpt-5.6-luna',
     ) {
     }
 
