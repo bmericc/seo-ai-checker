@@ -16,6 +16,7 @@ use GuzzleHttp\Exception\GuzzleException;
 final class OpenAiVisibilityChecker
 {
     private const ENDPOINT = 'https://api.openai.com/v1/chat/completions';
+    private const MAX_COMPLETION_TOKENS = 2500;
 
     public function __construct(
         private readonly Client $client,
@@ -33,14 +34,10 @@ final class OpenAiVisibilityChecker
                     'Authorization' => 'Bearer ' . $apiKey,
                     'Content-Type' => 'application/json',
                 ],
-                'json' => [
-                    'model' => $this->model,
-                    'messages' => [
-                        ['role' => 'system', 'content' => LlmVisibilityPrompt::SYSTEM_PROMPT],
-                        ['role' => 'user', 'content' => $prompt],
-                    ],
-                    'max_completion_tokens' => 400,
-                ],
+                'json' => $this->buildPayload([
+                    ['role' => 'system', 'content' => LlmVisibilityPrompt::SYSTEM_PROMPT],
+                    ['role' => 'user', 'content' => $prompt],
+                ]),
                 'http_errors' => false,
             ]);
         } catch (GuzzleException $e) {
@@ -84,16 +81,12 @@ final class OpenAiVisibilityChecker
                     'Authorization' => 'Bearer ' . $apiKey,
                     'Content-Type' => 'application/json',
                 ],
-                'json' => [
-                    'model' => $this->model,
-                    'messages' => [
-                        ['role' => 'system', 'content' => LlmVisibilityPrompt::SYSTEM_PROMPT],
-                        ['role' => 'user', 'content' => $firstPrompt],
-                        ['role' => 'assistant', 'content' => $firstResponse],
-                        ['role' => 'user', 'content' => $followUpPrompt],
-                    ],
-                    'max_completion_tokens' => 400,
-                ],
+                'json' => $this->buildPayload([
+                    ['role' => 'system', 'content' => LlmVisibilityPrompt::SYSTEM_PROMPT],
+                    ['role' => 'user', 'content' => $firstPrompt],
+                    ['role' => 'assistant', 'content' => $firstResponse],
+                    ['role' => 'user', 'content' => $followUpPrompt],
+                ]),
                 'http_errors' => false,
             ]);
         } catch (GuzzleException) {
@@ -110,12 +103,65 @@ final class OpenAiVisibilityChecker
         return is_string($text) && $text !== '' ? $text : null;
     }
 
+    /**
+     * @param array<int, array{role: string, content: string}> $messages
+     * @return array<string, mixed>
+     */
+    private function buildPayload(array $messages): array
+    {
+        $payload = [
+            'model' => $this->model,
+            'messages' => $messages,
+            'max_completion_tokens' => self::MAX_COMPLETION_TOKENS,
+        ];
+
+        if ($this->isReasoningModel()) {
+            $payload['reasoning_effort'] = 'low';
+        }
+
+        return $payload;
+    }
+
+    private function isReasoningModel(): bool
+    {
+        return str_starts_with($this->model, 'o1')
+            || str_starts_with($this->model, 'o3')
+            || str_starts_with($this->model, 'o4')
+            || str_contains($this->model, 'gpt-5');
+    }
+
     private function describeError(int $status, mixed $body): string
     {
-        $message = is_array($body) ? ($body['error']['message'] ?? null) : null;
+        if (is_array($body)) {
+            $message = $body['error']['message'] ?? null;
+            if (is_string($message) && $message !== '') {
+                return sprintf('OpenAI HTTP %d: %s', $status, $message);
+            }
 
-        return is_string($message) && $message !== ''
-            ? sprintf('OpenAI HTTP %d: %s', $status, $message)
+            $choice = $body['choices'][0] ?? null;
+            if (is_array($choice)) {
+                $refusal = $choice['message']['refusal'] ?? null;
+                if (is_string($refusal) && $refusal !== '') {
+                    return sprintf('OpenAI isteği reddetti: %s', $refusal);
+                }
+
+                $finishReason = $choice['finish_reason'] ?? null;
+                if ($finishReason === 'length') {
+                    $reasoningTokens = $body['usage']['completion_tokens_details']['reasoning_tokens'] ?? null;
+
+                    return is_int($reasoningTokens) && $reasoningTokens > 0
+                        ? sprintf('OpenAI token sınırı aşıldı (finish_reason: length, reasoning_tokens: %d).', $reasoningTokens)
+                        : 'OpenAI token sınırı aşıldı (finish_reason: length).';
+                }
+
+                if (is_string($finishReason) && $finishReason !== '' && $finishReason !== 'stop') {
+                    return sprintf('OpenAI tamamlanamadı (finish_reason: %s).', $finishReason);
+                }
+            }
+        }
+
+        return $status === 200
+            ? 'OpenAI boş yanıt döndü.'
             : sprintf('OpenAI HTTP %d', $status);
     }
 }
