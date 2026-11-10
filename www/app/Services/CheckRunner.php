@@ -11,6 +11,7 @@ use App\Services\Lighthouse\PageSpeedInsightsClient;
 use App\Services\Llm\AnthropicVisibilityChecker;
 use App\Services\Llm\GeminiVisibilityChecker;
 use App\Services\Llm\OpenAiVisibilityChecker;
+use App\Services\Llm\PerplexityVisibilityChecker;
 use App\Services\OnPage\OnPageSeoAnalyzer;
 use App\Services\Serp\AiOverviewResult;
 use App\Services\Serp\SerpResult;
@@ -30,6 +31,7 @@ final class CheckRunner
         private readonly OpenAiVisibilityChecker $openAiChecker,
         private readonly AnthropicVisibilityChecker $anthropicChecker,
         private readonly GeminiVisibilityChecker $geminiChecker,
+        private readonly PerplexityVisibilityChecker $perplexityChecker,
         private readonly EeatScorer $eeatScorer,
     ) {
     }
@@ -156,6 +158,12 @@ final class CheckRunner
         if ($apiKeys->has('gemini')) {
             $results['gemini'] = $this->safeCheckLlmVisibility(
                 fn () => $this->geminiChecker->check($keyword->keyword, $domain, $apiKeys['gemini']->api_key),
+            );
+        }
+
+        if ($apiKeys->has('perplexity')) {
+            $results['perplexity'] = $this->safeCheckLlmVisibility(
+                fn () => $this->perplexityChecker->check($keyword->keyword, $domain, $apiKeys['perplexity']->api_key),
             );
         }
 

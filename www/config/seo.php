@@ -50,6 +50,7 @@ return [
         'openai_model' => env('OPENAI_VISIBILITY_MODEL', 'gpt-5.6-luna'),
         'anthropic_model' => env('ANTHROPIC_VISIBILITY_MODEL', 'claude-haiku-5-5'),
         'gemini_model' => env('GEMINI_VISIBILITY_MODEL', 'gemini-3.8-flash'),
+        'perplexity_model' => env('PERPLEXITY_VISIBILITY_MODEL', 'sonar'),
     ],
 
     /*

@@ -15,6 +15,8 @@ final class LlmVisibilityResult
         public readonly ?string $followUpResponse = null,
         public readonly bool $followUpPresent = false,
         public readonly ?string $model = null,
+        /** @var list<string> Perplexity gibi kaynak gosteren saglayicilarin alintiladigi URL'ler. */
+        public readonly array $citations = [],
     ) {
     }
 
@@ -23,7 +25,7 @@ final class LlmVisibilityResult
      */
     public function toArray(): array
     {
-        return [
+        $data = [
             'present' => $this->present,
             'response' => $this->response,
             'error' => $this->error,
@@ -33,5 +35,11 @@ final class LlmVisibilityResult
             'follow_up_present' => $this->followUpPresent,
             'model' => $this->model,
         ];
+
+        if ($this->citations !== []) {
+            $data['citations'] = $this->citations;
+        }
+
+        return $data;
     }
 }

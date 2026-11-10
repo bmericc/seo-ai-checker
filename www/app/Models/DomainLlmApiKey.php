@@ -8,14 +8,22 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Bir domain icin ChatGPT/Claude/Gemini gorunurluk kontrolunde kullanilacak
+ * Bir domain icin ChatGPT/Claude/Gemini/Perplexity gorunurluk kontrolunde kullanilacak
  * saglayici basina bir API key. "label" (bireysel/musteri) sadece
  * yonetim/muhasebe amacli bir etikettir, davranisi degistirmez - hangi
  * "kese"den harcandigini admin'in takip edebilmesi icindir.
  */
 class DomainLlmApiKey extends Model
 {
-    public const PROVIDERS = ['openai', 'anthropic', 'gemini'];
+    public const PROVIDERS = ['openai', 'anthropic', 'gemini', 'perplexity'];
+
+    /** Arayuzde gosterilen saglayici adlari. */
+    public const PROVIDER_LABELS = [
+        'openai' => 'ChatGPT',
+        'anthropic' => 'Claude',
+        'gemini' => 'Gemini',
+        'perplexity' => 'Perplexity',
+    ];
 
     public const LABELS = ['bireysel', 'musteri'];
 

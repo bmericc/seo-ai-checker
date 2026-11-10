@@ -15,6 +15,7 @@ use App\Services\Lighthouse\PageSpeedInsightsClient;
 use App\Services\Llm\AnthropicVisibilityChecker;
 use App\Services\Llm\GeminiVisibilityChecker;
 use App\Services\Llm\OpenAiVisibilityChecker;
+use App\Services\Llm\PerplexityVisibilityChecker;
 use App\Services\Llms\LlmsTxtChecker;
 use App\Services\OnPage\OnPageSeoAnalyzer;
 use App\Services\Robots\RobotsTxtChecker;
@@ -104,6 +105,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(GeminiVisibilityChecker::class, fn ($app) => new GeminiVisibilityChecker(
             $app->make(Client::class),
             config('seo.llm_visibility.gemini_model'),
+        ));
+
+        $this->app->singleton(PerplexityVisibilityChecker::class, fn ($app) => new PerplexityVisibilityChecker(
+            $app->make(Client::class),
+            config('seo.llm_visibility.perplexity_model'),
         ));
 
         $this->app->singleton(RobotsTxtChecker::class, fn ($app) => new RobotsTxtChecker($app->make(Client::class)));

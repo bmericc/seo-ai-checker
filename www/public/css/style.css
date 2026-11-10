@@ -234,3 +234,20 @@ body {
 @media (prefers-reduced-motion: reduce) {
     .score-ring .ring-value, .meter-bar { transition: none; }
 }
+
+/* ---- IndexNow adimlari ---- */
+.indexnow-steps { padding-left: 1.25rem; margin-bottom: 0; display: flex; flex-direction: column; gap: .9rem; }
+.indexnow-steps li::marker { font-weight: 600; color: var(--tblr-primary); }
+
+/* ---- Prompt Explorer ---- */
+.prompt-answer { font-size: .875rem; line-height: 1.55; max-height: 32rem; overflow-y: auto; }
+.prompt-answer p:last-child, .prompt-answer ul:last-child, .prompt-answer ol:last-child { margin-bottom: 0; }
+.prompt-answer h1, .prompt-answer h2, .prompt-answer h3, .prompt-answer h4 { font-size: .95rem; margin-top: .75rem; }
+.prompt-answer mark { background: rgba(47, 179, 68, .2); color: inherit; padding: 0 .15em; border-radius: .2em; font-weight: 600; }
+.prompt-answer table { font-size: .8rem; }
+
+/* ---- Paylasilan rapor (yazdirma) ---- */
+@media print {
+    .public-report .card { break-inside: avoid; box-shadow: none; }
+    .public-report details.issue-item > summary .issue-chevron { display: none; }
+}

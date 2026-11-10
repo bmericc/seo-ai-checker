@@ -76,6 +76,49 @@ final class AnthropicVisibilityChecker
     }
 
     /**
+     * Prompt Explorer icin: kullanicinin yazdigi prompt'u oldugu gibi (sistem
+     * talimati ve ikinci-tur soru olmadan) sorar.
+     */
+    public function ask(string $prompt, string $domain, string $apiKey): LlmVisibilityResult
+    {
+        try {
+            $response = $this->client->post(self::ENDPOINT, [
+                'headers' => [
+                    'x-api-key' => $apiKey,
+                    'anthropic-version' => self::API_VERSION,
+                    'Content-Type' => 'application/json',
+                ],
+                'json' => [
+                    'model' => $this->model,
+                    'max_tokens' => self::MAX_TOKENS,
+                    'thinking' => ['type' => 'disabled'],
+                    'messages' => [
+                        ['role' => 'user', 'content' => $prompt],
+                    ],
+                ],
+                'http_errors' => false,
+            ]);
+        } catch (GuzzleException $e) {
+            return new LlmVisibilityResult(present: false, error: $e->getMessage(), prompt: $prompt, model: $this->model);
+        }
+
+        $status = $response->getStatusCode();
+        $body = json_decode((string) $response->getBody(), true);
+        $text = $status === 200 ? $this->extractText($body) : null;
+
+        if (!is_string($text) || $text === '') {
+            return new LlmVisibilityResult(present: false, error: $this->describeError($status, $body), prompt: $prompt, model: $this->model);
+        }
+
+        return new LlmVisibilityResult(
+            present: LlmMentions::mentions($text, $domain),
+            response: $text,
+            prompt: $prompt,
+            model: $this->model,
+        );
+    }
+
+    /**
      * Ilk cevabi konusma gecmisine ekleyip ikinci-tur soruyu sorar - basarisiz
      * olursa (agdan/API'den) null doner, bu ana sonucu bozmaz (bkz. check()).
      */

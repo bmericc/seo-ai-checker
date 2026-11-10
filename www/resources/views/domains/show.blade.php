@@ -12,6 +12,9 @@
     @endif
 @endsection
 @section('page-actions')
+    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modal-share-report">
+        <i class="ti ti-share icon"></i> {{ __('Paylaş') }}
+    </button>
     <form method="post" action="{{ route('domains.check', $domain) }}" class="d-inline">
         @csrf
         <button type="submit" class="btn btn-outline-primary">
@@ -73,6 +76,7 @@
         @if ($hasSitemapPages)
             <li class="nav-item" role="presentation"><a href="#tab-pages" class="nav-link" data-bs-toggle="tab" role="tab" aria-selected="false"><i class="ti ti-files me-1"></i>{{ __('Sayfalar') }}</a></li>
         @endif
+        <li class="nav-item" role="presentation"><a href="#tab-indexnow" class="nav-link" data-bs-toggle="tab" role="tab" aria-selected="false"><i class="ti ti-bolt me-1"></i>{{ __('Hızlı indeksleme') }}</a></li>
         <li class="nav-item" role="presentation"><a href="#tab-competitors" class="nav-link" data-bs-toggle="tab" role="tab" aria-selected="false"><i class="ti ti-users me-1"></i>{{ __('Rakipler') }}</a></li>
         <li class="nav-item" role="presentation"><a href="#tab-history" class="nav-link" data-bs-toggle="tab" role="tab" aria-selected="false"><i class="ti ti-chart-line me-1"></i>{{ __('Geçmiş') }}</a></li>
         <li class="nav-item" role="presentation"><a href="#tab-info" class="nav-link" data-bs-toggle="tab" role="tab" aria-selected="false"><i class="ti ti-id me-1"></i>{{ __('Domain bilgisi') }}</a></li>
@@ -860,11 +864,17 @@
     </div>
     </div>
 
+    <div class="tab-pane" id="tab-indexnow" role="tabpanel">
+        @include('domains.partials.indexnow')
+    </div>
+
     @if (auth()->user()->is_admin)
     <div class="tab-pane" id="tab-ai" role="tabpanel">
+        @include('domains.partials.prompt-explorer-form')
+
         <div class="card mb-4">
             <div class="card-header">
-                <h3 class="card-title">{{ __('AI Görünürlük Kontrolü (ChatGPT/Claude/Gemini)') }}</h3>
+                <h3 class="card-title">{{ __('AI Görünürlük Kontrolü (ChatGPT/Claude/Gemini/Perplexity)') }}</h3>
             </div>
             <div class="card-body">
                 <form method="post" action="{{ route('domains.llm-visibility.update', $domain) }}" class="mb-4">
@@ -893,7 +903,7 @@
                         <tbody>
                             @foreach ($domain->llmApiKeys as $llmApiKey)
                                 <tr>
-                                    <td>{{ $llmApiKey->provider }}</td>
+                                    <td>{{ \App\Models\DomainLlmApiKey::PROVIDER_LABELS[$llmApiKey->provider] ?? $llmApiKey->provider }}</td>
                                     <td><span class="badge bg-{{ $llmApiKey->label === 'bireysel' ? 'blue-lt' : 'green-lt' }}">{{ $llmApiKey->label }}</span></td>
                                     <td><code>{{ $llmApiKey->maskedKey() }}</code></td>
                                     <td class="text-end">
@@ -915,7 +925,7 @@
                         <label class="form-label">{{ __('Sağlayıcı') }}</label>
                         <select name="provider" class="form-select" required>
                             @foreach (\App\Models\DomainLlmApiKey::PROVIDERS as $provider)
-                                <option value="{{ $provider }}">{{ $provider }}</option>
+                                <option value="{{ $provider }}">{{ \App\Models\DomainLlmApiKey::PROVIDER_LABELS[$provider] ?? $provider }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -1334,4 +1344,5 @@
             </div>
         </div>
     </div>
+    @include('domains.partials.share-modal')
 @endsection

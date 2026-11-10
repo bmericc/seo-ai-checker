@@ -6,8 +6,11 @@ use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\CheckController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DomainController;
+use App\Http\Controllers\IndexNowController;
 use App\Http\Controllers\KeywordController;
 use App\Http\Controllers\LighthouseReportController;
+use App\Http\Controllers\PromptExplorerController;
+use App\Http\Controllers\ReportShareController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -35,6 +38,12 @@ Route::post('/logout', function () {
 
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
+// Paylasilan rapor linki: giris gerektirmez (bkz. ReportShareController::show).
+Route::get('/r/{token}', [ReportShareController::class, 'show'])
+    ->where('token', '[A-Za-z0-9]{20,64}')
+    ->middleware('throttle:60,1')
+    ->name('reports.public');
+
 Route::get('/pending-approval', function () {
     return view('pending-approval');
 })->middleware('auth')->name('pending-approval');
@@ -58,6 +67,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/domains/{domain}/lighthouse-report', [LighthouseReportController::class, 'show'])->name('domains.lighthouse-report');
     Route::post('/domains/{domain}/lighthouse-report/start', [LighthouseReportController::class, 'start'])->name('domains.lighthouse-report.start');
     Route::post('/domains/{domain}/lighthouse-report/start-onpage', [LighthouseReportController::class, 'startOnPage'])->name('domains.lighthouse-report.start-onpage');
+
+    Route::get('/domains/{domain}/indexnow/key-file', [IndexNowController::class, 'keyFile'])->name('domains.indexnow.key-file');
+    Route::post('/domains/{domain}/indexnow/regenerate', [IndexNowController::class, 'regenerate'])->name('domains.indexnow.regenerate');
+    Route::post('/domains/{domain}/indexnow/verify', [IndexNowController::class, 'verify'])->name('domains.indexnow.verify');
+    Route::post('/domains/{domain}/indexnow/submit', [IndexNowController::class, 'submit'])->name('domains.indexnow.submit');
+
+    Route::post('/domains/{domain}/prompts', [PromptExplorerController::class, 'store'])->name('domains.prompts.store');
+    Route::get('/domains/{domain}/prompts/{exploration}', [PromptExplorerController::class, 'show'])->name('domains.prompts.show');
+
+    Route::post('/domains/{domain}/shares', [ReportShareController::class, 'store'])->name('domains.shares.store');
+    Route::delete('/domains/{domain}/shares/{share}', [ReportShareController::class, 'destroy'])->name('domains.shares.destroy');
 
     Route::post('/domains/{domain}/keywords', [KeywordController::class, 'store'])->name('keywords.store');
     Route::get('/keywords/{keyword}', [KeywordController::class, 'show'])->name('keywords.show');

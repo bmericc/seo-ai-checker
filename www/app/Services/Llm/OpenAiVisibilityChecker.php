@@ -71,6 +71,44 @@ final class OpenAiVisibilityChecker
     }
 
     /**
+     * Prompt Explorer icin: kullanicinin yazdigi prompt'u oldugu gibi (sistem
+     * talimati ve ikinci-tur soru olmadan) sorar - gercek bir kullanicinin
+     * ChatGPT'ye yazdigi soruyu taklit eder.
+     */
+    public function ask(string $prompt, string $domain, string $apiKey): LlmVisibilityResult
+    {
+        try {
+            $response = $this->client->post(self::ENDPOINT, [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $apiKey,
+                    'Content-Type' => 'application/json',
+                ],
+                'json' => $this->buildPayload([
+                    ['role' => 'user', 'content' => $prompt],
+                ]),
+                'http_errors' => false,
+            ]);
+        } catch (GuzzleException $e) {
+            return new LlmVisibilityResult(present: false, error: $e->getMessage(), prompt: $prompt, model: $this->model);
+        }
+
+        $status = $response->getStatusCode();
+        $body = json_decode((string) $response->getBody(), true);
+        $text = is_array($body) ? ($body['choices'][0]['message']['content'] ?? null) : null;
+
+        if ($status !== 200 || !is_string($text) || $text === '') {
+            return new LlmVisibilityResult(present: false, error: $this->describeError($status, $body), prompt: $prompt, model: $this->model);
+        }
+
+        return new LlmVisibilityResult(
+            present: LlmMentions::mentions($text, $domain),
+            response: $text,
+            prompt: $prompt,
+            model: $this->model,
+        );
+    }
+
+    /**
      * Ilk cevabi konusma gecmisine ekleyip ikinci-tur soruyu sorar - basarisiz
      * olursa (agdan/API'den) null doner, bu ana sonucu bozmaz (bkz. check()).
      */

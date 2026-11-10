@@ -71,6 +71,46 @@ final class GeminiVisibilityChecker
     }
 
     /**
+     * Prompt Explorer icin: kullanicinin yazdigi prompt'u oldugu gibi (sistem
+     * talimati ve ikinci-tur soru olmadan) sorar.
+     */
+    public function ask(string $prompt, string $domain, string $apiKey): LlmVisibilityResult
+    {
+        $url = sprintf(self::ENDPOINT_TEMPLATE, $this->model);
+
+        try {
+            $response = $this->client->post($url, [
+                'query' => ['key' => $apiKey],
+                'headers' => ['Content-Type' => 'application/json'],
+                'json' => [
+                    'contents' => [
+                        ['role' => 'user', 'parts' => [['text' => $prompt]]],
+                    ],
+                    'generationConfig' => ['maxOutputTokens' => self::MAX_OUTPUT_TOKENS],
+                ],
+                'http_errors' => false,
+            ]);
+        } catch (GuzzleException $e) {
+            return new LlmVisibilityResult(present: false, error: $e->getMessage(), prompt: $prompt, model: $this->model);
+        }
+
+        $status = $response->getStatusCode();
+        $body = json_decode((string) $response->getBody(), true);
+        $text = is_array($body) ? ($body['candidates'][0]['content']['parts'][0]['text'] ?? null) : null;
+
+        if ($status !== 200 || !is_string($text) || $text === '') {
+            return new LlmVisibilityResult(present: false, error: $this->describeError($status, $body), prompt: $prompt, model: $this->model);
+        }
+
+        return new LlmVisibilityResult(
+            present: LlmMentions::mentions($text, $domain),
+            response: $text,
+            prompt: $prompt,
+            model: $this->model,
+        );
+    }
+
+    /**
      * Ilk cevabi konusma gecmisine ekleyip ikinci-tur soruyu sorar - basarisiz
      * olursa (agdan/API'den) null doner, bu ana sonucu bozmaz (bkz. check()).
      */

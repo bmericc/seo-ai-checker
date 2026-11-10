@@ -8,7 +8,8 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.45.0/dist/tabler-icons.min.css">
-    <link rel="stylesheet" href="{{ asset('css/style.css') }}?v=2">
+    <link rel="stylesheet" href="{{ asset('css/style.css') }}?v=3">
+    @stack('head')
     <script>
         if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
             document.documentElement.setAttribute('data-bs-theme', 'dark');
@@ -17,7 +18,7 @@
 </head>
 <body>
 <div class="page">
-    @auth
+    @if (auth()->check() && !View::hasSection('public-shell'))
         @php
             $navConnectionsIncomplete = !auth()->user()->hasGoogleOfflineAccess() || !auth()->user()->hasBingOfflineAccess();
         @endphp
@@ -88,7 +89,7 @@
                 </h1>
             </div>
         </header>
-    @endauth
+    @endif
 
     <div class="page-wrapper">
         @hasSection('page-title')
@@ -105,7 +106,7 @@
                             @endif
                         </div>
                         @hasSection('page-actions')
-                            <div class="col-12 col-md-auto ms-auto d-print-none">
+                            <div class="col-12 col-xl-auto ms-auto d-print-none">
                                 <div class="btn-list">@yield('page-actions')</div>
                             </div>
                         @endif
@@ -312,6 +313,33 @@
                     }
                 });
             });
+        });
+
+        // Panoya kopyala butonlari (ornek: paylasilan rapor linki).
+        document.querySelectorAll('[data-copy-text]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var text = btn.getAttribute('data-copy-text');
+                var original = btn.textContent;
+                var done = function () {
+                    btn.textContent = btn.getAttribute('data-copied-label') || original;
+                    setTimeout(function () { btn.textContent = original; }, 1500);
+                };
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(text).then(done).catch(function () {});
+                } else {
+                    var ta = document.createElement('textarea');
+                    ta.value = text;
+                    document.body.appendChild(ta);
+                    ta.select();
+                    try { document.execCommand('copy'); done(); } catch (e) {}
+                    ta.remove();
+                }
+            });
+        });
+
+        // Bir islemden sonra (ornek: rapor linki olusturuldu) ilgili modal'i yeniden ac.
+        document.querySelectorAll('.modal[data-auto-open]').forEach(function (el) {
+            new tabler.Modal(el).show();
         });
 
         // Dashboard: domain arama + durum filtresi (tamamen istemci tarafi).

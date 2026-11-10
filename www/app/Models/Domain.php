@@ -22,7 +22,10 @@ class Domain extends Model
     protected $casts = [
         'dismissed_keyword_suggestions' => 'array',
         'llm_visibility_enabled' => 'boolean',
+        'indexnow_verified_at' => 'datetime',
     ];
+
+    protected $hidden = ['indexnow_key'];
 
     public function user(): BelongsTo
     {
@@ -51,6 +54,21 @@ class Domain extends Model
     public function llmApiKeys(): HasMany
     {
         return $this->hasMany(DomainLlmApiKey::class);
+    }
+
+    public function indexNowSubmissions(): HasMany
+    {
+        return $this->hasMany(IndexNowSubmission::class)->orderByDesc('created_at')->orderByDesc('id');
+    }
+
+    public function promptExplorations(): HasMany
+    {
+        return $this->hasMany(PromptExploration::class)->orderByDesc('created_at')->orderByDesc('id');
+    }
+
+    public function reportShares(): HasMany
+    {
+        return $this->hasMany(ReportShare::class)->orderByDesc('created_at')->orderByDesc('id');
     }
 
     public function latestDomainCheck(): HasOne
