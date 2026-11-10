@@ -79,30 +79,13 @@ class GoogleController extends Controller
             'google_access_token' => $googleUser->token,
             'google_refresh_token' => $googleUser->refreshToken ?: $user->google_refresh_token,
             'google_token_expires_at' => $googleUser->expiresIn ? now()->addSeconds($googleUser->expiresIn) : $user->google_token_expires_at,
-            'locale' => $this->normalizeLocale($googleUser->user['locale'] ?? null) ?? $user->locale,
+            'locale' => $user->locale ?? app()->getLocale(),
         ])->save();
 
         Auth::login($user, remember: true);
         request()->session()->regenerate();
 
         return redirect()->intended('/');
-    }
-
-    /**
-     * Google'in userinfo yanitindaki "locale" alani OIDC'de opsiyonel bir
-     * claim'dir - her hesapta olmayabilir. Geldiginde "en-GB" gibi bolge
-     * ekli degerleri ana dile indirger, desteklenmeyen/eksik bir deger icin
-     * null doner (cagiran taraf mevcut degeri korur).
-     */
-    private function normalizeLocale(?string $rawLocale): ?string
-    {
-        if ($rawLocale === null || $rawLocale === '') {
-            return null;
-        }
-
-        $primary = strtolower(explode('-', $rawLocale)[0]);
-
-        return in_array($primary, User::SUPPORTED_LOCALES, true) ? $primary : null;
     }
 
     private function isBootstrapAdmin(string $email): bool

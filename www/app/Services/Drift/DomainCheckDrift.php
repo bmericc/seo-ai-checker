@@ -64,10 +64,10 @@ final class DomainCheckDrift
 
         $changes = [];
         if ($newlyBlocked->isNotEmpty()) {
-            $changes[] = sprintf("Yeni engellenen AI crawler'lar: %s", $newlyBlocked->implode(', '));
+            $changes[] = __("Yeni engellenen AI crawler'lar: :list", ['list' => $newlyBlocked->implode(', ')]);
         }
         if ($newlyAllowed->isNotEmpty()) {
-            $changes[] = sprintf("Artık engellenmeyen AI crawler'lar: %s", $newlyAllowed->implode(', '));
+            $changes[] = __("Artık engellenmeyen AI crawler'lar: :list", ['list' => $newlyAllowed->implode(', ')]);
         }
 
         return $changes;
@@ -84,14 +84,14 @@ final class DomainCheckDrift
         $prevFound = $previous['found'] ?? false;
 
         if ($curFound !== $prevFound) {
-            return [$curFound ? 'Sitemap artık bulunuyor' : 'Sitemap artık bulunamıyor'];
+            return [$curFound ? __('Sitemap artık bulunuyor') : __('Sitemap artık bulunamıyor')];
         }
 
         if ($curFound) {
             $curValid = $current['is_valid_xml'] ?? false;
             $prevValid = $previous['is_valid_xml'] ?? false;
             if ($curValid !== $prevValid) {
-                return [$curValid ? 'Sitemap artık geçerli XML' : 'Sitemap artık geçersiz XML'];
+                return [$curValid ? __('Sitemap artık geçerli XML') : __('Sitemap artık geçersiz XML')];
             }
         }
 
@@ -108,7 +108,7 @@ final class DomainCheckDrift
         $curFound = $current['found'] ?? false;
         $prevFound = $previous['found'] ?? false;
 
-        return $curFound !== $prevFound ? [$curFound ? 'llms.txt artık var' : 'llms.txt artık yok'] : [];
+        return $curFound !== $prevFound ? [$curFound ? __('llms.txt artık var') : __('llms.txt artık yok')] : [];
     }
 
     /**
@@ -127,16 +127,16 @@ final class DomainCheckDrift
         $added = $curHeaders->keys()->diff($prevHeaders->keys());
 
         if ($removed->isNotEmpty()) {
-            $changes[] = sprintf("Kaldırılan güvenlik header'ları: %s", $removed->implode(', '));
+            $changes[] = __("Kaldırılan güvenlik header'ları: :list", ['list' => $removed->implode(', ')]);
         }
         if ($added->isNotEmpty()) {
-            $changes[] = sprintf("Eklenen güvenlik header'ları: %s", $added->implode(', '));
+            $changes[] = __("Eklenen güvenlik header'ları: :list", ['list' => $added->implode(', ')]);
         }
 
         $curHttps = $current['http_redirects_to_https'] ?? false;
         $prevHttps = $previous['http_redirects_to_https'] ?? false;
         if ($curHttps !== $prevHttps) {
-            $changes[] = $curHttps ? "HTTP artık HTTPS'e yönlendiriliyor" : "HTTP artık HTTPS'e yönlendirilmiyor";
+            $changes[] = $curHttps ? __("HTTP artık HTTPS'e yönlendiriliyor") : __("HTTP artık HTTPS'e yönlendirilmiyor");
         }
 
         return $changes;
@@ -153,7 +153,7 @@ final class DomainCheckDrift
         $prevHost = $previous['canonical_host'] ?? null;
 
         if ($curHost !== null && $prevHost !== null && $curHost !== $prevHost) {
-            return [sprintf('Kanonik host değişti: %s → %s', $prevHost, $curHost)];
+            return [__('Kanonik host değişti: :from → :to', ['from' => $prevHost, 'to' => $curHost])];
         }
 
         return [];
@@ -185,8 +185,8 @@ final class DomainCheckDrift
 
             $label = $metric['label'] ?? $key;
             $changes[] = $curScore > $prevScore
-                ? sprintf('CrUX %s kötüleşti: %s → %s', $label, $prevRating, $curRating)
-                : sprintf('CrUX %s iyileşti: %s → %s', $label, $prevRating, $curRating);
+                ? __('CrUX :metric kötüleşti: :from → :to', ['metric' => $label, 'from' => $prevRating, 'to' => $curRating])
+                : __('CrUX :metric iyileşti: :from → :to', ['metric' => $label, 'from' => $prevRating, 'to' => $curRating]);
         }
 
         return $changes;

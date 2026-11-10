@@ -177,3 +177,6 @@ h1, h2, h3, p { margin: 0; }
 @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
 }
+
+.l-footer .locale-switch { background: none; border: 0; padding: 12px 8px; color: var(--l-body); font: inherit; cursor: pointer; text-decoration: underline; }
+.l-footer .locale-switch:hover { color: var(--l-blue); }

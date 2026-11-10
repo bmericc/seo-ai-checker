@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DomainController;
 use App\Http\Controllers\IndexNowController;
 use App\Http\Controllers\KeywordController;
+use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\LighthouseReportController;
 use App\Http\Controllers\McpConnectionController;
 use App\Http\Controllers\PromptExplorerController;
@@ -22,6 +23,8 @@ Route::get('/privacy-policy', function () {
 Route::get('/terms-of-service', function () {
     return view('legal.terms-of-service');
 })->name('terms-of-service');
+
+Route::post('/locale', [LocaleController::class, 'update'])->name('locale.update');
 
 Route::get('/auth/google', [GoogleController::class, 'redirect'])->name('google.redirect');
 Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name('google.callback');
@@ -53,6 +56,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/connections', function () {
         return view('connections');
     })->name('connections');
+    Route::view('/settings', 'settings')->name('settings');
     Route::delete('/connections/mcp/{client}', [McpConnectionController::class, 'destroy'])->name('connections.mcp.destroy');
 
     Route::post('/domains', [DomainController::class, 'store'])->name('domains.store');

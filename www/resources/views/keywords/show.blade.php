@@ -100,7 +100,7 @@
                 </div>
                 <div class="card-body">
                     @if ($check->blocked)
-                        <p class="text-danger">{{ $check->block_reason }}</p>
+                        <p class="text-danger">{{ \App\Support\StoredText::t($check->block_reason) }}</p>
                     @endif
 
                     @if ($check->ai_overview_present)
@@ -109,7 +109,7 @@
                             @if (!empty($check->ai_overview_cited_domains))
                                 {{ implode(', ', $check->ai_overview_cited_domains) }}
                             @else
-                                {{ __('(otomatik çıkarılamadı)') }}{{ $check->ai_overview_note ? ' — ' . $check->ai_overview_note : '' }}
+                                {{ __('(otomatik çıkarılamadı)') }}{{ $check->ai_overview_note ? ' — ' . \App\Support\StoredText::t($check->ai_overview_note) : '' }}
                             @endif
                         </p>
                     @endif
@@ -320,7 +320,7 @@
                                                                     <span class="badge bg-azure-lt">{{ $lang }}</span>
                                                                 @endforeach
                                                                 @foreach ($hreflangIssues as $issue)
-                                                                    <div class="text-warning small">{{ $issue }}</div>
+                                                                    <div class="text-warning small">{{ \App\Support\StoredText::t($issue) }}</div>
                                                                 @endforeach
                                                             @endif
                                                         </td>

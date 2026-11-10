@@ -57,19 +57,31 @@ class GoogleLoginTest extends TestCase
         $this->assertSame('access-token', $existing->fresh()->google_access_token);
     }
 
-    public function test_callback_stores_the_normalized_locale_from_the_google_profile(): void
+    public function test_new_user_gets_the_browser_language_not_the_google_profile_language(): void
     {
         Socialite::shouldReceive('driver->user')->andReturn(
             $this->socialiteUser('new@example.com', locale: 'en-GB'),
         );
 
-        $this->get(route('google.callback'));
+        $this->withHeaders(['Accept-Language' => 'tr-TR,tr;q=0.9'])->get(route('google.callback'));
+
+        $user = User::query()->where('email', 'new@example.com')->firstOrFail();
+        $this->assertSame('tr', $user->locale);
+    }
+
+    public function test_new_user_with_a_non_turkish_browser_gets_english(): void
+    {
+        Socialite::shouldReceive('driver->user')->andReturn(
+            $this->socialiteUser('new@example.com'),
+        );
+
+        $this->withHeaders(['Accept-Language' => 'de-DE'])->get(route('google.callback'));
 
         $user = User::query()->where('email', 'new@example.com')->firstOrFail();
         $this->assertSame('en', $user->locale);
     }
 
-    public function test_callback_ignores_an_unsupported_locale_and_keeps_the_existing_value(): void
+    public function test_login_keeps_the_language_the_user_chose(): void
     {
         $existing = User::factory()->create([
             'email' => 'user@example.com',
@@ -78,28 +90,11 @@ class GoogleLoginTest extends TestCase
         ]);
 
         Socialite::shouldReceive('driver->user')->andReturn(
-            $this->socialiteUser('user@example.com', 'google-2', locale: 'de'),
+            $this->socialiteUser('user@example.com', 'google-2', locale: 'en'),
         );
 
-        $this->get(route('google.callback'));
+        $this->withHeaders(['Accept-Language' => 'en-US'])->get(route('google.callback'));
 
         $this->assertSame('tr', $existing->fresh()->locale);
-    }
-
-    public function test_callback_keeps_the_existing_locale_when_google_does_not_provide_one(): void
-    {
-        $existing = User::factory()->create([
-            'email' => 'user@example.com',
-            'approved_at' => now(),
-            'locale' => 'en',
-        ]);
-
-        Socialite::shouldReceive('driver->user')->andReturn(
-            $this->socialiteUser('user@example.com', 'google-2'),
-        );
-
-        $this->get(route('google.callback'));
-
-        $this->assertSame('en', $existing->fresh()->locale);
     }
 }

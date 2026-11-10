@@ -50,6 +50,12 @@
                                 @endif
                             </a>
                         </li>
+                        <li class="nav-item {{ request()->routeIs('settings') ? 'active' : '' }}">
+                            <a class="nav-link" href="{{ route('settings') }}">
+                                <span class="nav-link-icon"><i class="ti ti-settings"></i></span>
+                                <span class="nav-link-title">{{ __('Ayarlar') }}</span>
+                            </a>
+                        </li>
                         @if (auth()->user()->is_admin)
                             <li class="nav-item {{ request()->routeIs('admin.*') ? 'active' : '' }}">
                                 <a class="nav-link" href="{{ route('admin.users.index') }}">

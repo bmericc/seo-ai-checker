@@ -12,27 +12,40 @@ use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Giris yapmis kullanici icin hesabina kayitli dili (Google hesabinin
- * dilinden tespit edilir, bkz. GoogleController) kullanir. Misafirler icin
- * (ya da henuz dili tespit edilememis kullanicilar icin) tarayicinin
- * Accept-Language header'ina bakilir, o da yoksa Turkce'ye dusulur.
+ * Arayuz dilini secer. Oncelik sirasi:
+ *  1. Giris yapmis kullanicinin Ayarlar'da sectigi (hesaba kayitli) dil.
+ *  2. Misafirin sayfa altindan sectigi dil (locale cookie'si).
+ *  3. Tarayicinin birincil dili: Turkce ise Turkce, degilse Ingilizce.
  */
 class SetLocale
 {
+    public const string COOKIE = 'locale';
+
     /**
      * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = Auth::user();
-        $locale = $user?->locale;
-
-        if (!in_array($locale, User::SUPPORTED_LOCALES, true)) {
-            $locale = $request->getPreferredLanguage(User::SUPPORTED_LOCALES) ?? 'tr';
-        }
-
-        App::setLocale($locale);
+        App::setLocale(self::resolve($request, Auth::user()));
 
         return $next($request);
+    }
+
+    public static function resolve(Request $request, ?User $user = null): string
+    {
+        foreach ([$user?->locale, $request->cookie(self::COOKIE)] as $candidate) {
+            if (is_string($candidate) && in_array($candidate, User::SUPPORTED_LOCALES, true)) {
+                return $candidate;
+            }
+        }
+
+        return self::fromBrowser($request);
+    }
+
+    public static function fromBrowser(Request $request): string
+    {
+        $primary = $request->getLanguages()[0] ?? '';
+
+        return str_starts_with(strtolower($primary), 'tr') ? 'tr' : 'en';
     }
 }

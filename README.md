@@ -4,37 +4,53 @@
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
-A **Laravel** application that combines Google search results (SERP)
-ranking tracking via web scraping, visibility checks in Google's **AI
-Overview** box, basic **on-page SEO** analysis, and **Lighthouse** (Google
-PageSpeed Insights) scores. It's used as a **web dashboard**, hosted on a
-remote server (or locally with Docker), that keeps a history in a database
-and is protected by Google account login.
+A **Laravel** dashboard that shows where a site stands in **classic Google
+search** and in **AI answers**: Google rankings, Google **AI Overview**
+citations, and whether **ChatGPT, Claude, Gemini and Perplexity** mention
+or cite the site. It finds technical problems, ranks them by impact and
+says how to fix each one. It runs on your own server (or locally with
+Docker), keeps the history in a database and is protected by Google sign-in.
+
+The interface is available in **English and Turkish**. It follows the
+browser language (Turkish browsers get Turkish, all others English), and
+each user can change it later under **Settings**.
 
 ## Features
 
-1. **SERP ranking** — fetches Google's first ~20 organic results and
-   reports where your target domain ranks.
-2. **AI Overview check** — reports whether an AI Overview box is present
-   on the results page, which domains are cited as sources inside it if
-   so, and whether your own domain is among those sources.
-3. **On-page SEO analysis** — fetches the target page and runs basic
-   checks: title/meta description length, H1/H2 count, keyword density,
-   images missing `alt` attributes, internal/external link count, and
-   presence of structured data (JSON-LD).
-4. **Lighthouse (Google PageSpeed Insights API)** — retrieves performance,
-   SEO, accessibility, and best-practices scores. **No** Chrome/Node.js
-   installation is required on the server; the audit runs on Google's own
-   infrastructure.
-5. **Web dashboard** — add a domain/keyword and run all checks at once
-   with "Check"; results and history are stored in a database (SQLite by
-   default, MySQL also supported). Access requires signing in with Google
-   OAuth and being on the allowed email list.
+- **Google rankings** — fetches the top ~20 organic results for each
+  tracked keyword (direct scraping or the DataForSEO API) and records your
+  position on every check.
+- **Google AI Overview** — detects the AI Overview box, lists the cited
+  domains and tells you whether your site is one of them.
+- **AI assistant visibility** — asks ChatGPT, Claude, Gemini and
+  Perplexity a real customer question and records who is mentioned, who is
+  cited and which competitors are recommended. **Prompt Explorer** lets
+  admins ask any question across all four at once.
+- **Site health** — AI bots in `robots.txt`, sitemap, `llms.txt`, HTTPS
+  redirect, security headers, canonical host and WHOIS/domain age, with a
+  health score and a prioritized issue list. Changes between two checks are
+  highlighted.
+- **Speed and page quality** — Lighthouse scores via the PageSpeed Insights
+  API (no Chrome needed on the server), real-user CrUX data, and on-page SEO
+  per page: title/meta, headings, images, structured data, hreflang.
+- **Your own data** — connect Google Search Console, GA4 and Bing Webmaster
+  Tools per user (OAuth) to see clicks, visitors and backlinks next to the
+  checks.
+- **IndexNow** — generates and verifies the key file and submits new or
+  changed URLs (or the whole sitemap) to IndexNow search engines.
+- **Sharing and reports** — read-only report links that need no login, and
+  a weekly SEO summary email.
+- **MCP server** — connect Claude, ChatGPT, Cursor or Claude Code with
+  OAuth and your Google account; the assistant sees only your domains and
+  cannot delete anything. See [MCP server](docs/MCP.md).
+- **Access control** — invite-only Google sign-in, admin approval of new
+  users, members see only their own domains.
 
 ## Important limitations and legal notice
 
-- Uses **direct HTTP scraping** (not a SERP API). This is a deliberate
-  design choice, but Google frequently blocks automated requests with a
+- By default rankings use **direct HTTP scraping**; set
+  `DATAFORSEO_LOGIN`/`DATAFORSEO_PASSWORD` to use the DataForSEO API
+  instead for more reliable results. With scraping, Google frequently blocks automated requests with a
   CAPTCHA/"unusual traffic" page or a redirect requiring JavaScript
   verification (`/httpservice/retry/enablejs`). The app detects these
   cases and reports them as "blocked" — check this first if you're not
@@ -80,6 +96,7 @@ The dashboard runs at `http://localhost:8080` by default. Continue with
   schema, and key services.
 - [User management and admin panel](docs/admin.md) — approving users,
   admin roles.
+- [MCP server](docs/MCP.md) — connecting AI assistants, scopes and tools.
 - [Development](docs/development.md) — local setup and running tests.
 
 ## License

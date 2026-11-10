@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.45.0/dist/tabler-icons.min.css">
-    <link rel="stylesheet" href="{{ asset('css/landing.css') }}?v=1">
+    <link rel="stylesheet" href="{{ asset('css/landing.css') }}?v=2">
 </head>
 <body>
 <header class="l-header">
@@ -194,6 +194,7 @@
         <nav aria-label="{{ __('Yasal') }}">
             <a href="{{ route('privacy-policy') }}">{{ __('Gizlilik Politikası') }}</a>
             <a href="{{ route('terms-of-service') }}">{{ __('Kullanım Koşulları') }}</a>
+            <x-locale-switch class="l-footer-locale" />
         </nav>
     </div>
 </footer>

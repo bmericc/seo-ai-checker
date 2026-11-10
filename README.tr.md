@@ -4,38 +4,58 @@
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
-Web scraping ile Google arama sonuçlarında (SERP) sıralama takibi, Google
-**AI Overview** kutusunda görünürlük kontrolü, temel **on-page SEO** analizi
-ve **Lighthouse** (Google PageSpeed Insights) skorlarını bir araya getiren
-bir **Laravel** uygulaması. Uzak bir sunucuda (veya Docker ile yerelde)
-barındırılıp geçmişi veritabanında tutan, Google hesabıyla korunan bir
-**web arayüzü** olarak kullanılır.
+Bir sitenin **klasik Google aramasında** ve **yapay zekâ yanıtlarında**
+nerede durduğunu gösteren bir **Laravel** paneli: Google sıralaması, Google
+**AI Overview** atıfları ve **ChatGPT, Claude, Gemini, Perplexity**'nin
+siteyi anıp anmadığı ya da kaynak gösterip göstermediği. Teknik sorunları
+bulur, etkisine göre sıralar ve her birinin nasıl düzeltileceğini söyler.
+Kendi sunucunuzda (veya Docker ile yerelde) çalışır, geçmişi veritabanında
+tutar ve Google girişiyle korunur.
+
+Arayüz **Türkçe ve İngilizce** kullanılabilir. Tarayıcı dili Türkçe ise
+Türkçe, değilse İngilizce açılır; her kullanıcı dili sonradan **Ayarlar**
+sayfasından değiştirebilir.
 
 ## Özellikler
 
-1. **SERP sıralaması** — Google'ın ilk ~20 organik sonucunu çeker, hedef
-   domaininizin kaçıncı sırada çıktığını raporlar.
-2. **AI Overview kontrolü** — Sonuç sayfasında bir AI Overview kutusu olup
-   olmadığını, varsa kutu içinde hangi domainlerin kaynak olarak
-   gösterildiğini ve kendi domaininizin bu kaynaklar arasında olup
-   olmadığını raporlar.
-3. **On-page SEO analizi** — hedef sayfayı çekip title/meta description
-   uzunluğu, H1/H2 sayısı, kelime yoğunluğu, `alt` etiketi eksik görseller,
-   iç/dış link sayısı ve yapısal veri (JSON-LD) varlığı gibi temel
-   kontrolleri yapar.
-4. **Lighthouse (Google PageSpeed Insights API)** — performans, SEO,
-   erişilebilirlik ve best-practices skorlarını alır. Sunucuda Chrome/Node.js
-   kurulumu **gerekmez**; denetim Google'ın kendi sunucularında çalışır.
-5. **Web arayüzü** — domain/anahtar kelime ekleyip "Kontrol Et" ile tüm
-   kontrolleri tek seferde çalıştırabileceğiniz, sonuçları ve geçmişi
-   veritabanında (SQLite varsayılan, MySQL de desteklenir) saklayan bir
-   panel. Erişim, Google OAuth ile giriş yapıp izinli e-posta listesinde
-   olma şartına bağlıdır.
+- **Google sıralaması** — takip edilen her kelime için ilk ~20 organik
+  sonucu çeker (doğrudan scraping veya DataForSEO API) ve her kontrolde
+  sitenizin sırasını kaydeder.
+- **Google AI Overview** — AI Overview kutusunu tespit eder, kaynak
+  gösterilen domainleri listeler ve sitenizin aralarında olup olmadığını
+  söyler.
+- **Yapay zekâ asistanlarında görünürlük** — ChatGPT, Claude, Gemini ve
+  Perplexity'ye gerçek bir müşteri sorusu sorar; kimin anıldığını, kimin
+  kaynak gösterildiğini ve hangi rakiplerin önerildiğini kaydeder.
+  Yöneticiler **Prompt Explorer** ile herhangi bir soruyu dördüne birden
+  sorabilir.
+- **Site sağlığı** — `robots.txt`'te yapay zekâ botları, site haritası,
+  `llms.txt`, HTTPS yönlendirmesi, güvenlik başlıkları, kanonik host ve
+  WHOIS/domain yaşı; sağlık skoru ve öncelikli sorun listesiyle. İki kontrol
+  arasındaki değişiklikler ayrıca gösterilir.
+- **Hız ve sayfa kalitesi** — PageSpeed Insights API ile Lighthouse
+  skorları (sunucuda Chrome gerekmez), gerçek kullanıcı CrUX verisi ve sayfa
+  başına on-page SEO: title/meta, başlıklar, görseller, yapısal veri,
+  hreflang.
+- **Kendi verileriniz** — Google Search Console, GA4 ve Bing Webmaster
+  Tools hesaplarını kullanıcı bazında (OAuth) bağlayıp tıklama, ziyaretçi ve
+  backlink verisini kontrollerin yanında görün.
+- **IndexNow** — anahtar dosyasını üretir ve doğrular, yeni ya da değişen
+  URL'leri (veya tüm site haritasını) IndexNow arama motorlarına bildirir.
+- **Paylaşım ve raporlar** — giriş gerektirmeyen salt okunur rapor linkleri
+  ve haftalık SEO özeti e-postası.
+- **MCP sunucusu** — Claude, ChatGPT, Cursor veya Claude Code'u OAuth ve
+  Google hesabınızla bağlayın; asistan yalnızca sizin domainlerinizi görür
+  ve hiçbir şeyi silemez. Bkz. [MCP sunucusu](docs/MCP.tr.md).
+- **Erişim kontrolü** — davetle Google girişi, yeni kullanıcılar için
+  yönetici onayı; üyeler yalnızca kendi domainlerini görür.
 
 ## Önemli sınırlamalar ve yasal uyarı
 
-- **Doğrudan HTTP scraping** kullanılır (SERP API'si değil). Bu yaklaşım
-  bilinçli olarak tercih edilmiştir; ancak Google, otomatik istekleri sıkça
+- Sıralamalar varsayılan olarak **doğrudan HTTP scraping** ile alınır;
+  daha güvenilir sonuç için `DATAFORSEO_LOGIN`/`DATAFORSEO_PASSWORD`
+  tanımlayıp DataForSEO API'sine geçin.
+  Scraping kullanıldığında Google, otomatik istekleri sıkça
   CAPTCHA/"unusual traffic" sayfasıyla veya JavaScript doğrulaması isteyen
   bir yönlendirmeyle (`/httpservice/retry/enablejs`) engelleyebilir. Uygulama
   bu durumları tespit edip "engellendi" olarak raporlar; sonuç alamıyorsanız
@@ -85,6 +105,8 @@ Detaylı dokümanlar İngilizce olarak `docs/` klasöründe tutuluyor:
   servisler.
 - [Kullanıcı yönetimi ve admin paneli](docs/admin.md) — kullanıcı onayı,
   admin rolleri.
+- [MCP sunucusu](docs/MCP.tr.md) — yapay zekâ asistanlarını bağlama, izinler
+  ve araçlar (Türkçe).
 - [Geliştirme](docs/development.md) — yerel kurulum ve testlerin
   çalıştırılması.
 

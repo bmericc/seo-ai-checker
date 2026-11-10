@@ -4,10 +4,18 @@ namespace Tests\Unit;
 
 use App\Models\DomainCheck;
 use App\Services\Drift\DomainCheckDrift;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 
 class DomainCheckDriftTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Assertions check the Turkish source strings.
+        app()->setLocale('tr');
+    }
+
     private function check(array $overrides = []): DomainCheck
     {
         return new DomainCheck(array_merge([

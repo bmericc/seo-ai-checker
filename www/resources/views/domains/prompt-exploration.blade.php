@@ -69,7 +69,7 @@
                                 <span class="placeholder col-11"></span>
                             </div>
                         @elseif ($result['error'] ?? null)
-                            <div class="text-danger small">{{ $result['error'] }}</div>
+                            <div class="text-danger small">{{ \App\Support\StoredText::t($result['error']) }}</div>
                         @else
                             {!! \App\Support\LlmAnswerFormatter::toHtml((string) $result['response'], $domain->domain) !!}
                             @if (!empty($result['citations']))

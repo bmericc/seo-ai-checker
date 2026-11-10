@@ -345,7 +345,7 @@
                                                         $model = $result['model'] ?? null;
                                                     @endphp
                                                     @if ($result['error'])
-                                                        <span class="badge bg-danger-lt" data-bs-toggle="tooltip" title="{{ ($model ? '[' . $model . '] ' : '') . $result['error'] }}">
+                                                        <span class="badge bg-danger-lt" data-bs-toggle="tooltip" title="{{ ($model ? '[' . $model . '] ' : '') . \App\Support\StoredText::t($result['error']) }}">
                                                             {{ $provider }}@if ($model) <span class="fw-normal text-muted" style="font-size: 0.75em;">({{ $model }})</span>@endif
                                                         </span>
                                                     @elseif ($result['present'])
@@ -513,7 +513,7 @@
                                             {{ ($sitemapData['is_sitemap_index'] ?? false) ? __('alt-sitemap') : 'URL' }} {{ __('içeriyor.') }}
                                         </p>
                                     @else
-                                        <p class="text-danger">{{ $sitemapData['error'] ?? __('Geçersiz XML.') }}</p>
+                                        <p class="text-danger">{{ \App\Support\StoredText::t($sitemapData['error'] ?? null) ?: __('Geçersiz XML.') }}</p>
                                     @endif
                                     <p class="text-secondary mb-0"><a href="{{ $sitemapData['url'] }}" target="_blank" rel="noopener">{{ $sitemapData['url'] }}</a></p>
                                 @else
@@ -632,7 +632,7 @@
                                     </p>
                                 @elseif ($cruxData['error'] ?? null)
                                     <p class="text-danger mb-1">
-                                        {!! __('<code>:origin</code> sorgulanırken hata oluştu: :error', ['origin' => $cruxData['origin'] ?? '', 'error' => $cruxData['error']]) !!}
+                                        {!! __('<code>:origin</code> sorgulanırken hata oluştu: :error', ['origin' => $cruxData['origin'] ?? '', 'error' => e(\App\Support\StoredText::t($cruxData['error']))]) !!}
                                     </p>
                                     <p class="text-secondary mb-0">
                                         {{ __('"PERMISSION_DENIED" / "API_KEY_SERVICE_BLOCKED" görüyorsanız: Google Cloud Console\'da API anahtarının API kısıtlamaları listesine "Chrome UX Report API"yi ekleyin ve API\'nin projede etkin olduğundan emin olun.') }}
@@ -697,7 +697,7 @@
                                         {!! __('Google hesabınız bağlı değil. Search Console verisi için üstteki ":link" bağlantısından tekrar giriş yapın.', ['link' => __('Google hesabını bağla')]) !!}
                                     </p>
                                 @elseif ($gscData['error'] ?? null)
-                                    <p class="text-danger mb-0">{{ __('Search Console sorgulanırken hata oluştu: :error', ['error' => $gscData['error']]) }}</p>
+                                    <p class="text-danger mb-0">{{ __('Search Console sorgulanırken hata oluştu: :error', ['error' => \App\Support\StoredText::t($gscData['error'])]) }}</p>
                                 @elseif (!($gscData['verified'] ?? false))
                                     <p class="text-secondary mb-0">
                                         {{ __("Bu domain, bağlı Google hesabınızın Search Console'unda doğrulanmış bir mülk (property) olarak bulunamadı.") }}
@@ -741,7 +741,7 @@
                                         {!! __('Google hesabınız bağlı değil. GA4 verisi için üstteki ":link" bağlantısından tekrar giriş yapın.', ['link' => __('Google hesabını bağla')]) !!}
                                     </p>
                                 @elseif ($ga4Data['error'] ?? null)
-                                    <p class="text-danger mb-0">{{ __('GA4 sorgulanırken hata oluştu: :error', ['error' => $ga4Data['error']]) }}</p>
+                                    <p class="text-danger mb-0">{{ __('GA4 sorgulanırken hata oluştu: :error', ['error' => \App\Support\StoredText::t($ga4Data['error'])]) }}</p>
                                 @elseif (empty($ga4Data['property_id']))
                                     <p class="text-secondary mb-2">{{ __('GA4 Property ID girilmedi.') }}</p>
                                 @else
@@ -779,7 +779,7 @@
                                             <select class="form-select mb-2" data-ga4-account-select="{{ $domain->id }}">
                                                 <option value="">{{ __('— Hesap seçiniz —') }}</option>
                                                 @foreach ($ga4PropertiesByAccount as $accountName => $accountProperties)
-                                                    <option value="{{ $accountName }}" @selected($selectedGa4Account === $accountName)>{{ $accountName }} ({{ $accountProperties->count() }})</option>
+                                                    <option value="{{ $accountName }}" @selected($selectedGa4Account === $accountName)>{{ \App\Support\StoredText::t($accountName) }} ({{ $accountProperties->count() }})</option>
                                                 @endforeach
                                             </select>
                                             <label class="form-label">GA4 Property</label>
@@ -828,7 +828,7 @@
                                         {!! __('Bing hesabınız bağlı değil. Backlink verisi için üstteki ":link" bağlantısından bağlanın.', ['link' => __('Bing hesabını bağla')]) !!}
                                     </p>
                                 @elseif ($bingData['error'] ?? null)
-                                    <p class="text-danger mb-0">{{ __('Bing Webmaster sorgulanırken hata oluştu: :error', ['error' => $bingData['error']]) }}</p>
+                                    <p class="text-danger mb-0">{{ __('Bing Webmaster sorgulanırken hata oluştu: :error', ['error' => \App\Support\StoredText::t($bingData['error'])]) }}</p>
                                 @elseif (!($bingData['verified'] ?? false))
                                     <p class="text-secondary mb-0">
                                         {{ __('Bu domain, bağlı Bing hesabınızda doğrulanmış bir site olarak bulunamadı. Not: bu, genel bir backlink indeksi değildir — yalnızca kendi Bing Webmaster hesabınızda doğruladığınız siteler için veri döner.') }}
@@ -1281,7 +1281,7 @@
             @if (!$domain->fact?->whois_checked_at)
                 <p class="text-secondary mb-0">{{ __('WHOIS bilgisi henüz kuyruğa alınmadı ya da worker tarafından işlenmedi.') }}</p>
             @elseif ($domain->fact->whois_error)
-                <p class="text-danger mb-0">{{ __('WHOIS sorgusu başarısız: :error', ['error' => $domain->fact->whois_error]) }}</p>
+                <p class="text-danger mb-0">{{ __('WHOIS sorgusu başarısız: :error', ['error' => \App\Support\StoredText::t($domain->fact->whois_error)]) }}</p>
             @else
                 <div class="row">
                     <div class="col-12 col-md-4">
