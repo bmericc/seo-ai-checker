@@ -42,6 +42,13 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // MCP istemcileri (Claude, ChatGPT vb.) Passport'un verdigi OAuth
+        // access token'i ile gelir; bkz. routes/ai.php.
+        'api' => [
+            'driver' => 'passport',
+            'provider' => 'users',
+        ],
     ],
 
     /*

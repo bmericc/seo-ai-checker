@@ -6,7 +6,7 @@
     <title>@yield('title', config('app.name')) — {{ config('app.name') }}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.45.0/dist/tabler-icons.min.css">
-    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/style.css') }}?v=4">
     <script>
         if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
             document.documentElement.setAttribute('data-bs-theme', 'dark');
@@ -18,7 +18,7 @@
     <div class="container @yield('container-class', 'container-tight') py-4">
         <div class="text-center mb-4">
             <a href="{{ route('dashboard') }}" class="navbar-brand navbar-brand-autodark">
-                <i class="ti ti-search text-primary me-1"></i>{{ config('app.name') }}
+                <span class="app-brand"><span class="app-brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span><span>{{ config('app.name') }}</span></span>
             </a>
         </div>
 

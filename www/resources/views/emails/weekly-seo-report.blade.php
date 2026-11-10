@@ -10,9 +10,9 @@
             <td align="center">
                 <table role="presentation" width="640" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:8px; overflow:hidden;">
                     <tr>
-                        <td style="background:#206bc4; padding:20px 28px;">
+                        <td style="background:#1A73E8; padding:20px 28px;">
                             <span style="color:#fff; font-size:20px; font-weight:600;">{{ __('Haftalık SEO Durum Raporu') }}</span><br>
-                            <span style="color:#d6e6fb; font-size:13px;">{{ $periodStart }} — {{ $periodEnd }}</span>
+                            <span style="color:#E8F0FE; font-size:13px;">{{ $periodStart }} — {{ $periodEnd }}</span>
                         </td>
                     </tr>
                     <tr>
@@ -40,7 +40,7 @@
                                 }
                                 $improved = $higherIsBetter ? $current > $previous : $current < $previous;
 
-                                return $improved ? ' <span style="color:#2fb344;">&#9650;</span>' : ' <span style="color:#d63939;">&#9660;</span>';
+                                return $improved ? ' <span style="color:#188038;">&#9650;</span>' : ' <span style="color:#D93025;">&#9660;</span>';
                             };
                         @endphp
                         <tr>
@@ -57,27 +57,27 @@
                                 @if (!($aiCrawlers['found'] ?? false))
                                     <span style="display:inline-block; background:#eef0f2; color:#4b5563; font-size:12px; padding:3px 8px; border-radius:4px; margin:0 4px 4px 0;">{{ __('robots.txt yok — hepsi açık') }}</span>
                                 @elseif ($blockedCrawlers->isEmpty())
-                                    <span style="display:inline-block; background:#e6f8ea; color:#2fb344; font-size:12px; padding:3px 8px; border-radius:4px; margin:0 4px 4px 0;">{{ __("AI crawler'lar: hepsi açık") }}</span>
+                                    <span style="display:inline-block; background:#E6F4EA; color:#188038; font-size:12px; padding:3px 8px; border-radius:4px; margin:0 4px 4px 0;">{{ __("AI crawler'lar: hepsi açık") }}</span>
                                 @else
-                                    <span style="display:inline-block; background:#fdf1da; color:#f59f00; font-size:12px; padding:3px 8px; border-radius:4px; margin:0 4px 4px 0;">{{ __("AI crawler'lar: :count engelli", ['count' => $blockedCrawlers->count()]) }}</span>
+                                    <span style="display:inline-block; background:#FEF7E0; color:#B06000; font-size:12px; padding:3px 8px; border-radius:4px; margin:0 4px 4px 0;">{{ __("AI crawler'lar: :count engelli", ['count' => $blockedCrawlers->count()]) }}</span>
                                 @endif
 
                                 @if ($sitemapData['found'] ?? false)
-                                    <span style="display:inline-block; background:#e6f8ea; color:#2fb344; font-size:12px; padding:3px 8px; border-radius:4px; margin:0 4px 4px 0;">{{ __('Sitemap: geçerli') }}</span>
+                                    <span style="display:inline-block; background:#E6F4EA; color:#188038; font-size:12px; padding:3px 8px; border-radius:4px; margin:0 4px 4px 0;">{{ __('Sitemap: geçerli') }}</span>
                                 @else
-                                    <span style="display:inline-block; background:#fdf1da; color:#f59f00; font-size:12px; padding:3px 8px; border-radius:4px; margin:0 4px 4px 0;">{{ __('Sitemap yok') }}</span>
+                                    <span style="display:inline-block; background:#FEF7E0; color:#B06000; font-size:12px; padding:3px 8px; border-radius:4px; margin:0 4px 4px 0;">{{ __('Sitemap yok') }}</span>
                                 @endif
 
                                 @if ($llmsTxt['found'] ?? false)
-                                    <span style="display:inline-block; background:#e6f8ea; color:#2fb344; font-size:12px; padding:3px 8px; border-radius:4px; margin:0 4px 4px 0;">{{ __('llms.txt var') }}</span>
+                                    <span style="display:inline-block; background:#E6F4EA; color:#188038; font-size:12px; padding:3px 8px; border-radius:4px; margin:0 4px 4px 0;">{{ __('llms.txt var') }}</span>
                                 @else
                                     <span style="display:inline-block; background:#eef0f2; color:#4b5563; font-size:12px; padding:3px 8px; border-radius:4px; margin:0 4px 4px 0;">{{ __('llms.txt yok') }}</span>
                                 @endif
 
                                 @if ($securityHeaders['http_redirects_to_https'] ?? false)
-                                    <span style="display:inline-block; background:#e6f8ea; color:#2fb344; font-size:12px; padding:3px 8px; border-radius:4px; margin:0 4px 4px 0;">{{ __('HTTPS zorunlu') }}</span>
+                                    <span style="display:inline-block; background:#E6F4EA; color:#188038; font-size:12px; padding:3px 8px; border-radius:4px; margin:0 4px 4px 0;">{{ __('HTTPS zorunlu') }}</span>
                                 @else
-                                    <span style="display:inline-block; background:#fdf1da; color:#f59f00; font-size:12px; padding:3px 8px; border-radius:4px; margin:0 4px 4px 0;">{{ __('HTTPS yönlendirmesi yok') }}</span>
+                                    <span style="display:inline-block; background:#FEF7E0; color:#B06000; font-size:12px; padding:3px 8px; border-radius:4px; margin:0 4px 4px 0;">{{ __('HTTPS yönlendirmesi yok') }}</span>
                                 @endif
                             </td>
                         </tr>
@@ -85,7 +85,7 @@
                         @if (!empty($report['drift_changes']))
                             <tr>
                                 <td style="padding:0 28px 8px;">
-                                    <div style="background:#fdf1da; border-radius:6px; padding:10px 14px; font-size:13px; color:#7c4a03;">
+                                    <div style="background:#FEF7E0; border-radius:6px; padding:10px 14px; font-size:13px; color:#7c4a03;">
                                         <strong>{{ __('Bir önceki kontrole göre değişenler:') }}</strong>
                                         <ul style="margin:6px 0 0; padding-left:18px;">
                                             @foreach ($report['drift_changes'] as $change)
@@ -174,7 +174,7 @@
 
                     <tr>
                         <td style="padding:16px 28px 24px; border-top:1px solid #e5e7eb;">
-                            <a href="{{ route('dashboard') }}" style="display:inline-block; background:#206bc4; color:#fff; text-decoration:none; font-size:13px; padding:9px 16px; border-radius:6px;">
+                            <a href="{{ route('dashboard') }}" style="display:inline-block; background:#1A73E8; color:#fff; text-decoration:none; font-size:13px; padding:9px 16px; border-radius:6px;">
                                 {{ __('Panele Git') }}
                             </a>
                         </td>

@@ -32,10 +32,10 @@
                                 <x-line-chart
                                     :labels="$scoreHistory['labels']"
                                     :series="[
-                                        ['label' => __('Performans'), 'color' => '#206bc4', 'values' => $scoreHistory['lighthouse_performance']],
-                                        ['label' => 'SEO', 'color' => '#2fb344', 'values' => $scoreHistory['lighthouse_seo']],
-                                        ['label' => __('Erişilebilirlik'), 'color' => '#ae3ec9', 'values' => $scoreHistory['lighthouse_accessibility']],
-                                        ['label' => 'Best Practices', 'color' => '#f76707', 'values' => $scoreHistory['lighthouse_best_practices']],
+                                        ['label' => __('Performans'), 'color' => '#4285F4', 'values' => $scoreHistory['lighthouse_performance']],
+                                        ['label' => 'SEO', 'color' => '#34A853', 'values' => $scoreHistory['lighthouse_seo']],
+                                        ['label' => __('Erişilebilirlik'), 'color' => '#FBBC04', 'values' => $scoreHistory['lighthouse_accessibility']],
+                                        ['label' => 'Best Practices', 'color' => '#EA4335', 'values' => $scoreHistory['lighthouse_best_practices']],
                                     ]"
                                     :min="0"
                                     :max="100"
@@ -49,7 +49,7 @@
                                 <div class="text-secondary small mb-2">{{ __('SERP pozisyon trendi') }}</div>
                                 <x-line-chart
                                     :labels="$scoreHistory['labels']"
-                                    :series="[['label' => __('Pozisyon'), 'color' => '#4263eb', 'values' => $scoreHistory['average_position']]]"
+                                    :series="[['label' => __('Pozisyon'), 'color' => '#4285F4', 'values' => $scoreHistory['average_position']]]"
                                     :min="1"
                                     :invert-y="true"
                                 />

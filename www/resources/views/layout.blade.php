@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.45.0/dist/tabler-icons.min.css">
-    <link rel="stylesheet" href="{{ asset('css/style.css') }}?v=3">
+    <link rel="stylesheet" href="{{ asset('css/style.css') }}?v=4">
     @stack('head')
     <script>
         if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
@@ -29,7 +29,7 @@
                 </button>
                 <h1 class="navbar-brand navbar-brand-autodark">
                     <a href="{{ route('dashboard') }}" class="app-brand">
-                        <span class="app-brand-mark"><i class="ti ti-search"></i></span>
+                        <span class="app-brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
                         <span>{{ config('app.name') }}</span>
                     </a>
                 </h1>
@@ -83,7 +83,7 @@
             <div class="container-xl">
                 <h1 class="navbar-brand navbar-brand-autodark pe-0 pe-md-3">
                     <a href="{{ route('dashboard') }}" class="app-brand">
-                        <span class="app-brand-mark"><i class="ti ti-search"></i></span>
+                        <span class="app-brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
                         <span>{{ config('app.name') }}</span>
                     </a>
                 </h1>

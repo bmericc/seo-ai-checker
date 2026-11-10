@@ -32,7 +32,11 @@ use App\Support\HttpClientFactory;
 use BahriCanli\DomainHunter\DomainParser;
 use BahriCanli\DomainHunter\WhoisService;
 use GuzzleHttp\Client;
+use App\Mcp\McpRegistrar;
+use App\Mcp\McpScopes;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Mcp\Server\Registrar;
+use Laravel\Passport\Passport;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -41,6 +45,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // OAuth metadata'sina read/write scope'larini ekleyen alt sinif
+        // (bkz. McpRegistrar). Paket kendi singleton'ini daha once kaydeder.
+        $this->app->singleton(Registrar::class, fn (): Registrar => new McpRegistrar);
+
         $this->app->singleton(Client::class, function () {
             $serp = config('seo.serp');
             $acceptLanguage = sprintf(
@@ -172,6 +180,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Passport::tokensCan(McpScopes::descriptions());
+        Passport::defaultScopes([McpScopes::READ]);
+        Passport::authorizationView('auth.oauth-authorize');
+        Passport::tokensExpireIn(now()->addDays(15));
+        Passport::refreshTokensExpireIn(now()->addDays(90));
     }
 }

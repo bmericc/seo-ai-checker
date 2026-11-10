@@ -1091,7 +1091,7 @@
                                 <div class="text-secondary small mb-2">{{ __('AI Overview görünürlük trendi') }}</div>
                                 <x-line-chart
                                     :labels="$scoreHistory['labels']"
-                                    :series="[['label' => __('Görünürlük'), 'color' => '#0ca678', 'values' => $scoreHistory['ai_visibility']]]"
+                                    :series="[['label' => __('Görünürlük'), 'color' => '#34A853', 'values' => $scoreHistory['ai_visibility']]]"
                                     :min="0"
                                     :max="100"
                                     value-suffix="%"
@@ -1106,10 +1106,10 @@
                                 <x-line-chart
                                     :labels="$scoreHistory['labels']"
                                     :series="[
-                                        ['label' => __('Performans'), 'color' => '#206bc4', 'values' => $scoreHistory['lighthouse_performance']],
-                                        ['label' => 'SEO', 'color' => '#2fb344', 'values' => $scoreHistory['lighthouse_seo']],
-                                        ['label' => __('Erişilebilirlik'), 'color' => '#ae3ec9', 'values' => $scoreHistory['lighthouse_accessibility']],
-                                        ['label' => 'Best Practices', 'color' => '#f76707', 'values' => $scoreHistory['lighthouse_best_practices']],
+                                        ['label' => __('Performans'), 'color' => '#4285F4', 'values' => $scoreHistory['lighthouse_performance']],
+                                        ['label' => 'SEO', 'color' => '#34A853', 'values' => $scoreHistory['lighthouse_seo']],
+                                        ['label' => __('Erişilebilirlik'), 'color' => '#FBBC04', 'values' => $scoreHistory['lighthouse_accessibility']],
+                                        ['label' => 'Best Practices', 'color' => '#EA4335', 'values' => $scoreHistory['lighthouse_best_practices']],
                                     ]"
                                     :min="0"
                                     :max="100"
@@ -1123,7 +1123,7 @@
                                 <div class="text-secondary small mb-2">{{ __('Ortalama SERP pozisyon trendi') }}</div>
                                 <x-line-chart
                                     :labels="$scoreHistory['labels']"
-                                    :series="[['label' => __('Pozisyon'), 'color' => '#4263eb', 'values' => $scoreHistory['average_position']]]"
+                                    :series="[['label' => __('Pozisyon'), 'color' => '#4285F4', 'values' => $scoreHistory['average_position']]]"
                                     :min="1"
                                     :invert-y="true"
                                 />
@@ -1144,10 +1144,10 @@
                                 <x-line-chart
                                     :labels="$domainCheckHistory['labels']"
                                     :series="[
-                                        ['label' => 'LCP', 'color' => '#206bc4', 'values' => $domainCheckHistory['crux_lcp']],
-                                        ['label' => 'FCP', 'color' => '#2fb344', 'values' => $domainCheckHistory['crux_fcp']],
-                                        ['label' => 'TTFB', 'color' => '#ae3ec9', 'values' => $domainCheckHistory['crux_ttfb']],
-                                        ['label' => 'INP', 'color' => '#f76707', 'values' => $domainCheckHistory['crux_inp']],
+                                        ['label' => 'LCP', 'color' => '#4285F4', 'values' => $domainCheckHistory['crux_lcp']],
+                                        ['label' => 'FCP', 'color' => '#34A853', 'values' => $domainCheckHistory['crux_fcp']],
+                                        ['label' => 'TTFB', 'color' => '#FBBC04', 'values' => $domainCheckHistory['crux_ttfb']],
+                                        ['label' => 'INP', 'color' => '#EA4335', 'values' => $domainCheckHistory['crux_inp']],
                                     ]"
                                     :min="0"
                                     value-suffix="ms"
@@ -1161,7 +1161,7 @@
                                 <div class="text-secondary small mb-2">{{ __('CrUX CLS trendi') }}</div>
                                 <x-line-chart
                                     :labels="$domainCheckHistory['labels']"
-                                    :series="[['label' => 'CLS', 'color' => '#d63939', 'values' => $domainCheckHistory['crux_cls']]]"
+                                    :series="[['label' => 'CLS', 'color' => '#EA4335', 'values' => $domainCheckHistory['crux_cls']]]"
                                     :min="0"
                                     :decimals="3"
                                 />
@@ -1176,7 +1176,7 @@
                                 <div class="text-secondary small mb-2">{{ __('Search Console tıklama trendi') }}</div>
                                 <x-line-chart
                                     :labels="$domainCheckHistory['labels']"
-                                    :series="[['label' => __('Tıklama'), 'color' => '#206bc4', 'values' => $domainCheckHistory['gsc_clicks']]]"
+                                    :series="[['label' => __('Tıklama'), 'color' => '#4285F4', 'values' => $domainCheckHistory['gsc_clicks']]]"
                                     :min="0"
                                 />
                             </div>
@@ -1188,7 +1188,7 @@
                                 <div class="text-secondary small mb-2">{{ __('Search Console gösterim trendi') }}</div>
                                 <x-line-chart
                                     :labels="$domainCheckHistory['labels']"
-                                    :series="[['label' => __('Gösterim'), 'color' => '#2fb344', 'values' => $domainCheckHistory['gsc_impressions']]]"
+                                    :series="[['label' => __('Gösterim'), 'color' => '#34A853', 'values' => $domainCheckHistory['gsc_impressions']]]"
                                     :min="0"
                                 />
                             </div>
@@ -1200,7 +1200,7 @@
                                 <div class="text-secondary small mb-2">CTR {{ __('trendi') }}</div>
                                 <x-line-chart
                                     :labels="$domainCheckHistory['labels']"
-                                    :series="[['label' => 'CTR', 'color' => '#ae3ec9', 'values' => $domainCheckHistory['gsc_ctr']]]"
+                                    :series="[['label' => 'CTR', 'color' => '#FBBC04', 'values' => $domainCheckHistory['gsc_ctr']]]"
                                     :min="0"
                                     value-suffix="%"
                                 />
@@ -1213,7 +1213,7 @@
                                 <div class="text-secondary small mb-2">{{ __('Search Console ortalama pozisyon trendi') }}</div>
                                 <x-line-chart
                                     :labels="$domainCheckHistory['labels']"
-                                    :series="[['label' => __('Pozisyon'), 'color' => '#4263eb', 'values' => $domainCheckHistory['gsc_average_position']]]"
+                                    :series="[['label' => __('Pozisyon'), 'color' => '#4285F4', 'values' => $domainCheckHistory['gsc_average_position']]]"
                                     :min="1"
                                     :invert-y="true"
                                 />
@@ -1229,10 +1229,10 @@
                                 <x-line-chart
                                     :labels="$domainCheckHistory['labels']"
                                     :series="[
-                                        ['label' => __('Toplam oturum'), 'color' => '#206bc4', 'values' => $domainCheckHistory['ga4_total_sessions']],
-                                        ['label' => __('Organik oturum'), 'color' => '#2fb344', 'values' => $domainCheckHistory['ga4_organic_sessions']],
-                                        ['label' => __('Organik olmayan oturum'), 'color' => '#ae3ec9', 'values' => $domainCheckHistory['ga4_non_organic_sessions']],
-                                        ['label' => __('Aktif kullanıcı'), 'color' => '#f76707', 'values' => $domainCheckHistory['ga4_active_users']],
+                                        ['label' => __('Toplam oturum'), 'color' => '#4285F4', 'values' => $domainCheckHistory['ga4_total_sessions']],
+                                        ['label' => __('Organik oturum'), 'color' => '#34A853', 'values' => $domainCheckHistory['ga4_organic_sessions']],
+                                        ['label' => __('Organik olmayan oturum'), 'color' => '#FBBC04', 'values' => $domainCheckHistory['ga4_non_organic_sessions']],
+                                        ['label' => __('Aktif kullanıcı'), 'color' => '#EA4335', 'values' => $domainCheckHistory['ga4_active_users']],
                                     ]"
                                     :min="0"
                                 />
@@ -1246,11 +1246,11 @@
                                 <x-line-chart
                                     :labels="$domainCheckHistory['labels']"
                                     :series="[
-                                        ['label' => __('Organik oturum'), 'color' => '#2fb344', 'values' => $domainCheckHistory['ga4_organic_sessions']],
-                                        ['label' => __('Doğrudan (Direct)'), 'color' => '#4263eb', 'values' => $domainCheckHistory['ga4_direct_sessions']],
-                                        ['label' => __('Yönlendirme (Referral)'), 'color' => '#f59f00', 'values' => $domainCheckHistory['ga4_referral_sessions']],
-                                        ['label' => __('Sosyal (Social)'), 'color' => '#d6336c', 'values' => $domainCheckHistory['ga4_social_sessions']],
-                                        ['label' => __('Ücretli (Paid)'), 'color' => '#f76707', 'values' => $domainCheckHistory['ga4_paid_sessions']],
+                                        ['label' => __('Organik oturum'), 'color' => '#34A853', 'values' => $domainCheckHistory['ga4_organic_sessions']],
+                                        ['label' => __('Doğrudan (Direct)'), 'color' => '#4285F4', 'values' => $domainCheckHistory['ga4_direct_sessions']],
+                                        ['label' => __('Yönlendirme (Referral)'), 'color' => '#FBBC04', 'values' => $domainCheckHistory['ga4_referral_sessions']],
+                                        ['label' => __('Sosyal (Social)'), 'color' => '#EA4335', 'values' => $domainCheckHistory['ga4_social_sessions']],
+                                        ['label' => __('Ücretli (Paid)'), 'color' => '#185ABC', 'values' => $domainCheckHistory['ga4_paid_sessions']],
                                         ['label' => __('Diğer kanallar'), 'color' => '#667382', 'values' => $domainCheckHistory['ga4_other_sessions']],
                                     ]"
                                     :min="0"

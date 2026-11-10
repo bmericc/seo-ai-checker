@@ -54,6 +54,57 @@
                 </div>
             </div>
 
+            @php
+                $mcpUrl = url('/mcp');
+                $mcpApps = $user->tokens()
+                    ->with('client')
+                    ->where('revoked', false)
+                    ->latest()
+                    ->get()
+                    ->groupBy('client_id');
+            @endphp
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="avatar avatar-md bg-body-tertiary flex-shrink-0"><i class="ti ti-plug-connected fs-2"></i></span>
+                        <div class="flex-fill" style="min-width: 0">
+                            <div class="fw-semibold">{{ __('Yapay zekâ asistanları (MCP)') }}</div>
+                            <div class="text-secondary small">{{ __('Claude, ChatGPT veya Cursor gibi bir asistana bu adresi "özel bağlayıcı" olarak ekleyin. Bağlanırken Google hesabınızla giriş yapıp izin vermeniz istenir; asistan yalnızca sizin domainlerinizi görür.') }}</div>
+                        </div>
+                    </div>
+                    <div class="input-group mt-3">
+                        <input type="text" class="form-control font-monospace" value="{{ $mcpUrl }}" readonly aria-label="{{ __('MCP sunucu adresi') }}">
+                        <button type="button" class="btn btn-outline-secondary" data-copy-text="{{ $mcpUrl }}"><i class="ti ti-copy me-1"></i>{{ __('Kopyala') }}</button>
+                    </div>
+
+                    @if ($mcpApps->isNotEmpty())
+                        <div class="fw-semibold small text-secondary text-uppercase mt-3 mb-2">{{ __('Erişim verdiğiniz uygulamalar') }}</div>
+                        <div class="list-group list-group-flush border rounded-3">
+                            @foreach ($mcpApps as $clientId => $tokens)
+                                @php
+                                    $scopes = $tokens->pluck('scopes')->flatten()->unique()->values();
+                                    $canWrite = $scopes->contains(\App\Mcp\McpScopes::WRITE);
+                                @endphp
+                                <div class="list-group-item d-flex flex-wrap align-items-center gap-2">
+                                    <div class="flex-fill" style="min-width: 0">
+                                        <div class="fw-medium text-truncate">{{ $tokens->first()->client?->name ?? __('Bilinmeyen uygulama') }}</div>
+                                        <div class="text-secondary small">
+                                            {{ $canWrite ? __('Okuma ve yazma') : __('Yalnızca okuma') }}
+                                            · {{ __('Son yetkilendirme: :date', ['date' => $tokens->first()->created_at?->diffForHumans()]) }}
+                                        </div>
+                                    </div>
+                                    <form method="post" action="{{ route('connections.mcp.destroy', $clientId) }}" onsubmit="return confirm(@js(__('Bu uygulamanın erişimi kaldırılsın mı?')))">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">{{ __('Erişimi kaldır') }}</button>
+                                    </form>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            </div>
+
             @if ($user->is_admin)
                 <div class="card">
                     <div class="card-body d-flex flex-wrap align-items-center gap-3">

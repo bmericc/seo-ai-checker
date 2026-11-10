@@ -30,8 +30,10 @@ final class RunDomainSiteCheck implements ShouldQueue
 
     public int $timeout = 180;
 
-    public function __construct(public readonly int $domainId)
-    {
+    public function __construct(
+        public readonly int $domainId,
+        public readonly bool $forceFresh = false,
+    ) {
     }
 
     public function handle(DomainCheckRunner $checkRunner): void
@@ -42,6 +44,6 @@ final class RunDomainSiteCheck implements ShouldQueue
             return;
         }
 
-        $checkRunner->run($domain);
+        $checkRunner->run($domain, $this->forceFresh);
     }
 }

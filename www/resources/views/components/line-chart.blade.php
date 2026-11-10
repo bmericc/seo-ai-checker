@@ -23,7 +23,7 @@
             'name' => $s['label'],
             'data' => collect($s['values'])->map(fn ($v) => $v === null ? null : round((float) $v, max(0, (int) $decimals)))->values()->all(),
         ])->values()->all(),
-        'colors' => collect($series)->map(fn ($s) => $s['color'] ?? '#206bc4')->values()->all(),
+        'colors' => collect($series)->map(fn ($s) => $s['color'] ?? '#4285F4')->values()->all(),
         'min' => $min,
         'max' => $max,
         'height' => (int) $height + (count($series) > 1 ? 28 : 0),

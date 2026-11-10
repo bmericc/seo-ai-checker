@@ -9,6 +9,7 @@ use App\Http\Controllers\DomainController;
 use App\Http\Controllers\IndexNowController;
 use App\Http\Controllers\KeywordController;
 use App\Http\Controllers\LighthouseReportController;
+use App\Http\Controllers\McpConnectionController;
 use App\Http\Controllers\PromptExplorerController;
 use App\Http\Controllers\ReportShareController;
 use Illuminate\Support\Facades\Auth;
@@ -52,6 +53,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/connections', function () {
         return view('connections');
     })->name('connections');
+    Route::delete('/connections/mcp/{client}', [McpConnectionController::class, 'destroy'])->name('connections.mcp.destroy');
 
     Route::post('/domains', [DomainController::class, 'store'])->name('domains.store');
     Route::get('/domains/{domain}', [DomainController::class, 'show'])->name('domains.show');

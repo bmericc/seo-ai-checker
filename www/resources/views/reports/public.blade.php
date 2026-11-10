@@ -163,15 +163,15 @@
                             <div class="col-12 col-lg-6">
                                 <div class="text-secondary small mb-2">{{ __('Search Console tıklama ve gösterim') }}</div>
                                 <x-line-chart :labels="$domainCheckHistory['labels']" :series="[
-                                    ['label' => __('Tıklama'), 'color' => '#206bc4', 'values' => $domainCheckHistory['gsc_clicks']],
-                                    ['label' => __('Gösterim'), 'color' => '#2fb344', 'values' => $domainCheckHistory['gsc_impressions']],
+                                    ['label' => __('Tıklama'), 'color' => '#4285F4', 'values' => $domainCheckHistory['gsc_clicks']],
+                                    ['label' => __('Gösterim'), 'color' => '#34A853', 'values' => $domainCheckHistory['gsc_impressions']],
                                 ]" :min="0" />
                             </div>
                             <div class="col-12 col-lg-6">
                                 <div class="text-secondary small mb-2">{{ __('GA4 oturumları') }}</div>
                                 <x-line-chart :labels="$domainCheckHistory['labels']" :series="[
-                                    ['label' => __('Toplam oturum'), 'color' => '#206bc4', 'values' => $domainCheckHistory['ga4_total_sessions']],
-                                    ['label' => __('Organik oturum'), 'color' => '#2fb344', 'values' => $domainCheckHistory['ga4_organic_sessions']],
+                                    ['label' => __('Toplam oturum'), 'color' => '#4285F4', 'values' => $domainCheckHistory['ga4_total_sessions']],
+                                    ['label' => __('Organik oturum'), 'color' => '#34A853', 'values' => $domainCheckHistory['ga4_organic_sessions']],
                                 ]" :min="0" />
                             </div>
                         </div>
@@ -194,9 +194,9 @@
                                 <div class="col-12 col-lg-6">
                                     <div class="text-secondary small mb-2">{{ __('Lighthouse skor trendi') }}</div>
                                     <x-line-chart :labels="$scoreHistory['labels']" :series="[
-                                        ['label' => __('Performans'), 'color' => '#206bc4', 'values' => $scoreHistory['lighthouse_performance']],
-                                        ['label' => 'SEO', 'color' => '#2fb344', 'values' => $scoreHistory['lighthouse_seo']],
-                                        ['label' => __('Erişilebilirlik'), 'color' => '#ae3ec9', 'values' => $scoreHistory['lighthouse_accessibility']],
+                                        ['label' => __('Performans'), 'color' => '#4285F4', 'values' => $scoreHistory['lighthouse_performance']],
+                                        ['label' => 'SEO', 'color' => '#34A853', 'values' => $scoreHistory['lighthouse_seo']],
+                                        ['label' => __('Erişilebilirlik'), 'color' => '#FBBC04', 'values' => $scoreHistory['lighthouse_accessibility']],
                                     ]" :min="0" :max="100" />
                                 </div>
                             @endif
@@ -204,8 +204,8 @@
                                 <div class="col-12 col-lg-6">
                                     <div class="text-secondary small mb-2">{{ __('Gerçek kullanıcı yükleme süresi (ms)') }}</div>
                                     <x-line-chart :labels="$domainCheckHistory['labels']" :series="[
-                                        ['label' => 'LCP', 'color' => '#206bc4', 'values' => $domainCheckHistory['crux_lcp']],
-                                        ['label' => 'INP', 'color' => '#f76707', 'values' => $domainCheckHistory['crux_inp']],
+                                        ['label' => 'LCP', 'color' => '#4285F4', 'values' => $domainCheckHistory['crux_lcp']],
+                                        ['label' => 'INP', 'color' => '#EA4335', 'values' => $domainCheckHistory['crux_inp']],
                                     ]" :min="0" value-suffix="ms" />
                                 </div>
                             @endif
@@ -226,7 +226,7 @@
                         <div class="h1 mb-1">{{ number_format($aiSnapshot['score'], 0) }}%</div>
                         <div class="text-secondary small mb-3">{{ __(':cited / :present anahtar kelimede AI Overview kaynağında domain gösteriliyor', ['cited' => $aiSnapshot['cited_count'], 'present' => $aiSnapshot['present_count']]) }}</div>
                         @if ($hasScoreHistory)
-                            <x-line-chart :labels="$scoreHistory['labels']" :series="[['label' => __('Görünürlük'), 'color' => '#0ca678', 'values' => $scoreHistory['ai_visibility']]]" :min="0" :max="100" value-suffix="%" />
+                            <x-line-chart :labels="$scoreHistory['labels']" :series="[['label' => __('Görünürlük'), 'color' => '#34A853', 'values' => $scoreHistory['ai_visibility']]]" :min="0" :max="100" value-suffix="%" />
                         @endif
                     @endif
                 </div>

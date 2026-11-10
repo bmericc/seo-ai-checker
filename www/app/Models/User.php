@@ -10,13 +10,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Passport\Contracts\OAuthenticatable;
+use Laravel\Passport\HasApiTokens;
 
 #[Fillable(['name', 'email', 'password', 'is_admin', 'approved_at', 'google_id', 'google_access_token', 'google_refresh_token', 'google_token_expires_at', 'bing_access_token', 'bing_refresh_token', 'bing_token_expires_at', 'locale'])]
 #[Hidden(['password', 'remember_token', 'google_access_token', 'google_refresh_token', 'bing_access_token', 'bing_refresh_token'])]
-class User extends Authenticatable
+class User extends Authenticatable implements OAuthenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * Uygulamanin desteklemedigi dil dosyasi olusturmamak icin sabit tutulur.

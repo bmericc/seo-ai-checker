@@ -28,6 +28,104 @@
     --tblr-font-sans-serif: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
+/* ------------------------------------------------------------------
+   Google logo paleti (2026-11). Logo tonlari (#4285F4 #EA4335
+   #FBBC04 #34A853) beyaz yaziyla yeterli kontrast vermedigi icin
+   buton/metin rengi olarak Google'in kendi koyu tonlari kullanilir;
+   parlak tonlar logo, grafik ve suslemelerde. Tabler'in -lt/-darken
+   degiskenleri color-mix ile bu temel renklerden turetilir.
+   ------------------------------------------------------------------ */
+:root,
+[data-bs-theme=light] {
+    --g-blue: #4285F4;
+    --g-red: #EA4335;
+    --g-yellow: #FBBC04;
+    --g-green: #34A853;
+
+    --tblr-primary: #1A73E8;
+    --tblr-primary-rgb: 26, 115, 232;
+    --tblr-primary-fg: #ffffff;
+    --tblr-primary-darken: #1557B0;
+    --tblr-blue: #1A73E8;
+    --tblr-blue-rgb: 26, 115, 232;
+    --tblr-azure: #4285F4;
+    --tblr-azure-rgb: 66, 133, 244;
+    --tblr-info: #1A73E8;
+    --tblr-info-rgb: 26, 115, 232;
+
+    --tblr-success: #188038;
+    --tblr-success-rgb: 24, 128, 56;
+    --tblr-success-darken: #0D652D;
+    --tblr-green: #188038;
+    --tblr-green-rgb: 24, 128, 56;
+
+    --tblr-danger: #D93025;
+    --tblr-danger-rgb: 217, 48, 37;
+    --tblr-danger-darken: #B31412;
+    --tblr-red: #D93025;
+    --tblr-red-rgb: 217, 48, 37;
+
+    --tblr-warning: #F9AB00;
+    --tblr-warning-rgb: 249, 171, 0;
+    --tblr-warning-fg: #202124;
+    --tblr-warning-darken: #E37400;
+    --tblr-yellow: #F9AB00;
+    --tblr-yellow-rgb: 249, 171, 0;
+    --tblr-yellow-fg: #202124;
+
+    --tblr-link-color: #1A73E8;
+    --tblr-link-color-rgb: 26, 115, 232;
+    --tblr-link-hover-color: #1557B0;
+    --tblr-link-hover-color-rgb: 21, 87, 176;
+
+    /* Sari metin beyaz zeminde okunmaz: uyari metinleri koyu amber. */
+    --app-warning-text: #B06000;
+}
+
+[data-bs-theme=dark] {
+    --tblr-primary: #8AB4F8;
+    --tblr-primary-rgb: 138, 180, 248;
+    --tblr-primary-fg: #202124;
+    --tblr-primary-darken: #AECBFA;
+    --tblr-blue: #8AB4F8;
+    --tblr-blue-rgb: 138, 180, 248;
+    --tblr-azure: #8AB4F8;
+    --tblr-azure-rgb: 138, 180, 248;
+    --tblr-info: #8AB4F8;
+    --tblr-info-rgb: 138, 180, 248;
+    --tblr-info-fg: #202124;
+
+    --tblr-success: #81C995;
+    --tblr-success-rgb: 129, 201, 149;
+    --tblr-success-fg: #202124;
+    --tblr-success-darken: #A8DAB5;
+    --tblr-green: #81C995;
+    --tblr-green-rgb: 129, 201, 149;
+
+    --tblr-danger: #F28B82;
+    --tblr-danger-rgb: 242, 139, 130;
+    --tblr-danger-fg: #202124;
+    --tblr-danger-darken: #F6AEA9;
+    --tblr-red: #F28B82;
+    --tblr-red-rgb: 242, 139, 130;
+
+    --tblr-warning: #FDD663;
+    --tblr-warning-rgb: 253, 214, 99;
+    --tblr-warning-darken: #FDE293;
+    --tblr-yellow: #FDD663;
+    --tblr-yellow-rgb: 253, 214, 99;
+
+    --tblr-link-color: #8AB4F8;
+    --tblr-link-color-rgb: 138, 180, 248;
+    --tblr-link-hover-color: #AECBFA;
+    --tblr-link-hover-color-rgb: 174, 203, 250;
+
+    --app-warning-text: #FDD663;
+}
+
+.text-warning { color: var(--app-warning-text) !important; }
+.bg-warning-lt { color: var(--app-warning-text) !important; }
+
 body {
     -webkit-font-smoothing: antialiased;
 }
@@ -46,16 +144,18 @@ body {
 .app-brand > span:last-child { white-space: normal; line-height: 1.2; font-size: .95rem; text-align: left; }
 .app-sidebar .navbar-brand { padding-left: .75rem; padding-right: .75rem; }
 .app-brand-mark {
+    flex-shrink: 0;
     width: 2rem;
     height: 2rem;
-    border-radius: .5rem;
-    background: var(--tblr-primary);
-    color: #fff;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.05rem;
+    display: inline-grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 3px;
 }
+.app-brand-mark > span { display: block; border-radius: 3px; }
+.app-brand-mark > span:nth-child(1) { background: var(--g-blue); border-top-left-radius: 7px; }
+.app-brand-mark > span:nth-child(2) { background: var(--g-red); border-top-right-radius: 7px; }
+.app-brand-mark > span:nth-child(3) { background: var(--g-yellow); border-bottom-left-radius: 7px; }
+.app-brand-mark > span:nth-child(4) { background: var(--g-green); border-bottom-right-radius: 7px; }
 
 /* Sidebar */
 .app-sidebar {
