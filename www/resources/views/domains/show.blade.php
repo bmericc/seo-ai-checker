@@ -24,130 +24,385 @@
 @endsection
 
 @section('content')
-    <div class="card mb-4">
-        <div class="card-header">
-            <h3 class="card-title">WHOIS</h3>
-            <div class="card-actions">
-                <form method="post" action="{{ route('domains.whois.refresh', $domain) }}">
-                    @csrf
-                    <button type="submit" class="btn btn-sm btn-outline-secondary">
-                        <i class="ti ti-refresh icon"></i> {{ __('WHOIS Bilgisini Yenile') }}
-                    </button>
-                </form>
-            </div>
-        </div>
-        <div class="card-body">
-            @if (!$domain->fact?->whois_checked_at)
-                <p class="text-secondary mb-0">{{ __('WHOIS bilgisi henüz kuyruğa alınmadı ya da worker tarafından işlenmedi.') }}</p>
-            @elseif ($domain->fact->whois_error)
-                <p class="text-danger mb-0">{{ __('WHOIS sorgusu başarısız: :error', ['error' => $domain->fact->whois_error]) }}</p>
-            @else
-                <div class="row">
-                    <div class="col-12 col-md-4">
-                        <div class="text-secondary small mb-1">{{ __('Domain Yaşı') }}</div>
-                        <div class="h3 mb-0">
-                            @if ($domain->whoisAgeInYears() !== null)
-                                {{ __(':years yıl', ['years' => $domain->whoisAgeInYears()]) }}
-                            @else
-                                <span class="text-secondary">—</span>
-                            @endif
-                        </div>
-                        @if ($domain->fact->whois_registered_at)
-                            <div class="text-secondary small">{{ __('Kayıt tarihi:') }} {{ $domain->fact->whois_registered_at->format('Y-m-d') }}</div>
-                        @endif
-                    </div>
-                    <div class="col-12 col-md-4">
-                        <div class="text-secondary small mb-1">{{ __('Registrar') }}</div>
-                        <div class="h3 mb-0">{{ $domain->fact->whois_registrar ?: '—' }}</div>
-                    </div>
-                    <div class="col-12 col-md-4">
-                        <div class="text-secondary small mb-1">{{ __('Kayıt Süresi Sonu') }}</div>
-                        <div class="h3 mb-0">{{ $domain->fact->whois_expires_at?->format('Y-m-d') ?: '—' }}</div>
-                    </div>
+    @php
+        $health = \App\Support\DomainHealth::for($domain);
+        $overviewGsc = $domain->latestDomainCheck?->gsc ?? [];
+        $overviewLastCheck = $domain->latestDomainCheck?->created_at ?? $domain->fact?->checked_at;
+        $severityMeta = [
+            'high' => ['label' => __('YÜKSEK'), 'class' => 'bg-danger-lt'],
+            'medium' => ['label' => __('ORTA'), 'class' => 'bg-warning-lt'],
+            'low' => ['label' => __('DÜŞÜK'), 'class' => 'bg-secondary-lt'],
+        ];
+        $checkIcon = [
+            'ok' => 'ti-circle-check text-success',
+            'warn' => 'ti-alert-circle text-warning',
+            'fail' => 'ti-circle-x text-danger',
+        ];
+        $hasSitemapPages = $sitemapUrlCounts['active'] + $sitemapUrlCounts['removed'] > 0;
+    @endphp
+
+    {{-- Ozet basligi --}}
+    <div class="card mb-3">
+        <div class="card-body d-flex flex-wrap align-items-center gap-4">
+            <x-score-ring :score="$health->score" :tone="$health->tone()" :size="104" :stroke="9" :show-max="true" />
+            <div class="flex-fill" style="min-width: 260px">
+                <div class="h2 mb-1">{{ $health->summary() }}</div>
+                <div class="text-secondary">
+                    @if (!$health->hasData)
+                        {{ __('İlk site kontrolü henüz tamamlanmadı. "Site Kontrolü Yap" ile hemen başlatabilirsiniz.') }}
+                    @elseif ($health->issues === [])
+                        {{ __('Temel teknik kontrollerin hepsi geçti. Anahtar kelimelerinizi ve yapay zekâ görünürlüğünüzü takip etmeye devam edin.') }}
+                    @else
+                        {{ __('Aşağıdaki konular arama motorlarında ve yapay zekâ asistanlarında görünürlüğünüzü düşürüyor. En önemlilerinden başlayın.') }}
+                    @endif
                 </div>
-                <div class="text-secondary small mt-3">{{ __('Son WHOIS kontrolü: :date', ['date' => $domain->fact->whois_checked_at->format('Y-m-d H:i:s')]) }}</div>
-            @endif
+                @if ($overviewLastCheck)
+                    <div class="small text-secondary mt-2">{{ __('Son kontrol: :when', ['when' => $overviewLastCheck->diffForHumans()]) }}</div>
+                @endif
+            </div>
         </div>
     </div>
 
-    @if (auth()->user()->is_admin)
-        <div class="card mb-4">
-            <div class="card-header">
-                <h3 class="card-title">{{ __('AI Görünürlük Kontrolü (ChatGPT/Claude/Gemini)') }}</h3>
-            </div>
-            <div class="card-body">
-                <form method="post" action="{{ route('domains.llm-visibility.update', $domain) }}" class="mb-4">
-                    @csrf
-                    @method('patch')
-                    <input type="hidden" name="llm_visibility_enabled" value="{{ $domain->llm_visibility_enabled ? '0' : '1' }}">
-                    <label class="form-check form-switch">
-                        <input type="checkbox" class="form-check-input" onchange="this.form.submit()" {{ $domain->llm_visibility_enabled ? 'checked' : '' }}>
-                        <span class="form-check-label">{{ __('Bu domain için AI görünürlük kontrolü aktif') }}</span>
-                    </label>
-                </form>
+    <ul class="nav nav-tabs domain-tabs mb-3" role="tablist" data-remember-tabs="domain-{{ $domain->id }}">
+        <li class="nav-item" role="presentation"><a href="#tab-overview" class="nav-link active" data-bs-toggle="tab" role="tab" aria-selected="true"><i class="ti ti-layout-dashboard me-1"></i>{{ __('Genel bakış') }}</a></li>
+        <li class="nav-item" role="presentation"><a href="#tab-keywords" class="nav-link" data-bs-toggle="tab" role="tab" aria-selected="false"><i class="ti ti-key me-1"></i>{{ __('Anahtar kelimeler') }} <span class="badge bg-secondary-lt ms-1">{{ $domain->keywords->count() }}</span></a></li>
+        <li class="nav-item" role="presentation"><a href="#tab-health" class="nav-link" data-bs-toggle="tab" role="tab" aria-selected="false"><i class="ti ti-heart-rate-monitor me-1"></i>{{ __('Site sağlığı') }}@if (count($health->issues) > 0) <span class="badge bg-warning-lt ms-1">{{ count($health->issues) }}</span>@endif</a></li>
+        @if (auth()->user()->is_admin)
+            <li class="nav-item" role="presentation"><a href="#tab-ai" class="nav-link" data-bs-toggle="tab" role="tab" aria-selected="false"><i class="ti ti-sparkles me-1"></i>{{ __('Yapay zekâ görünürlüğü') }}</a></li>
+        @endif
+        @if ($hasSitemapPages)
+            <li class="nav-item" role="presentation"><a href="#tab-pages" class="nav-link" data-bs-toggle="tab" role="tab" aria-selected="false"><i class="ti ti-files me-1"></i>{{ __('Sayfalar') }}</a></li>
+        @endif
+        <li class="nav-item" role="presentation"><a href="#tab-competitors" class="nav-link" data-bs-toggle="tab" role="tab" aria-selected="false"><i class="ti ti-users me-1"></i>{{ __('Rakipler') }}</a></li>
+        <li class="nav-item" role="presentation"><a href="#tab-history" class="nav-link" data-bs-toggle="tab" role="tab" aria-selected="false"><i class="ti ti-chart-line me-1"></i>{{ __('Geçmiş') }}</a></li>
+        <li class="nav-item" role="presentation"><a href="#tab-info" class="nav-link" data-bs-toggle="tab" role="tab" aria-selected="false"><i class="ti ti-id me-1"></i>{{ __('Domain bilgisi') }}</a></li>
+    </ul>
 
-                <h4 class="mb-3">{{ __('API Key\'ler') }}</h4>
-                @if ($domain->llmApiKeys->isEmpty())
-                    <p class="text-secondary small">{{ __('Henüz hiçbir sağlayıcı için API key girilmedi.') }}</p>
-                @else
-                    <table class="table table-vcenter mb-4">
-                        <thead>
-                            <tr>
-                                <th>{{ __('Sağlayıcı') }}</th>
-                                <th>{{ __('Etiket') }}</th>
-                                <th>{{ __('Key') }}</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($domain->llmApiKeys as $llmApiKey)
-                                <tr>
-                                    <td>{{ $llmApiKey->provider }}</td>
-                                    <td><span class="badge bg-{{ $llmApiKey->label === 'bireysel' ? 'blue-lt' : 'green-lt' }}">{{ $llmApiKey->label }}</span></td>
-                                    <td><code>{{ $llmApiKey->maskedKey() }}</code></td>
-                                    <td class="text-end">
-                                        <form method="post" action="{{ route('domains.llm-api-keys.destroy', [$domain, $llmApiKey]) }}" onsubmit="return confirm({{ json_encode(__('Bu API key silinsin mi?')) }});">
-                                            @csrf
-                                            @method('delete')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">{{ __('Sil') }}</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+    <div class="tab-content">
+    <div class="tab-pane active show" id="tab-overview" role="tabpanel">
+        <div class="row g-3">
+            <div class="col-12 col-lg-8 d-flex flex-column gap-3">
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <h3 class="card-title">{{ __('Önce bunları düzeltin') }}</h3>
+                            <div class="card-subtitle mt-1">{{ __('Etkisi en büyük olandan en küçüğe sıralandı. Ayrıntı ve çözüm için konuya tıklayın.') }}</div>
+                        </div>
+                    </div>
+                    @if (!$health->hasData)
+                        <div class="card-body text-secondary">{{ __('Kontrol tamamlanınca öncelikli konular burada listelenecek.') }}</div>
+                    @elseif ($health->issues === [])
+                        <div class="card-body d-flex align-items-center gap-3">
+                            <span class="avatar bg-success-lt"><i class="ti ti-check"></i></span>
+                            <div>{{ __('Düzeltilmesi gereken bir konu yok. Harika!') }}</div>
+                        </div>
+                    @else
+                        @foreach ($health->issues as $index => $issue)
+                            <details class="issue-item" @if ($index === 0) open @endif>
+                                <summary>
+                                    <span class="badge severity-badge {{ $severityMeta[$issue['severity']]['class'] }}">{{ $severityMeta[$issue['severity']]['label'] }}</span>
+                                    <div class="flex-fill">
+                                        <div class="fw-semibold">{{ $issue['title'] }}</div>
+                                        <div class="small text-secondary mt-1">{{ $issue['description'] }}</div>
+                                    </div>
+                                    <i class="ti ti-chevron-down issue-chevron" aria-hidden="true"></i>
+                                </summary>
+                                @if ($issue['fix'])
+                                    <div class="issue-fix">
+                                        <div class="rounded-3 border p-3 small">
+                                            <div class="fw-semibold mb-1"><i class="ti ti-tool me-1"></i>{{ __('Nasıl düzeltilir?') }}</div>
+                                            <div class="text-secondary">{{ $issue['fix'] }}</div>
+                                            <div class="d-flex flex-wrap gap-2 mt-3">
+                                                <form method="post" action="{{ route('domains.check', $domain) }}">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm">{{ __('Düzelttim, tekrar kontrol et') }}</button>
+                                                </form>
+                                                <a href="#tab-health" class="btn btn-sm btn-link" data-tab-jump="#tab-health">{{ __('Teknik ayrıntılar') }}</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+                            </details>
+                        @endforeach
+                    @endif
+                </div>
+
+                @if ($health->checks !== [])
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">{{ __('Tüm kontroller') }}</h3>
+                            <div class="card-actions small text-secondary d-flex gap-3">
+                                <span><i class="ti ti-circle-check text-success"></i> {{ collect($health->checks)->where('status', 'ok')->count() }}</span>
+                                <span><i class="ti ti-alert-circle text-warning"></i> {{ collect($health->checks)->where('status', 'warn')->count() }}</span>
+                                <span><i class="ti ti-circle-x text-danger"></i> {{ collect($health->checks)->where('status', 'fail')->count() }}</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="check-grid">
+                                @foreach ($health->checks as $c)
+                                    <div class="check-tile">
+                                        <i class="ti {{ $checkIcon[$c['status']] }}" aria-hidden="true"></i>
+                                        <div>
+                                            <div class="fw-semibold small">{{ $c['label'] }}</div>
+                                            <div class="small text-secondary">{{ $c['detail'] }}</div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            </div>
+
+            <div class="col-12 col-lg-4 d-flex flex-column gap-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h3 class="card-title mb-0">{{ __('Anahtar kelimeler') }}</h3>
+                            <a href="#tab-keywords" class="small" data-tab-jump="#tab-keywords">{{ __('Tümünü gör') }}</a>
+                        </div>
+                        @if ($domain->keywords->isEmpty())
+                            <p class="text-secondary small mb-3">{{ __('Hangi aramalarda görünmek istediğinizi ekleyin; Google ve yapay zekâ yanıtlarındaki yerinizi takip edelim.') }}</p>
+                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modal-add-keyword"><i class="ti ti-plus icon"></i> {{ __('Anahtar Kelime Ekle') }}</button>
+                        @else
+                            <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
+                                @foreach ($domain->keywords->take(5) as $kw)
+                                    @php
+                                        $pos = $kw->latestCheck?->target_position;
+                                    @endphp
+                                    <li class="d-flex justify-content-between gap-2">
+                                        <a href="{{ route('keywords.show', $kw) }}" class="text-reset text-truncate">{{ $kw->keyword }}</a>
+                                        <span class="small {{ $pos && $pos <= 10 ? 'text-success fw-semibold' : 'text-secondary' }}">{{ $pos ? $pos . '.' : '—' }}</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @endif
+                    </div>
+                </div>
+
+                @if (($overviewGsc['verified'] ?? false) && !($overviewGsc['error'] ?? null))
+                    <div class="card">
+                        <div class="card-body">
+                            <h3 class="card-title">{{ __('Google, son dönem') }}</h3>
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="small text-secondary">{{ __('Tıklama') }}</div>
+                                    <div class="h2 mb-0" data-count-to="{{ (int) ($overviewGsc['clicks'] ?? 0) }}">0</div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="small text-secondary">{{ __('Gösterim') }}</div>
+                                    <div class="h2 mb-0" data-count-to="{{ (int) ($overviewGsc['impressions'] ?? 0) }}">0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 @endif
 
-                <form method="post" action="{{ route('domains.llm-api-keys.store', $domain) }}" class="row g-2 align-items-end">
-                    @csrf
-                    <div class="col-auto">
-                        <label class="form-label">{{ __('Sağlayıcı') }}</label>
-                        <select name="provider" class="form-select" required>
-                            @foreach (\App\Models\DomainLlmApiKey::PROVIDERS as $provider)
-                                <option value="{{ $provider }}">{{ $provider }}</option>
-                            @endforeach
-                        </select>
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h3 class="card-title mb-0">{{ __('Domain bilgisi') }}</h3>
+                            <a href="#tab-info" class="small" data-tab-jump="#tab-info">{{ __('Ayrıntı') }}</a>
+                        </div>
+                        <dl class="row mb-0 small">
+                            <dt class="col-5 text-secondary fw-normal">{{ __('Kayıt Süresi Sonu') }}</dt>
+                            <dd class="col-7 mb-1 fw-semibold">
+                                @if ($domain->fact?->whois_expires_at)
+                                    {{ $domain->fact->whois_expires_at->format('Y-m-d') }}
+                                    @if ($domain->fact->whois_expires_at->isFuture() && $domain->fact->whois_expires_at->diffInDays() < 45)
+                                        <span class="badge bg-danger-lt ms-1">{{ __('Yakında doluyor') }}</span>
+                                    @endif
+                                @else
+                                    —
+                                @endif
+                            </dd>
+                            <dt class="col-5 text-secondary fw-normal">{{ __('Registrar') }}</dt>
+                            <dd class="col-7 mb-1">{{ $domain->fact?->whois_registrar ?: '—' }}</dd>
+                            <dt class="col-5 text-secondary fw-normal">{{ __('Domain Yaşı') }}</dt>
+                            <dd class="col-7 mb-0">{{ $domain->whoisAgeInYears() !== null ? __(':years yıl', ['years' => $domain->whoisAgeInYears()]) : '—' }}</dd>
+                        </dl>
                     </div>
-                    <div class="col-auto">
-                        <label class="form-label">{{ __('Etiket') }}</label>
-                        <select name="label" class="form-select" required>
-                            @foreach (\App\Models\DomainLlmApiKey::LABELS as $label)
-                                <option value="{{ $label }}">{{ $label }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col">
-                        <label class="form-label">{{ __('API Key') }}</label>
-                        <input type="text" name="api_key" class="form-control" placeholder="sk-..." required>
-                    </div>
-                    <div class="col-auto">
-                        <button type="submit" class="btn btn-primary">{{ __('Kaydet') }}</button>
-                    </div>
-                </form>
+                </div>
             </div>
         </div>
-    @endif
+    </div>
 
+    <div class="tab-pane" id="tab-keywords" role="tabpanel">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">{{ __('Anahtar Kelimeler') }}</h3>
+        </div>
+        <div class="card-body border-bottom py-2">
+            <p class="text-secondary mb-0">{{ __('"Kontrol Et" butonu SERP + on-page + Lighthouse taramasını aynı anda çalıştırır; bu 20-60 saniye sürebilir, sayfa kapanmadan bekleyin.') }}</p>
+        </div>
+
+        @php
+            $trackedKeywords = $domain->keywords->pluck('keyword')->map(fn ($k) => mb_strtolower(trim($k)));
+            $dismissedSuggestions = collect($domain->dismissed_keyword_suggestions ?? []);
+            $suggestedKeywords = collect($domain->latestDomainCheck?->suggested_keywords ?? [])
+                ->reject(fn ($s) => $trackedKeywords->contains(mb_strtolower($s['phrase'])))
+                ->reject(fn ($s) => $dismissedSuggestions->contains(mb_strtolower($s['phrase'])));
+        @endphp
+        @if ($suggestedKeywords->isNotEmpty())
+            <div class="card-body border-bottom py-3">
+                <div class="text-secondary small mb-2">
+                    {{ __('Ana sayfa HTML\'inden otomatik çıkarılan anahtar kelime önerileri — eklemek için "+", istemiyorsanız "×" tıklayın:') }}
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach ($suggestedKeywords as $suggestion)
+                        <div class="btn-group">
+                            <form method="post" action="{{ route('keywords.store', $domain) }}">
+                                @csrf
+                                <input type="hidden" name="keyword" value="{{ $suggestion['phrase'] }}">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                    <i class="ti ti-plus icon"></i> {{ $suggestion['phrase'] }}
+                                </button>
+                            </form>
+                            <form method="post" action="{{ route('domains.keyword-suggestions.dismiss', $domain) }}">
+                                @csrf
+                                <input type="hidden" name="phrase" value="{{ $suggestion['phrase'] }}">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary" aria-label="{{ __('Öneriyi kaldır: :phrase', ['phrase' => $suggestion['phrase']]) }}">
+                                    <i class="ti ti-x"></i>
+                                </button>
+                            </form>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
+        @if ($domain->keywords->isEmpty())
+            <div class="empty">
+                <div class="empty-icon"><i class="ti ti-key fs-1"></i></div>
+                <p class="empty-title">{{ __('Henüz anahtar kelime eklenmedi') }}</p>
+                <div class="empty-action">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-add-keyword">
+                        <i class="ti ti-plus icon"></i> {{ __('Anahtar Kelime Ekle') }}
+                    </button>
+                </div>
+            </div>
+        @else
+            <div class="table-responsive">
+                <table class="table card-table table-vcenter">
+                    <thead>
+                        <tr>
+                            <th>{{ __('Kelime') }}</th>
+                            <th>{{ __('Sayfa') }}</th>
+                            <th>{{ __('Son sıralama') }}</th>
+                            <th>AI Overview</th>
+                            @if ($domain->llm_visibility_enabled)
+                                <th>{{ __('AI Görünürlük Kontrolü (ChatGPT/Claude/Gemini)') }}</th>
+                            @endif
+                            <th>{{ __('Lighthouse (Perf/SEO/Eris/BP)') }}</th>
+                            <th>{{ __('Son kontrol') }}</th>
+                            <th class="w-1"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($domain->keywords as $kw)
+                            @php
+                                $last = $kw->latestCheck;
+                            @endphp
+                            <tr>
+                                <td><a href="{{ route('keywords.show', $kw) }}" class="fw-medium">{{ $kw->keyword }}</a></td>
+                                <td class="text-secondary">{{ $kw->url ?: $domain->rootUrl() }}</td>
+                                <td>
+                                    @if (!$last)
+                                        <span class="text-secondary">-</span>
+                                    @elseif ($last->blocked)
+                                        <span class="badge bg-warning-lt">{{ __('engellendi') }}</span>
+                                    @elseif ($last->target_position)
+                                        <strong>{{ $last->target_position }}</strong>
+                                    @else
+                                        <span class="text-secondary">{{ __('bulunamadı') }}</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if (!$last)
+                                        <span class="text-secondary">-</span>
+                                    @elseif ($last->ai_overview_present)
+                                        @if ($last->ai_overview_target_cited)
+                                            <span class="badge bg-success-lt">{{ __('var, kaynakta') }}</span>
+                                        @else
+                                            <span class="badge bg-warning-lt">{{ __('var, kaynakta değil') }}</span>
+                                        @endif
+                                    @else
+                                        <span class="text-secondary">{{ __('yok') }}</span>
+                                    @endif
+                                </td>
+                                @if ($domain->llm_visibility_enabled)
+                                    <td>
+                                        @if (!$last || empty($last->llm_visibility))
+                                            <span class="text-secondary">-</span>
+                                        @else
+                                            <div class="d-flex flex-wrap gap-1">
+                                                @foreach ($last->llm_visibility as $provider => $result)
+                                                    @php
+                                                        $model = $result['model'] ?? null;
+                                                    @endphp
+                                                    @if ($result['error'])
+                                                        <span class="badge bg-danger-lt" data-bs-toggle="tooltip" title="{{ ($model ? '[' . $model . '] ' : '') . $result['error'] }}">
+                                                            {{ $provider }}@if ($model) <span class="fw-normal text-muted" style="font-size: 0.75em;">({{ $model }})</span>@endif
+                                                        </span>
+                                                    @elseif ($result['present'])
+                                                        <span class="badge bg-success-lt" data-bs-toggle="tooltip" title="{{ $model ? '[' . $model . '] ' . __('Domain geçiyor') : '' }}">
+                                                            {{ $provider }}@if ($model) <span class="fw-normal text-muted" style="font-size: 0.75em;">({{ $model }})</span>@endif
+                                                        </span>
+                                                    @else
+                                                        <span class="badge bg-secondary-lt" data-bs-toggle="tooltip" title="{{ $model ? '[' . $model . '] ' . __('Domain geçmiyor') : '' }}">
+                                                            {{ $provider }}@if ($model) <span class="fw-normal text-muted" style="font-size: 0.75em;">({{ $model }})</span>@endif
+                                                        </span>
+                                                    @endif
+                                                    @if ($result['follow_up_response'] ?? null)
+                                                        @if ($result['follow_up_present'] ?? false)
+                                                            <span class="badge bg-success-lt" data-bs-toggle="tooltip" title="{{ __("Türkiye'den:") }}{{ $model ? ' [' . $model . ']' : '' }}">{{ $provider }} TR</span>
+                                                        @else
+                                                            <span class="badge bg-secondary-lt" data-bs-toggle="tooltip" title="{{ __("Türkiye'den:") }}{{ $model ? ' [' . $model . ']' : '' }}">{{ $provider }} TR</span>
+                                                        @endif
+                                                    @endif
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </td>
+                                @endif
+                                <td class="text-secondary">
+                                    @if (!$last)
+                                        -
+                                    @else
+                                        {{ $last->lighthouse_performance ?? '-' }} /
+                                        {{ $last->lighthouse_seo ?? '-' }} /
+                                        {{ $last->lighthouse_accessibility ?? '-' }} /
+                                        {{ $last->lighthouse_best_practices ?? '-' }}
+                                    @endif
+                                </td>
+                                <td class="text-secondary">{{ $last?->created_at?->format('Y-m-d H:i') ?? '-' }}</td>
+                                <td>
+                                    <div class="btn-list flex-nowrap">
+                                        <form method="post" action="{{ route('keywords.check', $kw) }}">
+                                            @csrf
+                                            <button type="submit" class="btn btn-icon btn-outline-primary" aria-label="{{ __('Kontrol Et') }}">
+                                                <i class="ti ti-refresh"></i>
+                                            </button>
+                                        </form>
+                                        <form method="post" action="{{ route('keywords.destroy', $kw) }}" onsubmit="return confirm('{{ __('Bu anahtar kelime silinsin mi?') }}');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-icon btn-ghost-danger" aria-label="{{ __('Sil') }}">
+                                                <i class="ti ti-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    </div>
+    </div>
+
+    <div class="tab-pane" id="tab-health" role="tabpanel">
     <div class="card mb-4">
         <div class="card-header">
             <h3 class="card-title">{{ __('Site Kontrolü') }}</h3>
@@ -603,7 +858,198 @@
             @endif
         </div>
     </div>
+    </div>
 
+    @if (auth()->user()->is_admin)
+    <div class="tab-pane" id="tab-ai" role="tabpanel">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="card-title">{{ __('AI Görünürlük Kontrolü (ChatGPT/Claude/Gemini)') }}</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ route('domains.llm-visibility.update', $domain) }}" class="mb-4">
+                    @csrf
+                    @method('patch')
+                    <input type="hidden" name="llm_visibility_enabled" value="{{ $domain->llm_visibility_enabled ? '0' : '1' }}">
+                    <label class="form-check form-switch">
+                        <input type="checkbox" class="form-check-input" onchange="this.form.submit()" {{ $domain->llm_visibility_enabled ? 'checked' : '' }}>
+                        <span class="form-check-label">{{ __('Bu domain için AI görünürlük kontrolü aktif') }}</span>
+                    </label>
+                </form>
+
+                <h4 class="mb-3">{{ __('API Key\'ler') }}</h4>
+                @if ($domain->llmApiKeys->isEmpty())
+                    <p class="text-secondary small">{{ __('Henüz hiçbir sağlayıcı için API key girilmedi.') }}</p>
+                @else
+                    <table class="table table-vcenter mb-4">
+                        <thead>
+                            <tr>
+                                <th>{{ __('Sağlayıcı') }}</th>
+                                <th>{{ __('Etiket') }}</th>
+                                <th>{{ __('Key') }}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($domain->llmApiKeys as $llmApiKey)
+                                <tr>
+                                    <td>{{ $llmApiKey->provider }}</td>
+                                    <td><span class="badge bg-{{ $llmApiKey->label === 'bireysel' ? 'blue-lt' : 'green-lt' }}">{{ $llmApiKey->label }}</span></td>
+                                    <td><code>{{ $llmApiKey->maskedKey() }}</code></td>
+                                    <td class="text-end">
+                                        <form method="post" action="{{ route('domains.llm-api-keys.destroy', [$domain, $llmApiKey]) }}" onsubmit="return confirm({{ json_encode(__('Bu API key silinsin mi?')) }});">
+                                            @csrf
+                                            @method('delete')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">{{ __('Sil') }}</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @endif
+
+                <form method="post" action="{{ route('domains.llm-api-keys.store', $domain) }}" class="row g-2 align-items-end">
+                    @csrf
+                    <div class="col-auto">
+                        <label class="form-label">{{ __('Sağlayıcı') }}</label>
+                        <select name="provider" class="form-select" required>
+                            @foreach (\App\Models\DomainLlmApiKey::PROVIDERS as $provider)
+                                <option value="{{ $provider }}">{{ $provider }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <label class="form-label">{{ __('Etiket') }}</label>
+                        <select name="label" class="form-select" required>
+                            @foreach (\App\Models\DomainLlmApiKey::LABELS as $label)
+                                <option value="{{ $label }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col">
+                        <label class="form-label">{{ __('API Key') }}</label>
+                        <input type="text" name="api_key" class="form-control" placeholder="sk-..." required>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary">{{ __('Kaydet') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @endif
+
+    @if ($sitemapUrlCounts['active'] + $sitemapUrlCounts['removed'] > 0)
+    <div class="tab-pane" id="tab-pages" role="tabpanel">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="card-title">{{ __('Keşfedilen Sayfalar (Sitemap)') }}</h3>
+                <div class="card-actions">
+                    <span class="badge bg-success-lt">{{ __(":count sitemap'te", ['count' => $sitemapUrlCounts['active']]) }}</span>
+                    @if ($sitemapUrlCounts['removed'] > 0)
+                        <span class="badge bg-warning-lt">{{ __(':count kaldırıldı', ['count' => $sitemapUrlCounts['removed']]) }}</span>
+                    @endif
+                    <a href="{{ route('domains.lighthouse-report', $domain) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="ti ti-gauge icon"></i> {{ __('Sayfa Raporu') }}
+                    </a>
+                </div>
+            </div>
+            <div class="card-body py-2">
+                <p class="text-secondary mb-0">
+                    {{ __('Sitemap.xml\'de bulunan sayfalar; her "Site Kontrolü Yap" çalıştırmasında yeniden okunur. Bir sayfa sitemap\'ten kaldırılırsa (silinmez, sadece) "kaldırıldı" olarak işaretlenir.') }}
+                </p>
+            </div>
+            <div class="table-responsive" style="max-height: 420px; overflow-y: auto;">
+                <table class="table card-table table-vcenter table-sm">
+                    <thead>
+                        <tr>
+                            <th>URL</th>
+                            <th>{{ __('İlk görülme') }}</th>
+                            <th>{{ __('Son görülme') }}</th>
+                            <th>{{ __('Durum') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($sitemapUrls as $sitemapUrl)
+                            <tr>
+                                <td class="text-truncate" style="max-width: 420px;">
+                                    <a href="{{ $sitemapUrl->url }}" target="_blank" rel="noopener">{{ $sitemapUrl->url }}</a>
+                                </td>
+                                <td class="text-secondary">{{ $sitemapUrl->first_seen_at->format('Y-m-d') }}</td>
+                                <td class="text-secondary">{{ $sitemapUrl->last_seen_at->format('Y-m-d') }}</td>
+                                <td>
+                                    @if ($sitemapUrl->removed_at)
+                                        <span class="badge bg-warning-lt">{{ __('kaldırıldı: :date', ['date' => $sitemapUrl->removed_at->format('Y-m-d')]) }}</span>
+                                    @else
+                                        <span class="badge bg-success-lt">{{ __("sitemap'te") }}</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @if ($sitemapUrlCounts['active'] + $sitemapUrlCounts['removed'] > $sitemapUrls->count())
+                <div class="card-body py-2">
+                    <p class="text-secondary mb-0 small">{{ __('İlk :count kayıt gösteriliyor.', ['count' => $sitemapUrls->count()]) }}</p>
+                </div>
+            @endif
+        </div>
+    </div>
+
+    @endif
+
+    <div class="tab-pane" id="tab-competitors" role="tabpanel">
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3 class="card-title">{{ __('Rakip Analizi') }}</h3>
+        </div>
+        <div class="card-body">
+            @if ($competitorAnalysis['tracked_keyword_count'] === 0)
+                <p class="text-secondary mb-0">{{ __('Rakip analizi için en az bir anahtar kelimede engellenmemiş bir SERP kontrolü gerekir.') }}</p>
+            @elseif (empty($competitorAnalysis['competitors']))
+                <p class="text-secondary mb-0">{{ __('İzlenen anahtar kelimelerin SERP sonuçlarında tekrar eden bir rakip domain bulunamadı.') }}</p>
+            @else
+                <p class="text-secondary">
+                    {{ __('İzlenen :count anahtar kelimenin son SERP sonuçlarında sizinle birlikte en sık çıkan domainler:', ['count' => $competitorAnalysis['tracked_keyword_count']]) }}
+                </p>
+                <div class="table-responsive">
+                    <table class="table card-table table-vcenter">
+                        <thead>
+                            <tr>
+                                <th>Domain</th>
+                                <th>{{ __('Ortak anahtar kelime') }}</th>
+                                <th>{{ __('Ortalama pozisyon') }}</th>
+                                <th>{{ __('En iyi pozisyon') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($competitorAnalysis['competitors'] as $competitor)
+                                <tr>
+                                    <td class="fw-medium">{{ $competitor['domain'] }}</td>
+                                    <td>
+                                        <span
+                                            data-bs-toggle="tooltip"
+                                            data-bs-placement="top"
+                                            title="{{ implode(', ', $competitor['keywords']) }}"
+                                            style="cursor: help; border-bottom: 1px dotted currentColor;"
+                                        >{{ __(':count / :total', ['count' => $competitor['keyword_count'], 'total' => $competitorAnalysis['tracked_keyword_count']]) }}</span>
+                                    </td>
+                                    <td class="text-secondary">{{ $competitor['average_position'] }}</td>
+                                    <td class="text-secondary">{{ $competitor['best_position'] }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </div>
+    </div>
+    </div>
+
+    <div class="tab-pane" id="tab-history" role="tabpanel">
     <div class="card mb-4">
         <div class="card-header">
             <h3 class="card-title">{{ __('Geçmiş Skorlar') }}</h3>
@@ -806,281 +1252,56 @@
             @endunless
         </div>
     </div>
+    </div>
 
+    <div class="tab-pane" id="tab-info" role="tabpanel">
     <div class="card mb-4">
         <div class="card-header">
-            <h3 class="card-title">{{ __('Rakip Analizi') }}</h3>
+            <h3 class="card-title">WHOIS</h3>
+            <div class="card-actions">
+                <form method="post" action="{{ route('domains.whois.refresh', $domain) }}">
+                    @csrf
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">
+                        <i class="ti ti-refresh icon"></i> {{ __('WHOIS Bilgisini Yenile') }}
+                    </button>
+                </form>
+            </div>
         </div>
         <div class="card-body">
-            @if ($competitorAnalysis['tracked_keyword_count'] === 0)
-                <p class="text-secondary mb-0">{{ __('Rakip analizi için en az bir anahtar kelimede engellenmemiş bir SERP kontrolü gerekir.') }}</p>
-            @elseif (empty($competitorAnalysis['competitors']))
-                <p class="text-secondary mb-0">{{ __('İzlenen anahtar kelimelerin SERP sonuçlarında tekrar eden bir rakip domain bulunamadı.') }}</p>
+            @if (!$domain->fact?->whois_checked_at)
+                <p class="text-secondary mb-0">{{ __('WHOIS bilgisi henüz kuyruğa alınmadı ya da worker tarafından işlenmedi.') }}</p>
+            @elseif ($domain->fact->whois_error)
+                <p class="text-danger mb-0">{{ __('WHOIS sorgusu başarısız: :error', ['error' => $domain->fact->whois_error]) }}</p>
             @else
-                <p class="text-secondary">
-                    {{ __('İzlenen :count anahtar kelimenin son SERP sonuçlarında sizinle birlikte en sık çıkan domainler:', ['count' => $competitorAnalysis['tracked_keyword_count']]) }}
-                </p>
-                <div class="table-responsive">
-                    <table class="table card-table table-vcenter">
-                        <thead>
-                            <tr>
-                                <th>Domain</th>
-                                <th>{{ __('Ortak anahtar kelime') }}</th>
-                                <th>{{ __('Ortalama pozisyon') }}</th>
-                                <th>{{ __('En iyi pozisyon') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($competitorAnalysis['competitors'] as $competitor)
-                                <tr>
-                                    <td class="fw-medium">{{ $competitor['domain'] }}</td>
-                                    <td>
-                                        <span
-                                            data-bs-toggle="tooltip"
-                                            data-bs-placement="top"
-                                            title="{{ implode(', ', $competitor['keywords']) }}"
-                                            style="cursor: help; border-bottom: 1px dotted currentColor;"
-                                        >{{ __(':count / :total', ['count' => $competitor['keyword_count'], 'total' => $competitorAnalysis['tracked_keyword_count']]) }}</span>
-                                    </td>
-                                    <td class="text-secondary">{{ $competitor['average_position'] }}</td>
-                                    <td class="text-secondary">{{ $competitor['best_position'] }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                <div class="row">
+                    <div class="col-12 col-md-4">
+                        <div class="text-secondary small mb-1">{{ __('Domain Yaşı') }}</div>
+                        <div class="h3 mb-0">
+                            @if ($domain->whoisAgeInYears() !== null)
+                                {{ __(':years yıl', ['years' => $domain->whoisAgeInYears()]) }}
+                            @else
+                                <span class="text-secondary">—</span>
+                            @endif
+                        </div>
+                        @if ($domain->fact->whois_registered_at)
+                            <div class="text-secondary small">{{ __('Kayıt tarihi:') }} {{ $domain->fact->whois_registered_at->format('Y-m-d') }}</div>
+                        @endif
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="text-secondary small mb-1">{{ __('Registrar') }}</div>
+                        <div class="h3 mb-0">{{ $domain->fact->whois_registrar ?: '—' }}</div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="text-secondary small mb-1">{{ __('Kayıt Süresi Sonu') }}</div>
+                        <div class="h3 mb-0">{{ $domain->fact->whois_expires_at?->format('Y-m-d') ?: '—' }}</div>
+                    </div>
                 </div>
+                <div class="text-secondary small mt-3">{{ __('Son WHOIS kontrolü: :date', ['date' => $domain->fact->whois_checked_at->format('Y-m-d H:i:s')]) }}</div>
             @endif
         </div>
     </div>
+    </div>
 
-    @if ($sitemapUrlCounts['active'] + $sitemapUrlCounts['removed'] > 0)
-        <div class="card mb-4">
-            <div class="card-header">
-                <h3 class="card-title">{{ __('Keşfedilen Sayfalar (Sitemap)') }}</h3>
-                <div class="card-actions">
-                    <span class="badge bg-success-lt">{{ __(":count sitemap'te", ['count' => $sitemapUrlCounts['active']]) }}</span>
-                    @if ($sitemapUrlCounts['removed'] > 0)
-                        <span class="badge bg-warning-lt">{{ __(':count kaldırıldı', ['count' => $sitemapUrlCounts['removed']]) }}</span>
-                    @endif
-                    <a href="{{ route('domains.lighthouse-report', $domain) }}" class="btn btn-sm btn-outline-primary">
-                        <i class="ti ti-gauge icon"></i> {{ __('Sayfa Raporu') }}
-                    </a>
-                </div>
-            </div>
-            <div class="card-body py-2">
-                <p class="text-secondary mb-0">
-                    {{ __('Sitemap.xml\'de bulunan sayfalar; her "Site Kontrolü Yap" çalıştırmasında yeniden okunur. Bir sayfa sitemap\'ten kaldırılırsa (silinmez, sadece) "kaldırıldı" olarak işaretlenir.') }}
-                </p>
-            </div>
-            <div class="table-responsive" style="max-height: 420px; overflow-y: auto;">
-                <table class="table card-table table-vcenter table-sm">
-                    <thead>
-                        <tr>
-                            <th>URL</th>
-                            <th>{{ __('İlk görülme') }}</th>
-                            <th>{{ __('Son görülme') }}</th>
-                            <th>{{ __('Durum') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($sitemapUrls as $sitemapUrl)
-                            <tr>
-                                <td class="text-truncate" style="max-width: 420px;">
-                                    <a href="{{ $sitemapUrl->url }}" target="_blank" rel="noopener">{{ $sitemapUrl->url }}</a>
-                                </td>
-                                <td class="text-secondary">{{ $sitemapUrl->first_seen_at->format('Y-m-d') }}</td>
-                                <td class="text-secondary">{{ $sitemapUrl->last_seen_at->format('Y-m-d') }}</td>
-                                <td>
-                                    @if ($sitemapUrl->removed_at)
-                                        <span class="badge bg-warning-lt">{{ __('kaldırıldı: :date', ['date' => $sitemapUrl->removed_at->format('Y-m-d')]) }}</span>
-                                    @else
-                                        <span class="badge bg-success-lt">{{ __("sitemap'te") }}</span>
-                                    @endif
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-            @if ($sitemapUrlCounts['active'] + $sitemapUrlCounts['removed'] > $sitemapUrls->count())
-                <div class="card-body py-2">
-                    <p class="text-secondary mb-0 small">{{ __('İlk :count kayıt gösteriliyor.', ['count' => $sitemapUrls->count()]) }}</p>
-                </div>
-            @endif
-        </div>
-    @endif
-
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">{{ __('Anahtar Kelimeler') }}</h3>
-        </div>
-        <div class="card-body border-bottom py-2">
-            <p class="text-secondary mb-0">{{ __('"Kontrol Et" butonu SERP + on-page + Lighthouse taramasını aynı anda çalıştırır; bu 20-60 saniye sürebilir, sayfa kapanmadan bekleyin.') }}</p>
-        </div>
-
-        @php
-            $trackedKeywords = $domain->keywords->pluck('keyword')->map(fn ($k) => mb_strtolower(trim($k)));
-            $dismissedSuggestions = collect($domain->dismissed_keyword_suggestions ?? []);
-            $suggestedKeywords = collect($domain->latestDomainCheck?->suggested_keywords ?? [])
-                ->reject(fn ($s) => $trackedKeywords->contains(mb_strtolower($s['phrase'])))
-                ->reject(fn ($s) => $dismissedSuggestions->contains(mb_strtolower($s['phrase'])));
-        @endphp
-        @if ($suggestedKeywords->isNotEmpty())
-            <div class="card-body border-bottom py-3">
-                <div class="text-secondary small mb-2">
-                    {{ __('Ana sayfa HTML\'inden otomatik çıkarılan anahtar kelime önerileri — eklemek için "+", istemiyorsanız "×" tıklayın:') }}
-                </div>
-                <div class="d-flex flex-wrap gap-2">
-                    @foreach ($suggestedKeywords as $suggestion)
-                        <div class="btn-group">
-                            <form method="post" action="{{ route('keywords.store', $domain) }}">
-                                @csrf
-                                <input type="hidden" name="keyword" value="{{ $suggestion['phrase'] }}">
-                                <button type="submit" class="btn btn-sm btn-outline-secondary">
-                                    <i class="ti ti-plus icon"></i> {{ $suggestion['phrase'] }}
-                                </button>
-                            </form>
-                            <form method="post" action="{{ route('domains.keyword-suggestions.dismiss', $domain) }}">
-                                @csrf
-                                <input type="hidden" name="phrase" value="{{ $suggestion['phrase'] }}">
-                                <button type="submit" class="btn btn-sm btn-outline-secondary" aria-label="{{ __('Öneriyi kaldır: :phrase', ['phrase' => $suggestion['phrase']]) }}">
-                                    <i class="ti ti-x"></i>
-                                </button>
-                            </form>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        @endif
-
-        @if ($domain->keywords->isEmpty())
-            <div class="empty">
-                <div class="empty-icon"><i class="ti ti-key fs-1"></i></div>
-                <p class="empty-title">{{ __('Henüz anahtar kelime eklenmedi') }}</p>
-                <div class="empty-action">
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-add-keyword">
-                        <i class="ti ti-plus icon"></i> {{ __('Anahtar Kelime Ekle') }}
-                    </button>
-                </div>
-            </div>
-        @else
-            <div class="table-responsive">
-                <table class="table card-table table-vcenter">
-                    <thead>
-                        <tr>
-                            <th>{{ __('Kelime') }}</th>
-                            <th>{{ __('Sayfa') }}</th>
-                            <th>{{ __('Son sıralama') }}</th>
-                            <th>AI Overview</th>
-                            @if ($domain->llm_visibility_enabled)
-                                <th>{{ __('AI Görünürlük Kontrolü (ChatGPT/Claude/Gemini)') }}</th>
-                            @endif
-                            <th>{{ __('Lighthouse (Perf/SEO/Eris/BP)') }}</th>
-                            <th>{{ __('Son kontrol') }}</th>
-                            <th class="w-1"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($domain->keywords as $kw)
-                            @php
-                                $last = $kw->latestCheck;
-                            @endphp
-                            <tr>
-                                <td><a href="{{ route('keywords.show', $kw) }}" class="fw-medium">{{ $kw->keyword }}</a></td>
-                                <td class="text-secondary">{{ $kw->url ?: $domain->rootUrl() }}</td>
-                                <td>
-                                    @if (!$last)
-                                        <span class="text-secondary">-</span>
-                                    @elseif ($last->blocked)
-                                        <span class="badge bg-warning-lt">{{ __('engellendi') }}</span>
-                                    @elseif ($last->target_position)
-                                        <strong>{{ $last->target_position }}</strong>
-                                    @else
-                                        <span class="text-secondary">{{ __('bulunamadı') }}</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if (!$last)
-                                        <span class="text-secondary">-</span>
-                                    @elseif ($last->ai_overview_present)
-                                        @if ($last->ai_overview_target_cited)
-                                            <span class="badge bg-success-lt">{{ __('var, kaynakta') }}</span>
-                                        @else
-                                            <span class="badge bg-warning-lt">{{ __('var, kaynakta değil') }}</span>
-                                        @endif
-                                    @else
-                                        <span class="text-secondary">{{ __('yok') }}</span>
-                                    @endif
-                                </td>
-                                @if ($domain->llm_visibility_enabled)
-                                    <td>
-                                        @if (!$last || empty($last->llm_visibility))
-                                            <span class="text-secondary">-</span>
-                                        @else
-                                            <div class="d-flex flex-wrap gap-1">
-                                                @foreach ($last->llm_visibility as $provider => $result)
-                                                    @php
-                                                        $model = $result['model'] ?? null;
-                                                    @endphp
-                                                    @if ($result['error'])
-                                                        <span class="badge bg-danger-lt" data-bs-toggle="tooltip" title="{{ ($model ? '[' . $model . '] ' : '') . $result['error'] }}">
-                                                            {{ $provider }}@if ($model) <span class="fw-normal text-muted" style="font-size: 0.75em;">({{ $model }})</span>@endif
-                                                        </span>
-                                                    @elseif ($result['present'])
-                                                        <span class="badge bg-success-lt" data-bs-toggle="tooltip" title="{{ $model ? '[' . $model . '] ' . __('Domain geçiyor') : '' }}">
-                                                            {{ $provider }}@if ($model) <span class="fw-normal text-muted" style="font-size: 0.75em;">({{ $model }})</span>@endif
-                                                        </span>
-                                                    @else
-                                                        <span class="badge bg-secondary-lt" data-bs-toggle="tooltip" title="{{ $model ? '[' . $model . '] ' . __('Domain geçmiyor') : '' }}">
-                                                            {{ $provider }}@if ($model) <span class="fw-normal text-muted" style="font-size: 0.75em;">({{ $model }})</span>@endif
-                                                        </span>
-                                                    @endif
-                                                    @if ($result['follow_up_response'] ?? null)
-                                                        @if ($result['follow_up_present'] ?? false)
-                                                            <span class="badge bg-success-lt" data-bs-toggle="tooltip" title="{{ __("Türkiye'den:") }}{{ $model ? ' [' . $model . ']' : '' }}">{{ $provider }} TR</span>
-                                                        @else
-                                                            <span class="badge bg-secondary-lt" data-bs-toggle="tooltip" title="{{ __("Türkiye'den:") }}{{ $model ? ' [' . $model . ']' : '' }}">{{ $provider }} TR</span>
-                                                        @endif
-                                                    @endif
-                                                @endforeach
-                                            </div>
-                                        @endif
-                                    </td>
-                                @endif
-                                <td class="text-secondary">
-                                    @if (!$last)
-                                        -
-                                    @else
-                                        {{ $last->lighthouse_performance ?? '-' }} /
-                                        {{ $last->lighthouse_seo ?? '-' }} /
-                                        {{ $last->lighthouse_accessibility ?? '-' }} /
-                                        {{ $last->lighthouse_best_practices ?? '-' }}
-                                    @endif
-                                </td>
-                                <td class="text-secondary">{{ $last?->created_at?->format('Y-m-d H:i') ?? '-' }}</td>
-                                <td>
-                                    <div class="btn-list flex-nowrap">
-                                        <form method="post" action="{{ route('keywords.check', $kw) }}">
-                                            @csrf
-                                            <button type="submit" class="btn btn-icon btn-outline-primary" aria-label="{{ __('Kontrol Et') }}">
-                                                <i class="ti ti-refresh"></i>
-                                            </button>
-                                        </form>
-                                        <form method="post" action="{{ route('keywords.destroy', $kw) }}" onsubmit="return confirm('{{ __('Bu anahtar kelime silinsin mi?') }}');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-icon btn-ghost-danger" aria-label="{{ __('Sil') }}">
-                                                <i class="ti ti-trash"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        @endif
     </div>
 
     <div class="modal modal-blur fade" id="modal-add-keyword" tabindex="-1" role="dialog" aria-hidden="true">

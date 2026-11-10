@@ -74,7 +74,7 @@ class ScoreHistoryChartsTest extends TestCase
 
         $response->assertOk();
         $response->assertDontSee('Grafikler için tamamlanmış en az bir kontrol gerekir.');
-        $response->assertSee('<svg', false);
+        $response->assertSee('data-apex-line', false);
     }
 
     public function test_domain_page_renders_site_check_history_charts_once_domain_checks_span_multiple_days(): void
@@ -135,7 +135,7 @@ class ScoreHistoryChartsTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Geçmiş Skor Trendi');
-        $response->assertSee('<svg', false);
+        $response->assertSee('data-apex-line', false);
     }
 
     public function test_keyword_page_with_a_single_check_still_shows_the_trend_card(): void
@@ -149,9 +149,9 @@ class ScoreHistoryChartsTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Geçmiş Skor Trendi');
-        // Tek nokta icin polyline yerine yalnizca bir <circle> noktasi
-        // cizilir - cizgi olusmasa da veri gorsellestirilir.
-        $response->assertSee('<circle', false);
+        // Tek nokta icin de grafik konfigurasyonu basilir - ApexCharts
+        // cizgi olusmasa da tek noktayi isaretci (marker) olarak gosterir.
+        $response->assertSee('data-apex-line', false);
     }
 
     public function test_domain_page_with_a_single_check_still_shows_the_trend_charts(): void
@@ -165,6 +165,6 @@ class ScoreHistoryChartsTest extends TestCase
 
         $response->assertOk();
         $response->assertDontSee('Grafikler için tamamlanmış en az bir kontrol gerekir.');
-        $response->assertSee('<circle', false);
+        $response->assertSee('data-apex-line', false);
     }
 }
