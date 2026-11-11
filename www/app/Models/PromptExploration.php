@@ -9,9 +9,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Prompt Explorer: tek bir prompt'un, domain'e API key'i girilmis tum
- * yapay zeka saglayicilarina ayni anda sorulmasi. Sonuclar saglayici
- * bazinda "results" kolonunda tutulur (bkz. RunPromptExploration).
+ * Bir domain icin yapilan tum yapay zeka gorunurluk kontrolleri: Prompt
+ * Explorer sorulari, manuel MCP kontrolleri (check_ai_answer) ve otomatik
+ * anahtar kelime kontrolleri (check_id dolu, bkz. CheckRunner). Sonuclar
+ * saglayici bazinda "results" kolonunda tutulur.
  */
 class PromptExploration extends Model
 {
@@ -19,6 +20,7 @@ class PromptExploration extends Model
         'domain_id',
         'user_id',
         'keyword_id',
+        'check_id',
         'prompt',
         'providers',
         'results',
@@ -39,6 +41,17 @@ class PromptExploration extends Model
     public function keyword(): BelongsTo
     {
         return $this->belongsTo(Keyword::class);
+    }
+
+    /** Otomatik anahtar kelime kontrolunden geldiyse o check. */
+    public function check(): BelongsTo
+    {
+        return $this->belongsTo(Check::class);
+    }
+
+    public function isAutomatic(): bool
+    {
+        return $this->check_id !== null;
     }
 
     public function user(): BelongsTo

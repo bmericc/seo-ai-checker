@@ -824,5 +824,7 @@
     "Salt okunur": "Read-only",
     "Salt okunur: her şeyi görür, hiçbir şeyi değiştiremez. Düzenleyebilir: kontrol çalıştırır, anahtar kelime ekler/siler, rapor linki oluşturur. Domaini silmek ve erişimi yönetmek yalnızca sahibe aittir.": "Read-only: sees everything, changes nothing. Can edit: runs checks, adds/removes keywords, creates report links. Only the owner can delete the domain and manage access.",
     "Yetki": "Permission",
-    "Yetki: :email": "Permission: :email"
+    "Yetki: :email": "Permission: :email",
+    "Anahtar kelime kontrolü sırasında otomatik soruldu": "Asked automatically during the keyword check",
+    "Henüz kayıt yok. AI görünürlük kontrolü açıksa her anahtar kelime kontrolünde sonuçlar buraya düşer; MCP bağlantısındaki asistanınıza da check_ai_answer ile kontrol ettirebilirsiniz.": "No records yet. When AI visibility checks are on, every keyword check lands here; you can also have your MCP-connected assistant check keywords with check_ai_answer."
 }

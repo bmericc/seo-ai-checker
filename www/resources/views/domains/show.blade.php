@@ -332,7 +332,10 @@
                             <th class="text-end" data-bs-toggle="tooltip" title="{{ __('Keyword difficulty: 0-100 arası organik sıralama zorluğu') }}">KD</th>
                             <th>{{ __('Son sıralama') }}</th>
                             <th>AI Overview</th>
-                            @if ($domain->llm_visibility_enabled)
+                            @php
+                                $showAiColumn = $domain->llm_visibility_enabled || $domain->keywords->contains(fn ($k) => $k->latestAiCheck !== null);
+                            @endphp
+                            @if ($showAiColumn)
                                 <th>{{ __('AI Görünürlük Kontrolü (ChatGPT/Claude/Gemini)') }}</th>
                             @endif
                             <th>{{ __('Lighthouse (Perf/SEO/Eris/BP)') }}</th>
@@ -403,41 +406,41 @@
                                         <span class="text-secondary">{{ __('yok') }}</span>
                                     @endif
                                 </td>
-                                @if ($domain->llm_visibility_enabled)
+                                @if ($showAiColumn)
                                     @php
-                                        $llmCheck = $kw->latestLlmCheck;
+                                        $aiCheck = $kw->latestAiCheck;
                                     @endphp
                                     <td>
-                                        @if (!$llmCheck || empty($llmCheck->llm_visibility))
+                                        @if (!$aiCheck || empty($aiCheck->results))
                                             <span class="text-secondary">-</span>
                                         @else
-                                            <div class="d-flex flex-wrap gap-1">
-                                                @foreach ($llmCheck->llm_visibility as $provider => $result)
+                                            <a href="{{ route('domains.prompts.show', [$domain, $aiCheck]) }}" class="d-flex flex-wrap gap-1 text-reset text-decoration-none" title="{{ $aiCheck->created_at->toDateTimeString() }}">
+                                                @foreach ($aiCheck->results as $provider => $result)
                                                     @php
                                                         $model = $result['model'] ?? null;
                                                     @endphp
-                                                    @if ($result['error'])
+                                                    @if ($result['error'] ?? null)
                                                         <span class="badge bg-danger-lt" data-bs-toggle="tooltip" title="{{ ($model ? '[' . $model . '] ' : '') . \App\Support\StoredText::t($result['error']) }}">
-                                                            {{ $provider }}@if ($model) <span class="fw-normal text-muted" style="font-size: 0.75em;">({{ $model }})</span>@endif
+                                                            {{ \App\Support\AiAssistant::label($provider) }}@if ($model) <span class="fw-normal text-muted" style="font-size: 0.75em;">({{ $model }})</span>@endif
                                                         </span>
-                                                    @elseif ($result['present'])
+                                                    @elseif ($result['present'] ?? false)
                                                         <span class="badge bg-success-lt" data-bs-toggle="tooltip" title="{{ $model ? '[' . $model . '] ' . __('Domain geçiyor') : '' }}">
-                                                            {{ $provider }}@if ($model) <span class="fw-normal text-muted" style="font-size: 0.75em;">({{ $model }})</span>@endif
+                                                            {{ \App\Support\AiAssistant::label($provider) }}@if ($model) <span class="fw-normal text-muted" style="font-size: 0.75em;">({{ $model }})</span>@endif
                                                         </span>
                                                     @else
                                                         <span class="badge bg-secondary-lt" data-bs-toggle="tooltip" title="{{ $model ? '[' . $model . '] ' . __('Domain geçmiyor') : '' }}">
-                                                            {{ $provider }}@if ($model) <span class="fw-normal text-muted" style="font-size: 0.75em;">({{ $model }})</span>@endif
+                                                            {{ \App\Support\AiAssistant::label($provider) }}@if ($model) <span class="fw-normal text-muted" style="font-size: 0.75em;">({{ $model }})</span>@endif
                                                         </span>
                                                     @endif
                                                     @if ($result['follow_up_response'] ?? null)
                                                         @if ($result['follow_up_present'] ?? false)
-                                                            <span class="badge bg-success-lt" data-bs-toggle="tooltip" title="{{ __("Türkiye'den:") }}{{ $model ? ' [' . $model . ']' : '' }}">{{ $provider }} TR</span>
+                                                            <span class="badge bg-success-lt" data-bs-toggle="tooltip" title="{{ __("Türkiye'den:") }}{{ $model ? ' [' . $model . ']' : '' }}">{{ \App\Support\AiAssistant::label($provider) }} TR</span>
                                                         @else
-                                                            <span class="badge bg-secondary-lt" data-bs-toggle="tooltip" title="{{ __("Türkiye'den:") }}{{ $model ? ' [' . $model . ']' : '' }}">{{ $provider }} TR</span>
+                                                            <span class="badge bg-secondary-lt" data-bs-toggle="tooltip" title="{{ __("Türkiye'den:") }}{{ $model ? ' [' . $model . ']' : '' }}">{{ \App\Support\AiAssistant::label($provider) }} TR</span>
                                                         @endif
                                                     @endif
                                                 @endforeach
-                                            </div>
+                                            </a>
                                         @endif
                                     </td>
                                 @endif

@@ -65,17 +65,18 @@ class Keyword extends Model
     }
 
     /**
-     * AI gorunurluk sonucu iceren en son kontrol. Haftalik otomatik
-     * kontrol LLM saglayicilarini varsayilan olarak cagirmadigi icin
-     * (bkz. config seo.scheduled_checks.include_llm) en son kontrol ile
-     * en son LLM sonucu farkli kontroller olabilir.
+     * En son yapay zeka gorunurluk kontrolu (otomatik, Prompt Explorer ya
+     * da manuel MCP). Haftalik otomatik kontrol LLM saglayicilarini
+     * varsayilan olarak cagirmadigi icin (bkz. config
+     * seo.scheduled_checks.include_llm) en son SERP kontrolu ile en son AI
+     * kontrolu farkli zamanlara ait olabilir.
      */
-    public function latestLlmCheck(): HasOne
+    public function latestAiCheck(): HasOne
     {
-        return $this->hasOne(Check::class)->ofMany(['id' => 'max'], fn ($query) => $query->whereNotNull('llm_visibility'));
+        return $this->hasOne(PromptExploration::class)->latestOfMany();
     }
 
-    /** Bu kelime icin kaydedilen yapay zeka kontrolleri (check_ai_answer). */
+    /** Bu kelime icin kaydedilen tum yapay zeka kontrolleri. */
     public function aiChecks(): HasMany
     {
         return $this->hasMany(PromptExploration::class)->orderByDesc('created_at')->orderByDesc('id');

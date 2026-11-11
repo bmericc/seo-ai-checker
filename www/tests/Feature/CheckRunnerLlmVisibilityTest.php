@@ -63,7 +63,7 @@ class CheckRunnerLlmVisibilityTest extends TestCase
 
         $check = app(CheckRunner::class)->run($keyword);
 
-        $this->assertNull($check->llm_visibility);
+        $this->assertNull($check->aiCheck?->results);
     }
 
     public function test_llm_visibility_is_null_when_enabled_but_no_keys_configured(): void
@@ -74,7 +74,7 @@ class CheckRunnerLlmVisibilityTest extends TestCase
 
         $check = app(CheckRunner::class)->run($keyword);
 
-        $this->assertNull($check->llm_visibility);
+        $this->assertNull($check->aiCheck?->results);
     }
 
     public function test_only_configured_providers_are_included(): void
@@ -88,12 +88,12 @@ class CheckRunnerLlmVisibilityTest extends TestCase
 
         $check = app(CheckRunner::class)->run($keyword);
 
-        $this->assertArrayHasKey('openai', $check->llm_visibility);
-        $this->assertArrayNotHasKey('anthropic', $check->llm_visibility);
-        $this->assertArrayNotHasKey('gemini', $check->llm_visibility);
+        $this->assertArrayHasKey('openai', $check->aiCheck?->results);
+        $this->assertArrayNotHasKey('anthropic', $check->aiCheck?->results);
+        $this->assertArrayNotHasKey('gemini', $check->aiCheck?->results);
     }
 
-    public function test_openai_mention_result_is_stored_on_the_check(): void
+    public function test_openai_mention_result_is_stored_as_an_ai_check_of_the_keyword(): void
     {
         $user = User::factory()->create(['approved_at' => now()]);
         $domain = Domain::query()->create(['domain' => 'example.com', 'user_id' => $user->id, 'llm_visibility_enabled' => true]);
@@ -104,13 +104,22 @@ class CheckRunnerLlmVisibilityTest extends TestCase
 
         $check = app(CheckRunner::class)->run($keyword);
 
-        $this->assertTrue($check->llm_visibility['openai']['present']);
-        $this->assertStringContainsString('example.com', $check->llm_visibility['openai']['response']);
-        $this->assertNull($check->llm_visibility['openai']['error']);
-        $this->assertStringContainsString('örnek kelime', $check->llm_visibility['openai']['prompt']);
-        $this->assertSame('Türkiye kaynaklı: example.com.', $check->llm_visibility['openai']['follow_up_response']);
-        $this->assertNotNull($check->llm_visibility['openai']['follow_up_prompt']);
-        $this->assertTrue($check->llm_visibility['openai']['follow_up_present']);
-        $this->assertSame('gpt-5.6-luna', $check->llm_visibility['openai']['model']);
+        $this->assertTrue($check->aiCheck?->results['openai']['present']);
+        $this->assertStringContainsString('example.com', $check->aiCheck?->results['openai']['response']);
+        $this->assertNull($check->aiCheck?->results['openai']['error']);
+        $this->assertStringContainsString('örnek kelime', $check->aiCheck?->results['openai']['prompt']);
+        $this->assertSame('Türkiye kaynaklı: example.com.', $check->aiCheck?->results['openai']['follow_up_response']);
+        $this->assertNotNull($check->aiCheck?->results['openai']['follow_up_prompt']);
+        $this->assertTrue($check->aiCheck?->results['openai']['follow_up_present']);
+        $this->assertSame('gpt-5.6-luna', $check->aiCheck?->results['openai']['model']);
+
+        $aiCheck = $check->aiCheck;
+        $this->assertTrue($aiCheck->isAutomatic());
+        $this->assertTrue($aiCheck->isComplete());
+        $this->assertSame($keyword->id, $aiCheck->keyword_id);
+        $this->assertSame($domain->id, $aiCheck->domain_id);
+        $this->assertSame(['openai'], $aiCheck->providers);
+        $this->assertStringContainsString('örnek kelime', $aiCheck->prompt);
+        $this->assertTrue($keyword->latestAiCheck->is($aiCheck));
     }
 }

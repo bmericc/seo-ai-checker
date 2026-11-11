@@ -11,6 +11,7 @@ use App\Services\Eeat\EeatScorer;
 use App\Services\Lighthouse\PageSpeedInsightsClient;
 use App\Services\Llm\AnthropicVisibilityChecker;
 use App\Services\Llm\GeminiVisibilityChecker;
+use App\Services\Llm\LlmVisibilityPrompt;
 use App\Services\Llm\OpenAiVisibilityChecker;
 use App\Services\Llm\PerplexityVisibilityChecker;
 use App\Services\OnPage\OnPageSeoAnalyzer;
@@ -43,7 +44,8 @@ final class CheckRunner
      *         otomatik kontrolde Standard kuyruktan onceden toplanmis
      *         sonuclar (cihaz => sonuc). Verilmezse SERP live sorgulanir.
      * @param  bool  $includeLlm  false ise AI gorunurluk saglayicilari hic
-     *         cagrilmaz (llm_visibility null kalir, maliyet olusmaz).
+     *         cagrilmaz (AI kontrol kaydi olusmaz, maliyet olusmaz). Sonuclar
+     *         check'e bagli bir PromptExploration olarak yazilir.
      */
     public function run(Keyword $keyword, ?array $prefetchedSerp = null, bool $includeLlm = true, string $source = 'manual'): Check
     {
@@ -110,7 +112,7 @@ final class CheckRunner
 
         $lighthouse = $this->lighthouseClient->analyze($targetUrl);
 
-        return $keyword->checks()->create([
+        $check = $keyword->checks()->create([
             'source' => $source,
             'blocked' => $serp->blocked,
             'block_reason' => $serp->blockReason,
@@ -130,7 +132,6 @@ final class CheckRunner
             'ai_overview_cited_domains' => $serp->aiOverview->citedDomains,
             'ai_overview_target_cited' => $serp->aiOverview->present ? $serp->aiOverview->citesDomain($domain) : null,
             'ai_overview_note' => $serp->aiOverview->note,
-            'llm_visibility' => $includeLlm ? $this->buildLlmVisibility($keyword, $domain) : null,
             'onpage' => $onPageData,
             'onpage_error' => $onPageError,
             'eeat_score' => $eeat?->score,
@@ -142,6 +143,20 @@ final class CheckRunner
             'lighthouse_error' => $lighthouse->error,
             'lighthouse_raw' => $lighthouse->raw,
         ]);
+
+        $llmResults = $includeLlm ? $this->buildLlmVisibility($keyword, $domain) : null;
+        if ($llmResults !== null && $llmResults !== []) {
+            $keyword->domain->promptExplorations()->create([
+                'keyword_id' => $keyword->id,
+                'check_id' => $check->id,
+                'prompt' => collect($llmResults)->pluck('prompt')->filter()->first() ?? LlmVisibilityPrompt::userPrompt($keyword->keyword),
+                'providers' => array_keys($llmResults),
+                'results' => $llmResults,
+                'completed_at' => now(),
+            ]);
+        }
+
+        return $check;
     }
 
     /**

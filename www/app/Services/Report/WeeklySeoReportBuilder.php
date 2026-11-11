@@ -34,7 +34,7 @@ final class WeeklySeoReportBuilder
      */
     public function build(Domain $domain): ?array
     {
-        $domain->loadMissing(['keywords.checks', 'fact', 'domainChecks']);
+        $domain->loadMissing(['keywords.checks.aiCheck', 'fact', 'domainChecks']);
 
         $keywordRows = [];
         foreach ($domain->keywords as $keyword) {
@@ -88,7 +88,7 @@ final class WeeklySeoReportBuilder
             'previous_eeat_score' => $previous?->eeat_score,
             'lighthouse_performance' => $current->lighthouse_performance,
             'previous_lighthouse_performance' => $previous?->lighthouse_performance,
-            'llm_visibility' => $current->llm_visibility,
+            'llm_visibility' => $current->aiCheck?->results,
         ];
     }
 

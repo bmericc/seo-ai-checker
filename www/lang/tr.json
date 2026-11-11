@@ -824,5 +824,7 @@
     "Salt okunur": "Salt okunur",
     "Salt okunur: her şeyi görür, hiçbir şeyi değiştiremez. Düzenleyebilir: kontrol çalıştırır, anahtar kelime ekler/siler, rapor linki oluşturur. Domaini silmek ve erişimi yönetmek yalnızca sahibe aittir.": "Salt okunur: her şeyi görür, hiçbir şeyi değiştiremez. Düzenleyebilir: kontrol çalıştırır, anahtar kelime ekler/siler, rapor linki oluşturur. Domaini silmek ve erişimi yönetmek yalnızca sahibe aittir.",
     "Yetki": "Yetki",
-    "Yetki: :email": "Yetki: :email"
+    "Yetki: :email": "Yetki: :email",
+    "Anahtar kelime kontrolü sırasında otomatik soruldu": "Anahtar kelime kontrolü sırasında otomatik soruldu",
+    "Henüz kayıt yok. AI görünürlük kontrolü açıksa her anahtar kelime kontrolünde sonuçlar buraya düşer; MCP bağlantısındaki asistanınıza da check_ai_answer ile kontrol ettirebilirsiniz.": "Henüz kayıt yok. AI görünürlük kontrolü açıksa her anahtar kelime kontrolünde sonuçlar buraya düşer; MCP bağlantısındaki asistanınıza da check_ai_answer ile kontrol ettirebilirsiniz."
 }

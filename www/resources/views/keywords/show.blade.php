@@ -181,57 +181,6 @@
                         </p>
                     @endif
 
-                    @if (!empty($check->llm_visibility))
-                        <div class="mb-2">
-                            <div class="text-secondary small mb-1">{{ __('AI Görünürlük Kontrolü (ChatGPT/Claude/Gemini)') }}</div>
-                            @php
-                                $llmPrompt = collect($check->llm_visibility)->pluck('prompt')->filter()->first();
-                            @endphp
-                            @if ($llmPrompt)
-                                <div class="small text-secondary mb-1"><strong>{{ __('Soru:') }}</strong> {{ $llmPrompt }}</div>
-                            @endif
-                            <div class="d-flex flex-wrap gap-1 mb-1">
-                                @foreach ($check->llm_visibility as $provider => $result)
-                                    @php
-                                        $model = $result['model'] ?? null;
-                                        $providerLabel = $provider . ($model ? ' (' . $model . ')' : '');
-                                    @endphp
-                                    @if ($result['error'])
-                                        <span class="badge bg-danger-lt" data-bs-toggle="tooltip" title="{{ $result['error'] }}">{{ $providerLabel }}: {{ __('hata') }}</span>
-                                    @elseif ($result['present'])
-                                        <span class="badge bg-success-lt">{{ $providerLabel }}: {{ __('geçiyor') }}</span>
-                                    @else
-                                        <span class="badge bg-secondary-lt">{{ $providerLabel }}: {{ __('geçmiyor') }}</span>
-                                    @endif
-                                @endforeach
-                            </div>
-                            @foreach ($check->llm_visibility as $provider => $result)
-                                @php
-                                    $model = $result['model'] ?? null;
-                                    $providerLabel = $provider . ($model ? ' (' . $model . ')' : '');
-                                @endphp
-                                @if ($result['response'])
-                                    <div class="small text-secondary mb-1" style="white-space: pre-wrap;">
-                                        <strong>{{ $providerLabel }} — {{ __('Genel cevap:') }}</strong> {{ $result['response'] }}
-                                    </div>
-                                @endif
-                                @if (!empty($result['citations']))
-                                    <div class="small text-secondary mb-1 ps-3">
-                                        <strong>{{ __('Kaynaklar:') }}</strong>
-                                        @foreach (array_filter($result['citations'], fn ($url) => is_string($url) && preg_match('#^https?://#i', $url)) as $citation)
-                                            <a href="{{ $citation }}" target="_blank" rel="noopener noreferrer nofollow" class="me-2">{{ parse_url($citation, PHP_URL_HOST) }}</a>
-                                        @endforeach
-                                    </div>
-                                @endif
-                                @if ($result['follow_up_response'] ?? null)
-                                    <div class="small text-secondary mb-1 ps-3 border-start" style="white-space: pre-wrap;">
-                                        <strong>{{ $providerLabel }} — {{ __("Türkiye'den:") }}</strong> {{ $result['follow_up_response'] }}
-                                    </div>
-                                @endif
-                            @endforeach
-                        </div>
-                    @endif
-
                     @if ($check->onpage_error)
                         <p class="text-danger mb-0">{{ __('On-page analiz başarısız: :error', ['error' => $check->onpage_error]) }}</p>
                     @endif

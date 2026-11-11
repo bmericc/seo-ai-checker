@@ -76,7 +76,7 @@ class DomainController extends Controller
         $domain->load([
             'keywords' => fn ($q) => $q->orderBy('keyword'),
             'keywords.latestCheck',
-            'keywords.latestLlmCheck',
+            'keywords.latestAiCheck',
             'latestDomainCheck',
             'fact',
             'user',

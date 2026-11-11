@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Services\Lighthouse\LighthouseResult;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Check extends Model
 {
@@ -25,7 +26,6 @@ class Check extends Model
         'ai_overview_cited_domains',
         'ai_overview_target_cited',
         'ai_overview_note',
-        'llm_visibility',
         'onpage',
         'onpage_error',
         'eeat_score',
@@ -46,7 +46,6 @@ class Check extends Model
         'ai_overview_present' => 'boolean',
         'ai_overview_cited_domains' => 'array',
         'ai_overview_target_cited' => 'boolean',
-        'llm_visibility' => 'array',
         'onpage' => 'array',
         'eeat_breakdown' => 'array',
         'lighthouse_raw' => 'array',
@@ -55,6 +54,12 @@ class Check extends Model
     public function keyword(): BelongsTo
     {
         return $this->belongsTo(Keyword::class);
+    }
+
+    /** Bu kontrolde calisan AI gorunurluk sorgusu (varsa). */
+    public function aiCheck(): HasOne
+    {
+        return $this->hasOne(PromptExploration::class);
     }
 
     public function isVisibleTo(?User $user): bool

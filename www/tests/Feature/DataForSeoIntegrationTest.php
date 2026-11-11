@@ -110,10 +110,10 @@ class DataForSeoIntegrationTest extends TestCase
 
         $check = app(CheckRunner::class)->run($keyword);
 
-        $this->assertSame(['chatgpt_web', 'gemini_web'], array_keys($check->llm_visibility));
-        $this->assertTrue($check->llm_visibility['chatgpt_web']['present']);
-        $this->assertSame(['https://example.com/a'], $check->llm_visibility['chatgpt_web']['citations']);
-        $this->assertFalse($check->llm_visibility['gemini_web']['present']);
+        $this->assertSame(['chatgpt_web', 'gemini_web'], array_keys($check->aiCheck?->results));
+        $this->assertTrue($check->aiCheck?->results['chatgpt_web']['present']);
+        $this->assertSame(['https://example.com/a'], $check->aiCheck?->results['chatgpt_web']['citations']);
+        $this->assertFalse($check->aiCheck?->results['gemini_web']['present']);
     }
 
     public function test_llm_scraper_requires_master_toggle(): void
@@ -121,7 +121,7 @@ class DataForSeoIntegrationTest extends TestCase
         [, , $keyword] = $this->domainWithKeyword(['llm_visibility_enabled' => false, 'llm_scraper_enabled' => true]);
         $this->app->instance(LlmScraperChecker::class, new LlmScraperChecker($this->fakeClient([])));
 
-        $this->assertNull(app(CheckRunner::class)->run($keyword)->llm_visibility);
+        $this->assertNull(app(CheckRunner::class)->run($keyword)->aiCheck);
     }
 
     public function test_metrics_updater_writes_and_skips_fresh(): void
@@ -216,7 +216,7 @@ class DataForSeoIntegrationTest extends TestCase
         $this->assertSame(2, $check->target_position);
         $this->assertSame(5, $check->mobile_target_position);
         $this->assertSame('scheduled', $check->source);
-        $this->assertNull($check->llm_visibility);
+        $this->assertNull($check->aiCheck?->results);
     }
 
     public function test_collector_times_out_stuck_tasks(): void

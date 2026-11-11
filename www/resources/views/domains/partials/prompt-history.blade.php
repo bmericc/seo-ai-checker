@@ -11,7 +11,7 @@
     </div>
     @if ($historyItems->isEmpty())
         <div class="card-body text-secondary">
-            {{ __('Henüz kayıt yok. MCP bağlantısındaki asistanınıza bir domain verip kelimelerini check_ai_answer ile kontrol ettirebilirsiniz.') }}
+            {{ __('Henüz kayıt yok. AI görünürlük kontrolü açıksa her anahtar kelime kontrolünde sonuçlar buraya düşer; MCP bağlantısındaki asistanınıza da check_ai_answer ile kontrol ettirebilirsiniz.') }}
         </div>
     @else
         <div class="list-group list-group-flush">
@@ -20,6 +20,9 @@
                     <span class="text-truncate flex-fill" style="min-width: 12rem">{{ $item->prompt }}</span>
                     @if ($item->keyword && !$historyKeyword)
                         <span class="badge bg-azure-lt"><i class="ti ti-key me-1"></i>{{ $item->keyword->keyword }}</span>
+                    @endif
+                    @if ($item->isAutomatic())
+                        <span class="badge bg-teal-lt" title="{{ __('Anahtar kelime kontrolü sırasında otomatik soruldu') }}"><i class="ti ti-refresh me-1"></i>{{ __('Otomatik') }}</span>
                     @endif
                     @if (!$item->isComplete())
                         <span class="badge bg-blue-lt">{{ __('Çalışıyor') }}</span>

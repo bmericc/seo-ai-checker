@@ -26,6 +26,9 @@
             @if ($exploration->keyword)
                 <a href="{{ route('keywords.show', $exploration->keyword) }}" class="badge bg-azure-lt mb-2"><i class="ti ti-key me-1"></i>{{ $exploration->keyword->keyword }}</a>
             @endif
+            @if ($exploration->isAutomatic())
+                <span class="badge bg-teal-lt mb-2" title="{{ __('Anahtar kelime kontrolü sırasında otomatik soruldu') }}"><i class="ti ti-refresh me-1"></i>{{ __('Otomatik') }}</span>
+            @endif
             <div class="d-flex flex-wrap align-items-center gap-2">
                 @if ($exploration->isComplete())
                     <span class="badge {{ $summary['mentioned'] > 0 ? 'bg-success-lt' : 'bg-secondary-lt' }} fs-5">

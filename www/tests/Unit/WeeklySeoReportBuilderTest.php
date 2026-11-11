@@ -88,12 +88,17 @@ class WeeklySeoReportBuilderTest extends TestCase
         $user = User::factory()->create();
         $domain = Domain::query()->create(['domain' => 'example.com', 'user_id' => $user->id, 'llm_visibility_enabled' => true]);
         $keyword = $domain->keywords()->create(['keyword' => 'örnek kelime']);
-        $keyword->checks()->create([
-            'target_position' => 3,
-            'llm_visibility' => [
+        $check = $keyword->checks()->create(['target_position' => 3]);
+        $domain->promptExplorations()->create([
+            'keyword_id' => $keyword->id,
+            'check_id' => $check->id,
+            'prompt' => 'örnek kelime konusunda hangi web sitelerine bakmalıyım?',
+            'providers' => ['openai', 'anthropic'],
+            'results' => [
                 'openai' => ['present' => true, 'response' => null, 'error' => null],
                 'anthropic' => ['present' => false, 'response' => null, 'error' => null],
             ],
+            'completed_at' => now(),
         ]);
 
         $report = $this->builder()->build($domain);
