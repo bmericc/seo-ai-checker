@@ -14,18 +14,6 @@ use Laravel\Mcp\Server\Registrar;
  */
 class McpRegistrar extends Registrar
 {
-    /**
-     * Bazi istemciler (ChatGPT) RFC 8414 belgesine ek olarak OpenID
-     * kesif adresini de okuyor; orada HTML 404 gormek yerine ayni OAuth
-     * sunucu bilgisini alsinlar diye disaridan cagrilabilir hali.
-     *
-     * @return array<string, mixed>
-     */
-    public static function oauthServerMetadata(string $oauthPrefix = 'oauth'): array
-    {
-        return static::authorizationServerMetadata($oauthPrefix);
-    }
-
     protected static function authorizationServerMetadata(string $oauthPrefix): array
     {
         return [

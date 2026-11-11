@@ -28,11 +28,14 @@ Route::post('/', fn () => response()->json([
 // route'laridir; giris sistemdeki Google girisiyle yapilir.
 Mcp::oauthRoutes();
 
-// ChatGPT oauth-authorization-server belgesinden sonra OpenID kesif adresini
-// de okuyor; HTML 404 yerine ayni OAuth sunucu bilgisini JSON olarak verir.
-Route::get('/.well-known/openid-configuration', fn () => response()->json(
-    \App\Mcp\McpRegistrar::oauthServerMetadata(),
-))->name('mcp.oauth.openid-configuration');
+// Sunucu OpenID Connect saglayicisi degil (yalnizca OAuth 2.0, RFC 8414).
+// ChatGPT bu adresi de okuyor; burada OAuth belgesini 200 ile vermek eksik
+// OIDC alanlariyla bozuk bir OIDC saglayicisi izlenimi veriyordu. HTML 404
+// yerine JSON 404 doner.
+Route::get('/.well-known/openid-configuration', fn () => response()->json([
+    'error' => 'not_found',
+    'error_description' => 'OpenID Connect discovery is not supported.',
+], 404))->name('mcp.oauth.openid-configuration');
 
 // Her uye yalnizca kendi domainlerini, admin tum domainleri gorur
 // (bkz. App\Mcp\Tools\SeoTool).
