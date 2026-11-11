@@ -21,7 +21,7 @@ class IndexNowController extends Controller
      */
     public function keyFile(Request $request, Domain $domain): Response
     {
-        $this->ensureCanAccessDomain($request, $domain);
+        $this->ensureCanEditDomain($request, $domain);
 
         $key = $this->indexNow->ensureKey($domain);
 
@@ -33,7 +33,7 @@ class IndexNowController extends Controller
 
     public function regenerate(Request $request, Domain $domain): RedirectResponse
     {
-        $this->ensureCanAccessDomain($request, $domain);
+        $this->ensureCanEditDomain($request, $domain);
 
         $this->indexNow->regenerateKey($domain);
 
@@ -42,7 +42,7 @@ class IndexNowController extends Controller
 
     public function verify(Request $request, Domain $domain): RedirectResponse
     {
-        $this->ensureCanAccessDomain($request, $domain);
+        $this->ensureCanEditDomain($request, $domain);
 
         $result = $this->indexNow->verifyKeyFile($domain);
 
@@ -51,7 +51,7 @@ class IndexNowController extends Controller
 
     public function submit(Request $request, Domain $domain): RedirectResponse
     {
-        $this->ensureCanAccessDomain($request, $domain);
+        $this->ensureCanEditDomain($request, $domain);
 
         $data = $request->validate([
             'source' => ['required', 'in:sitemap,manual'],

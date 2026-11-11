@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\CheckController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DomainController;
+use App\Http\Controllers\DomainMemberController;
 use App\Http\Controllers\IndexNowController;
 use App\Http\Controllers\KeywordController;
 use App\Http\Controllers\LocaleController;
@@ -87,6 +88,10 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/domains/{domain}/shares', [ReportShareController::class, 'store'])->name('domains.shares.store');
     Route::delete('/domains/{domain}/shares/{share}', [ReportShareController::class, 'destroy'])->name('domains.shares.destroy');
+
+    Route::post('/domains/{domain}/members', [DomainMemberController::class, 'store'])->name('domains.members.store');
+    Route::patch('/domains/{domain}/members/{member}', [DomainMemberController::class, 'update'])->name('domains.members.update');
+    Route::delete('/domains/{domain}/members/{member}', [DomainMemberController::class, 'destroy'])->name('domains.members.destroy');
 
     Route::post('/domains/{domain}/keywords', [KeywordController::class, 'store'])->name('keywords.store');
     Route::get('/keywords/{keyword}', [KeywordController::class, 'show'])->name('keywords.show');

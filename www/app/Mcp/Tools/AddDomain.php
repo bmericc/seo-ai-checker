@@ -6,6 +6,7 @@ namespace App\Mcp\Tools;
 
 use App\Jobs\RunDomainSiteCheck;
 use App\Jobs\RunDomainWhoisLookup;
+use App\Models\Domain;
 use App\Support\Domain as DomainHelper;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
@@ -44,6 +45,18 @@ class AddDomain extends SeoTool
                 'domain' => $existing->domain,
                 'message' => __(':domain zaten kayıtlı.', ['domain' => $name]),
                 'url' => route('domains.show', $existing),
+            ]);
+        }
+
+        $shared = Domain::query()->accessibleBy($user)->where('domain', $name)->first();
+        if ($shared !== null) {
+            return Response::json([
+                'created' => false,
+                'id' => $shared->id,
+                'domain' => $shared->domain,
+                'access' => $shared->accessLevelFor($user),
+                'message' => __(':domain sizinle zaten paylaşılmış.', ['domain' => $name]),
+                'url' => route('domains.show', $shared),
             ]);
         }
 

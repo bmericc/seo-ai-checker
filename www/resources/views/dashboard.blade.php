@@ -165,6 +165,9 @@
         <div class="domain-grid" data-domain-grid>
             @foreach ($domains as $domain)
                 @php
+                    $access = $domain->accessLevelFor($user);
+                    $isShared = $domain->user_id !== $user->id && !$user->is_admin;
+                    $myMembership = $isShared ? $domain->membershipFor($user) : null;
                     $health = $healthByDomain[$domain->id];
                     $status = !$health->hasData ? 'pending' : (count($health->issues) > 0 ? 'attention' : 'ok');
                     $toneText = ['success' => 'text-success', 'warning' => 'text-warning', 'danger' => 'text-danger', 'secondary' => 'text-secondary'][$health->tone()];
@@ -190,6 +193,11 @@
                                 </div>
                                 @if ($user->is_admin)
                                     <div class="small text-secondary text-truncate">{{ $domain->user?->email ?? '—' }}</div>
+                                @elseif ($isShared)
+                                    <div class="small text-secondary text-truncate">
+                                        <i class="ti ti-users me-1"></i>{{ __(':email paylaştı', ['email' => $domain->user?->email ?? '—']) }}
+                                        · {{ $access === \App\Models\DomainMember::WRITE ? __('Düzenleyebilir') : __('Salt okunur') }}
+                                    </div>
                                 @endif
                             </div>
                             <div class="dropdown">
@@ -197,16 +205,26 @@
                                     <i class="ti ti-dots-vertical"></i>
                                 </button>
                                 <div class="dropdown-menu dropdown-menu-end">
-                                    <form method="post" action="{{ route('domains.check', $domain) }}">
-                                        @csrf
-                                        <button type="submit" class="dropdown-item"><i class="ti ti-refresh icon me-1"></i>{{ __('Yeniden kontrol et') }}</button>
-                                    </form>
-                                    <div class="dropdown-divider"></div>
-                                    <form method="post" action="{{ route('domains.destroy', $domain) }}" onsubmit="return confirm('{{ __(':domain silinsin mi? Tüm anahtar kelimeler ve geçmiş de silinecek.', ['domain' => $domain->domain]) }}');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="dropdown-item text-danger" aria-label="{{ __('Sil') }}"><i class="ti ti-trash icon me-1"></i>{{ __('Sil') }}</button>
-                                    </form>
+                                    @if ($access !== \App\Models\DomainMember::READ)
+                                        <form method="post" action="{{ route('domains.check', $domain) }}">
+                                            @csrf
+                                            <button type="submit" class="dropdown-item"><i class="ti ti-refresh icon me-1"></i>{{ __('Yeniden kontrol et') }}</button>
+                                        </form>
+                                        <div class="dropdown-divider"></div>
+                                    @endif
+                                    @if ($myMembership)
+                                        <form method="post" action="{{ route('domains.members.destroy', [$domain, $myMembership]) }}" onsubmit="return confirm({{ json_encode(__(':domain paylaşımından ayrılmak istiyor musunuz?', ['domain' => $domain->domain])) }});">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="dropdown-item text-danger"><i class="ti ti-logout icon me-1"></i>{{ __('Paylaşımdan ayrıl') }}</button>
+                                        </form>
+                                    @else
+                                        <form method="post" action="{{ route('domains.destroy', $domain) }}" onsubmit="return confirm('{{ __(':domain silinsin mi? Tüm anahtar kelimeler ve geçmiş de silinecek.', ['domain' => $domain->domain]) }}');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="dropdown-item text-danger" aria-label="{{ __('Sil') }}"><i class="ti ti-trash icon me-1"></i>{{ __('Sil') }}</button>
+                                        </form>
+                                    @endif
                                 </div>
                             </div>
                         </div>

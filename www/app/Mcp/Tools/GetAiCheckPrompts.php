@@ -51,6 +51,7 @@ class GetAiCheckPrompts extends SeoTool
                 if (!$this->canWrite($user)) {
                     throw new ToolError(__('Yeni kelime eklemek için "write" izni gerekiyor. Bağlantıyı yazma izniyle yeniden yetkilendirin.'));
                 }
+                $this->ensureCanEdit($user, $domain);
                 $keyword = $domain->keywords()->create(['keyword' => $phrase]);
                 $created = true;
             }

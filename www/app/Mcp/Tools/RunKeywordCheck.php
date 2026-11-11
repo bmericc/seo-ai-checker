@@ -34,6 +34,7 @@ class RunKeywordCheck extends SeoTool
         if ($keyword === null || !$keyword->isVisibleTo($user)) {
             throw new ToolError(__('Anahtar kelime bulunamadı. list_keywords ile id\'leri görebilirsiniz.'));
         }
+        $this->ensureCanEdit($user, $keyword->domain);
 
         RunKeywordCheckJob::dispatch($keyword->id);
 

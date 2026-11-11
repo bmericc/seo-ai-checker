@@ -14,8 +14,9 @@ use Laravel\Mcp\Server\Registrar;
 
 /**
  * Tum MCP tool'larinin ortak yetki kurallari:
- * - Uye yalnizca kendi domainlerini, admin tum domainleri gorur
- *   (Domain::isVisibleTo ile ayni kural).
+ * - Uye kendi domainlerini ve kendisiyle paylasilanlari, admin tum
+ *   domainleri gorur (Domain::isVisibleTo ile ayni kural). Yazma
+ *   tool'lari ayrica domain'de "write" yetkisi ister (bkz. DomainMember).
  * - Okuma tool'lari "read" (ya da paketin "mcp:use") scope'unu, yazma
  *   tool'lari "write" scope'unu ister; scope'u olmayan tool listede de
  *   gorunmez.
@@ -83,7 +84,7 @@ abstract class SeoTool extends Tool
      */
     protected function visibleDomains(User $user): Builder
     {
-        return Domain::query()->when(!$user->is_admin, fn (Builder $q) => $q->where('user_id', $user->id));
+        return Domain::query()->accessibleBy($user);
     }
 
     /**
@@ -91,6 +92,27 @@ abstract class SeoTool extends Tool
      * uyede kayitliysa once kendi kaydini, yoksa hata ile id'leri doner.
      */
     protected function resolveDomain(User $user, mixed $reference): Domain
+    {
+        $domain = $this->findDomain($user, $reference);
+
+        if ($this->writes) {
+            $this->ensureCanEdit($user, $domain);
+        }
+
+        return $domain;
+    }
+
+    /**
+     * Domain sizinle salt okunur paylasildiysa degisiklik yapilamaz.
+     */
+    protected function ensureCanEdit(User $user, Domain $domain): void
+    {
+        if (!$domain->canBeEditedBy($user)) {
+            throw new ToolError(__(':domain sizinle salt okunur paylaşılmış; bu işlem için düzenleme yetkisi gerekiyor.', ['domain' => $domain->domain]));
+        }
+    }
+
+    private function findDomain(User $user, mixed $reference): Domain
     {
         $reference = trim((string) $reference);
 

@@ -18,7 +18,7 @@ class ReportShareController extends Controller
 {
     public function store(Request $request, Domain $domain, ReportShareService $shares): RedirectResponse
     {
-        $this->ensureCanAccessDomain($request, $domain);
+        $this->ensureCanEditDomain($request, $domain);
 
         $data = $request->validate([
             'title' => ['nullable', 'string', 'max:120'],
@@ -43,7 +43,7 @@ class ReportShareController extends Controller
 
     public function destroy(Request $request, Domain $domain, ReportShare $share): RedirectResponse
     {
-        $this->ensureCanAccessDomain($request, $domain);
+        $this->ensureCanEditDomain($request, $domain);
         abort_unless($share->domain_id === $domain->id, 404);
 
         $share->update(['revoked_at' => now()]);

@@ -32,7 +32,9 @@ use Laravel\Mcp\Server\Attributes\Version;
 
     - Start with list_domains, then get_domain for health issues and how to fix them,
       and list_keywords for rankings and AI Overview citations.
-    - Members see only their own domains; admins see every member's domains.
+    - Members see their own domains plus domains other members shared with them
+      (list_domains shows "access": owner, write or read; write tools fail on
+      read-only shares); admins see every member's domains.
     - Checks run in the background: after run_domain_check / run_keyword_check /
       explore_prompt, wait a minute or two before reading the result again.
     - Manual AI visibility check (no API keys): call get_ai_check_prompts (with the

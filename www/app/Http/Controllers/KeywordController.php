@@ -16,7 +16,7 @@ class KeywordController extends Controller
 {
     public function store(Request $request, Domain $domain): RedirectResponse
     {
-        $this->ensureCanAccessDomain($request, $domain);
+        $this->ensureCanEditDomain($request, $domain);
 
         $data = $request->validate([
             'keyword' => ['required', 'string', 'max:255'],
@@ -53,13 +53,17 @@ class KeywordController extends Controller
             ->get();
         $scoreHistory = $scoreHistoryBuilder->groupedByDay($ascendingChecks);
 
-        return view('keywords.show', ['keyword' => $keyword, 'scoreHistory' => $scoreHistory]);
+        return view('keywords.show', [
+            'keyword' => $keyword,
+            'scoreHistory' => $scoreHistory,
+            'canEdit' => $keyword->domain->canBeEditedBy($request->user()),
+        ]);
     }
 
     public function check(Request $request, Keyword $keyword, CheckRunner $checkRunner): RedirectResponse
     {
         $keyword->load('domain');
-        $this->ensureCanAccessKeyword($request, $keyword);
+        $this->ensureCanEditKeyword($request, $keyword);
 
         $checkRunner->run($keyword);
 
@@ -71,7 +75,7 @@ class KeywordController extends Controller
     public function destroy(Request $request, Keyword $keyword): RedirectResponse
     {
         $keyword->loadMissing('domain');
-        $this->ensureCanAccessKeyword($request, $keyword);
+        $this->ensureCanEditKeyword($request, $keyword);
 
         $domain = $keyword->domain;
         $keyword->delete();

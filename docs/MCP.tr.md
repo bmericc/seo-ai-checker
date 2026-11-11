@@ -37,7 +37,7 @@ Verdiğiniz erişimleri **Bağlantılar → Yapay zekâ asistanları (MCP)** kar
 
 ## Yetkiler
 
-- Her üye yalnızca kendi domainlerini görür. Yönetici tüm üyelerin domainlerini görür.
+- Her üye kendi domainlerini ve domain sayfasındaki "Erişim" penceresinden kendisiyle paylaşılanları görür. `list_domains` her domain için `access` seviyenizi döner (`owner`, `write`, `read`); salt okunur paylaşımlarda yazma araçları hata verir. Yönetici tüm üyelerin domainlerini görür.
 - Onayı bekleyen (henüz onaylanmamış) hesaplar hiçbir araca erişemez.
 - İki izin (scope) vardır:
   - `read`: okuma araçları.

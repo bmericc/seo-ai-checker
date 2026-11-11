@@ -14,6 +14,21 @@ abstract class Controller
         abort_unless($domain->isVisibleTo($request->user()), 403);
     }
 
+    protected function ensureCanEditDomain(Request $request, Domain $domain): void
+    {
+        abort_unless($domain->canBeEditedBy($request->user()), 403);
+    }
+
+    protected function ensureCanManageDomain(Request $request, Domain $domain): void
+    {
+        abort_unless($domain->canBeManagedBy($request->user()), 403);
+    }
+
+    protected function ensureCanEditKeyword(Request $request, Keyword $keyword): void
+    {
+        abort_unless($keyword->domain->canBeEditedBy($request->user()), 403);
+    }
+
     protected function ensureCanAccessKeyword(Request $request, Keyword $keyword): void
     {
         abort_unless($keyword->isVisibleTo($request->user()), 403);

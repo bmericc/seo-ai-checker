@@ -15,7 +15,9 @@
                     {{ __('Yeni ya da değişen sayfalarınızı Bing, Yandex, Seznam ve Naver\'e anında bildirin. Arama motorları sayfayı keşfetmek için taramayı beklemez. Google IndexNow\'u desteklemiyor.') }}
                 </p>
 
-                @if (!$indexNowKey)
+                @if (!$canEdit)
+                    <p class="text-secondary small mb-0"><i class="ti ti-lock me-1"></i>{{ __('Bu domaine salt okunur erişiminiz var; IndexNow ayarlarını yalnızca düzenleme yetkisi olanlar değiştirebilir.') }}</p>
+                @elseif (!$indexNowKey)
                     <div class="border rounded-3 p-3">
                         <div class="fw-semibold mb-1">{{ __('1. Anahtar oluşturun') }}</div>
                         <p class="text-secondary small mb-2">{{ __('Bildirimlerin sizden geldiğini kanıtlamak için sitenize küçük bir anahtar dosyası koymanız gerekiyor.') }}</p>

@@ -20,9 +20,8 @@ class DashboardController extends Controller
 
         $domains = Domain::query()
             ->withCount('keywords')
-            ->with(['latestDomainCheck', 'fact'])
-            ->when($user->is_admin, fn ($query) => $query->with('user'))
-            ->when(!$user->is_admin, fn ($query) => $query->where('user_id', $user->id))
+            ->with(['latestDomainCheck', 'fact', 'user', 'members' => fn ($query) => $query->where('user_id', $user->id)])
+            ->accessibleBy($user)
             ->orderBy('domain')
             ->get();
 

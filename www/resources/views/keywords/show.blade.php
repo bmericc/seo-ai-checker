@@ -7,12 +7,14 @@
 @endsection
 @section('page-title', $keyword->keyword)
 @section('page-actions')
-    <form method="post" action="{{ route('keywords.check', $keyword) }}" class="d-inline">
-        @csrf
-        <button type="submit" class="btn btn-primary">
-            <i class="ti ti-refresh icon"></i> {{ __('Kontrol Et') }}
-        </button>
-    </form>
+    @if ($canEdit)
+        <form method="post" action="{{ route('keywords.check', $keyword) }}" class="d-inline">
+            @csrf
+            <button type="submit" class="btn btn-primary">
+                <i class="ti ti-refresh icon"></i> {{ __('Kontrol Et') }}
+            </button>
+        </form>
+    @endif
 @endsection
 
 @section('content')

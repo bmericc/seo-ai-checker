@@ -37,7 +37,7 @@ You can see the access you granted on the **Connections → AI assistants (MCP)*
 
 ## Permissions
 
-- Each member sees only their own domains. Admins see every member's domains.
+- Each member sees their own domains plus domains shared with them from the domain page's "Access" dialog. `list_domains` returns your `access` level per domain (`owner`, `write`, `read`); write tools fail on read-only shares. Admins see every member's domains.
 - Accounts waiting for approval cannot use any tool.
 - There are two scopes:
   - `read`: read tools.

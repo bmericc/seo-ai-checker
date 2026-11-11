@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\DomainMember;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
@@ -81,6 +82,9 @@ class GoogleController extends Controller
             'google_token_expires_at' => $googleUser->expiresIn ? now()->addSeconds($googleUser->expiresIn) : $user->google_token_expires_at,
             'locale' => $user->locale ?? app()->getLocale(),
         ])->save();
+
+        // Hesabi yokken kendisiyle paylasilmis domainler (bkz. DomainMember).
+        DomainMember::claimPendingFor($user);
 
         Auth::login($user, remember: true);
         request()->session()->regenerate();

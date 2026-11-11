@@ -71,6 +71,7 @@ class LighthouseReportController extends Controller
 
         return view('domains.lighthouse-report', [
             'domain' => $domain,
+            'canEdit' => $domain->canBeEditedBy($request->user()),
             'sitemapUrls' => $sitemapUrls,
             'lighthouseSummary' => $lighthouseSummary,
             'onPageSummary' => $onPageSummary,
@@ -81,7 +82,7 @@ class LighthouseReportController extends Controller
 
     public function start(Request $request, Domain $domain, SharedSitemapUrlLookup $sharedLookup): RedirectResponse
     {
-        $this->ensureCanAccessDomain($request, $domain);
+        $this->ensureCanEditDomain($request, $domain);
 
         $urls = $domain->sitemapUrls()
             ->whereNull('removed_at')
@@ -118,7 +119,7 @@ class LighthouseReportController extends Controller
 
     public function startOnPage(Request $request, Domain $domain, SharedSitemapUrlLookup $sharedLookup): RedirectResponse
     {
-        $this->ensureCanAccessDomain($request, $domain);
+        $this->ensureCanEditDomain($request, $domain);
 
         $urls = $domain->sitemapUrls()
             ->whereNull('removed_at')

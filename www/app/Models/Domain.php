@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -32,6 +33,11 @@ class Domain extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function members(): HasMany
+    {
+        return $this->hasMany(DomainMember::class)->orderBy('email');
     }
 
     public function keywords(): HasMany
@@ -151,16 +157,65 @@ class Domain extends Model
         }
     }
 
-    public function isVisibleTo(?User $user): bool
+    public const ACCESS_OWNER = 'owner';
+
+    /**
+     * Kullanicinin bu domain'deki erisim seviyesi: "owner" (sahip ya da
+     * admin), "write", "read" (bkz. DomainMember) ya da erisimi yoksa null.
+     */
+    public function accessLevelFor(?User $user): ?string
     {
         if ($user === null) {
-            return false;
+            return null;
         }
 
+        if ($user->is_admin || ($this->user_id !== null && $this->user_id === $user->id)) {
+            return self::ACCESS_OWNER;
+        }
+
+        return $this->membershipFor($user)?->permission;
+    }
+
+    public function membershipFor(User $user): ?DomainMember
+    {
+        if ($this->relationLoaded('members')) {
+            return $this->members->firstWhere('user_id', $user->id);
+        }
+
+        return $this->members()->where('user_id', $user->id)->first();
+    }
+
+    public function isVisibleTo(?User $user): bool
+    {
+        return $this->accessLevelFor($user) !== null;
+    }
+
+    /** Kontrol calistirma, anahtar kelime ekleme/silme gibi degisiklikler. */
+    public function canBeEditedBy(?User $user): bool
+    {
+        return in_array($this->accessLevelFor($user), [self::ACCESS_OWNER, DomainMember::WRITE], true);
+    }
+
+    /** Domain'i silme, paylasimi yonetme, GA4 property secimi. */
+    public function canBeManagedBy(?User $user): bool
+    {
+        return $this->accessLevelFor($user) === self::ACCESS_OWNER;
+    }
+
+    /**
+     * Kullanicinin gorebildigi domainler: admin hepsini, uye kendi
+     * domainlerini ve kendisiyle paylasilanlari.
+     *
+     * @param  Builder<Domain>  $query
+     */
+    public function scopeAccessibleBy(Builder $query, User $user): void
+    {
         if ($user->is_admin) {
-            return true;
+            return;
         }
 
-        return $this->user_id !== null && $this->user_id === $user->id;
+        $query->where(fn (Builder $q) => $q
+            ->where('user_id', $user->id)
+            ->orWhereHas('members', fn (Builder $m) => $m->where('user_id', $user->id)));
     }
 }

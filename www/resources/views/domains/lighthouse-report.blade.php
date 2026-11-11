@@ -7,6 +7,7 @@
 @endsection
 @section('page-title', __('Sayfa Raporu'))
 @section('page-actions')
+    @if ($canEdit)
     <form method="post" action="{{ route('domains.lighthouse-report.start-onpage', $domain) }}" class="d-inline">
         @csrf
         <button type="submit" class="btn btn-outline-primary">
@@ -19,6 +20,7 @@
             <i class="ti ti-gauge icon"></i> {{ __(':count Sayfa Lighthouse Tara', ['count' => $maxLighthouseUrlsPerBatch]) }}
         </button>
     </form>
+    @endif
 @endsection
 
 @section('content')

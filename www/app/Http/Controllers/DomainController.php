@@ -46,6 +46,18 @@ class DomainController extends Controller
                 ->with('flash', ['type' => 'error', 'message' => __(':domain zaten kayıtlı.', ['domain' => $domain])]);
         }
 
+        // Ayni domain bu kullaniciyla zaten paylasildiysa ikinci bir kopya
+        // olusturmak yerine paylasilan kayda yonlendir.
+        $shared = Domain::query()
+            ->accessibleBy($request->user())
+            ->where('domain', $domain)
+            ->first();
+        if ($shared !== null) {
+            return redirect()
+                ->route('domains.show', $shared)
+                ->with('flash', ['type' => 'success', 'message' => __(':domain sizinle zaten paylaşılmış.', ['domain' => $domain])]);
+        }
+
         $record = $request->user()->domains()->create(['domain' => $domain]);
 
         RunDomainWhoisLookup::dispatch($record->id);
@@ -68,6 +80,7 @@ class DomainController extends Controller
             'latestDomainCheck',
             'fact',
             'user',
+            'members.user',
         ]);
 
         $keywordChecks = Check::query()
@@ -111,8 +124,14 @@ class DomainController extends Controller
 
         $competitorAnalysis = (new CompetitorAnalyzer())->frequentCompetitors($domain->domain, $domain->keywords);
 
+        $accessLevel = $domain->accessLevelFor($request->user());
+
         return view('domains.show', [
             'domain' => $domain,
+            'accessLevel' => $accessLevel,
+            'canEdit' => $domain->canBeEditedBy($request->user()),
+            'canManage' => $domain->canBeManagedBy($request->user()),
+            'membership' => $accessLevel === Domain::ACCESS_OWNER ? null : $domain->membershipFor($request->user()),
             'sitemapUrls' => $sitemapUrls,
             'sitemapUrlCounts' => $sitemapUrlCounts,
             'driftChanges' => $driftChanges,
@@ -125,7 +144,7 @@ class DomainController extends Controller
 
     public function check(Request $request, Domain $domain, DomainCheckRunner $checkRunner): RedirectResponse
     {
-        $this->ensureCanAccessDomain($request, $domain);
+        $this->ensureCanEditDomain($request, $domain);
 
         $checkRunner->run($domain, forceFresh: true);
 
@@ -136,7 +155,7 @@ class DomainController extends Controller
 
     public function refreshWhois(Request $request, Domain $domain): RedirectResponse
     {
-        $this->ensureCanAccessDomain($request, $domain);
+        $this->ensureCanEditDomain($request, $domain);
 
         RunDomainWhoisLookup::dispatch($domain->id);
 
@@ -147,7 +166,7 @@ class DomainController extends Controller
 
     public function destroy(Request $request, Domain $domain): RedirectResponse
     {
-        $this->ensureCanAccessDomain($request, $domain);
+        $this->ensureCanManageDomain($request, $domain);
 
         $domain->delete();
 
@@ -158,7 +177,7 @@ class DomainController extends Controller
 
     public function dismissKeywordSuggestion(Request $request, Domain $domain): RedirectResponse
     {
-        $this->ensureCanAccessDomain($request, $domain);
+        $this->ensureCanEditDomain($request, $domain);
 
         $data = $request->validate(['phrase' => ['required', 'string', 'max:255']]);
 
@@ -171,7 +190,7 @@ class DomainController extends Controller
 
     public function updateGa4Property(Request $request, Domain $domain): RedirectResponse
     {
-        $this->ensureCanAccessDomain($request, $domain);
+        $this->ensureCanManageDomain($request, $domain);
 
         $data = $request->validate(['ga4_property_id' => ['nullable', 'string', 'max:64']]);
 
@@ -188,7 +207,7 @@ class DomainController extends Controller
         GoogleTokenService $tokenService,
         Ga4PropertyLister $lister,
     ): RedirectResponse {
-        $this->ensureCanAccessDomain($request, $domain);
+        $this->ensureCanManageDomain($request, $domain);
 
         $accessToken = $tokenService->getValidAccessToken($domain->user);
         $result = $lister->list($accessToken);
@@ -274,7 +293,7 @@ class DomainController extends Controller
 
     public function refreshKeywordMetrics(Request $request, Domain $domain, DataForSeoClient $dataForSeo): RedirectResponse
     {
-        $this->ensureCanAccessDomain($request, $domain);
+        $this->ensureCanEditDomain($request, $domain);
 
         if (!$dataForSeo->isConfigured()) {
             return redirect()

@@ -11,19 +11,41 @@
         <span class="badge bg-secondary-lt ms-2">{{ __('Sahibi: :email', ['email' => $domain->user?->email ?? '—']) }}</span>
     @endif
 @endsection
+@if ($accessLevel !== \App\Models\Domain::ACCESS_OWNER)
+    @section('page-subtitle')
+        <i class="ti ti-users me-1"></i>{{ __(':email paylaştı', ['email' => $domain->user?->email ?? '—']) }}
+        · {{ $canEdit ? __('Düzenleyebilir') : __('Salt okunur') }}
+    @endsection
+@endif
 @section('page-actions')
-    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modal-share-report">
-        <i class="ti ti-share icon"></i> {{ __('Paylaş') }}
-    </button>
-    <form method="post" action="{{ route('domains.check', $domain) }}" class="d-inline">
-        @csrf
-        <button type="submit" class="btn btn-outline-primary">
-            <i class="ti ti-refresh icon"></i> {{ __('Site Kontrolü Yap') }}
+    @if ($canManage)
+        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modal-domain-members">
+            <i class="ti ti-users icon"></i> {{ __('Erişim') }}
+            @if ($domain->members->isNotEmpty())
+                <span class="badge bg-secondary-lt ms-1">{{ $domain->members->count() }}</span>
+            @endif
         </button>
-    </form>
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-add-keyword">
-        <i class="ti ti-plus icon"></i> {{ __('Anahtar Kelime Ekle') }}
-    </button>
+    @elseif ($membership)
+        <form method="post" action="{{ route('domains.members.destroy', [$domain, $membership]) }}" class="d-inline" onsubmit="return confirm({{ json_encode(__(':domain paylaşımından ayrılmak istiyor musunuz?', ['domain' => $domain->domain])) }});">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn btn-ghost-danger"><i class="ti ti-logout icon"></i> {{ __('Paylaşımdan ayrıl') }}</button>
+        </form>
+    @endif
+    @if ($canEdit)
+        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modal-share-report">
+            <i class="ti ti-share icon"></i> {{ __('Paylaş') }}
+        </button>
+        <form method="post" action="{{ route('domains.check', $domain) }}" class="d-inline">
+            @csrf
+            <button type="submit" class="btn btn-outline-primary">
+                <i class="ti ti-refresh icon"></i> {{ __('Site Kontrolü Yap') }}
+            </button>
+        </form>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-add-keyword">
+            <i class="ti ti-plus icon"></i> {{ __('Anahtar Kelime Ekle') }}
+        </button>
+    @endif
 @endsection
 
 @section('content')
@@ -115,10 +137,12 @@
                                             <div class="fw-semibold mb-1"><i class="ti ti-tool me-1"></i>{{ __('Nasıl düzeltilir?') }}</div>
                                             <div class="text-secondary">{{ $issue['fix'] }}</div>
                                             <div class="d-flex flex-wrap gap-2 mt-3">
-                                                <form method="post" action="{{ route('domains.check', $domain) }}">
-                                                    @csrf
-                                                    <button type="submit" class="btn btn-sm">{{ __('Düzelttim, tekrar kontrol et') }}</button>
-                                                </form>
+                                                @if ($canEdit)
+                                                    <form method="post" action="{{ route('domains.check', $domain) }}">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-sm">{{ __('Düzelttim, tekrar kontrol et') }}</button>
+                                                    </form>
+                                                @endif
                                                 <a href="#tab-health" class="btn btn-sm btn-link" data-tab-jump="#tab-health">{{ __('Teknik ayrıntılar') }}</a>
                                             </div>
                                         </div>
@@ -165,7 +189,9 @@
                         </div>
                         @if ($domain->keywords->isEmpty())
                             <p class="text-secondary small mb-3">{{ __('Hangi aramalarda görünmek istediğinizi ekleyin; Google ve yapay zekâ yanıtlarındaki yerinizi takip edelim.') }}</p>
-                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modal-add-keyword"><i class="ti ti-plus icon"></i> {{ __('Anahtar Kelime Ekle') }}</button>
+                            @if ($canEdit)
+                                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modal-add-keyword"><i class="ti ti-plus icon"></i> {{ __('Anahtar Kelime Ekle') }}</button>
+                            @endif
                         @else
                             <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
                                 @foreach ($domain->keywords->take(5) as $kw)
@@ -233,7 +259,7 @@
     <div class="card">
         <div class="card-header">
             <h3 class="card-title">{{ __('Anahtar Kelimeler') }}</h3>
-            @if ($dataForSeoConfigured && $domain->keywords->isNotEmpty())
+            @if ($canEdit && $dataForSeoConfigured && $domain->keywords->isNotEmpty())
                 <div class="card-actions">
                     <form method="post" action="{{ route('domains.keyword-metrics.refresh', $domain) }}">
                         @csrf
@@ -255,7 +281,7 @@
                 ->reject(fn ($s) => $trackedKeywords->contains(mb_strtolower($s['phrase'])))
                 ->reject(fn ($s) => $dismissedSuggestions->contains(mb_strtolower($s['phrase'])));
         @endphp
-        @if ($suggestedKeywords->isNotEmpty())
+        @if ($canEdit && $suggestedKeywords->isNotEmpty())
             <div class="card-body border-bottom py-3">
                 <div class="text-secondary small mb-2">
                     {{ __('Ana sayfa HTML\'inden otomatik çıkarılan anahtar kelime önerileri — eklemek için "+", istemiyorsanız "×" tıklayın:') }}
@@ -287,11 +313,13 @@
             <div class="empty">
                 <div class="empty-icon"><i class="ti ti-key fs-1"></i></div>
                 <p class="empty-title">{{ __('Henüz anahtar kelime eklenmedi') }}</p>
+                @if ($canEdit)
                 <div class="empty-action">
                     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-add-keyword">
                         <i class="ti ti-plus icon"></i> {{ __('Anahtar Kelime Ekle') }}
                     </button>
                 </div>
+                @endif
             </div>
         @else
             <div class="table-responsive">
@@ -425,6 +453,7 @@
                                 </td>
                                 <td class="text-secondary">{{ $last?->created_at?->format('Y-m-d H:i') ?? '-' }}</td>
                                 <td>
+                                    @if ($canEdit)
                                     <div class="btn-list flex-nowrap">
                                         <form method="post" action="{{ route('keywords.check', $kw) }}">
                                             @csrf
@@ -440,6 +469,7 @@
                                             </button>
                                         </form>
                                     </div>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach
@@ -736,7 +766,7 @@
                         </h2>
                         <div id="ac-gsc" class="accordion-collapse collapse" data-bs-parent="#site-check-accordion">
                             <div class="accordion-body">
-                                @if (!auth()->user()->hasGoogleOfflineAccess())
+                                @if (!$domain->user?->hasGoogleOfflineAccess())
                                     <p class="text-secondary mb-0">
                                         {!! __('Google hesabınız bağlı değil. Search Console verisi için üstteki ":link" bağlantısından tekrar giriş yapın.', ['link' => __('Google hesabını bağla')]) !!}
                                     </p>
@@ -814,6 +844,7 @@
                                     $selectedGa4Property = collect($ga4Properties)->firstWhere('propertyId', $domain->ga4_property_id);
                                     $selectedGa4Account = $selectedGa4Property['accountName'] ?? null;
                                 @endphp
+                                @if ($canManage)
                                 <form method="post" action="{{ route('domains.ga4-property.update', $domain) }}" class="d-flex gap-2 align-items-end mt-3">
                                     @csrf
                                     @method('PATCH')
@@ -847,13 +878,14 @@
                                     </div>
                                     <button type="submit" class="btn btn-outline-primary">{{ __('Kaydet') }}</button>
                                 </form>
-                                @if (empty($ga4Properties) && auth()->user()->hasGoogleOfflineAccess())
+                                @if (empty($ga4Properties) && $domain->user?->hasGoogleOfflineAccess())
                                     <form method="post" action="{{ route('domains.ga4-properties.fetch', $domain) }}" class="mt-2">
                                         @csrf
                                         <button type="submit" class="btn btn-sm btn-outline-secondary">
                                             <i class="ti ti-refresh icon"></i> {{ __('Property listesini getir') }}
                                         </button>
                                     </form>
+                                @endif
                                 @endif
                             </div>
                         </div>
@@ -867,7 +899,7 @@
                         </h2>
                         <div id="ac-bing" class="accordion-collapse collapse" data-bs-parent="#site-check-accordion">
                             <div class="accordion-body">
-                                @if (!auth()->user()->hasBingOfflineAccess())
+                                @if (!$domain->user?->hasBingOfflineAccess())
                                     <p class="text-secondary mb-0">
                                         {!! __('Bing hesabınız bağlı değil. Backlink verisi için üstteki ":link" bağlantısından bağlanın.', ['link' => __('Bing hesabını bağla')]) !!}
                                     </p>
@@ -1334,6 +1366,7 @@
     <div class="card mb-4">
         <div class="card-header">
             <h3 class="card-title">WHOIS</h3>
+            @if ($canEdit)
             <div class="card-actions">
                 <form method="post" action="{{ route('domains.whois.refresh', $domain) }}">
                     @csrf
@@ -1342,6 +1375,7 @@
                     </button>
                 </form>
             </div>
+            @endif
         </div>
         <div class="card-body">
             @if (!$domain->fact?->whois_checked_at)
@@ -1410,5 +1444,10 @@
             </div>
         </div>
     </div>
-    @include('domains.partials.share-modal')
+    @if ($canEdit)
+        @include('domains.partials.share-modal')
+    @endif
+    @if ($canManage)
+        @include('domains.partials.members-modal')
+    @endif
 @endsection
