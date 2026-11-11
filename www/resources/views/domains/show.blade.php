@@ -233,6 +233,16 @@
     <div class="card">
         <div class="card-header">
             <h3 class="card-title">{{ __('Anahtar Kelimeler') }}</h3>
+            @if ($dataForSeoConfigured && $domain->keywords->isNotEmpty())
+                <div class="card-actions">
+                    <form method="post" action="{{ route('domains.keyword-metrics.refresh', $domain) }}">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="{{ __('Aylık arama hacmi, CPC, keyword difficulty ve arama niyeti (DataForSEO). 30 günden yeni metrikler tekrar sorgulanmaz.') }}">
+                            <i class="ti ti-chart-bar icon"></i> {{ __('Metrikleri getir') }}
+                        </button>
+                    </form>
+                </div>
+            @endif
         </div>
         <div class="card-body border-bottom py-2">
             <p class="text-secondary mb-0">{{ __('"Kontrol Et" butonu SERP + on-page + Lighthouse taramasını aynı anda çalıştırır; bu 20-60 saniye sürebilir, sayfa kapanmadan bekleyin.') }}</p>
@@ -290,6 +300,8 @@
                         <tr>
                             <th>{{ __('Kelime') }}</th>
                             <th>{{ __('Sayfa') }}</th>
+                            <th class="text-end" data-bs-toggle="tooltip" title="{{ __('Aylık ortalama Google arama hacmi (DataForSEO)') }}">{{ __('Hacim') }}</th>
+                            <th class="text-end" data-bs-toggle="tooltip" title="{{ __('Keyword difficulty: 0-100 arası organik sıralama zorluğu') }}">KD</th>
                             <th>{{ __('Son sıralama') }}</th>
                             <th>AI Overview</th>
                             @if ($domain->llm_visibility_enabled)
@@ -308,15 +320,46 @@
                             <tr>
                                 <td><a href="{{ route('keywords.show', $kw) }}" class="fw-medium">{{ $kw->keyword }}</a></td>
                                 <td class="text-secondary">{{ $kw->url ?: $domain->rootUrl() }}</td>
-                                <td>
+                                <td class="text-end">
+                                    @if ($kw->search_volume !== null)
+                                        <span @if ($kw->search_intent) data-bs-toggle="tooltip" title="{{ __('Arama niyeti: :intent', ['intent' => __('intent.' . $kw->search_intent)]) }}{{ $kw->cpc !== null ? ' · CPC: $' . number_format($kw->cpc, 2) : '' }}" @endif>{{ number_format($kw->search_volume, 0, ',', '.') }}</span>
+                                    @elseif ($kw->metrics_error)
+                                        <span class="text-danger" data-bs-toggle="tooltip" title="{{ $kw->metrics_error }}">!</span>
+                                    @else
+                                        <span class="text-secondary">-</span>
+                                    @endif
+                                </td>
+                                <td class="text-end">
+                                    @if ($kw->keyword_difficulty !== null)
+                                        <span class="badge {{ $kw->keyword_difficulty >= 70 ? 'bg-danger-lt' : ($kw->keyword_difficulty >= 40 ? 'bg-warning-lt' : 'bg-success-lt') }}">{{ $kw->keyword_difficulty }}</span>
+                                    @else
+                                        <span class="text-secondary">-</span>
+                                    @endif
+                                </td>
+                                <td class="text-nowrap">
                                     @if (!$last)
                                         <span class="text-secondary">-</span>
                                     @elseif ($last->blocked)
                                         <span class="badge bg-warning-lt">{{ __('engellendi') }}</span>
-                                    @elseif ($last->target_position)
-                                        <strong>{{ $last->target_position }}</strong>
                                     @else
-                                        <span class="text-secondary">{{ __('bulunamadı') }}</span>
+                                        <span data-bs-toggle="tooltip" title="{{ __('Masaüstü') }}"><i class="ti ti-device-desktop text-secondary"></i>
+                                            @if ($last->target_position)
+                                                <strong>{{ $last->target_position }}</strong>
+                                            @else
+                                                <span class="text-secondary">{{ __('bulunamadı') }}</span>
+                                            @endif
+                                        </span>
+                                        @if ($last->mobile_blocked !== null)
+                                            <span class="ms-2" data-bs-toggle="tooltip" title="{{ __('Mobil') }}"><i class="ti ti-device-mobile text-secondary"></i>
+                                                @if ($last->mobile_blocked)
+                                                    <span class="text-warning">!</span>
+                                                @elseif ($last->mobile_target_position)
+                                                    <strong>{{ $last->mobile_target_position }}</strong>
+                                                @else
+                                                    <span class="text-secondary">-</span>
+                                                @endif
+                                            </span>
+                                        @endif
                                     @endif
                                 </td>
                                 <td>
@@ -333,12 +376,15 @@
                                     @endif
                                 </td>
                                 @if ($domain->llm_visibility_enabled)
+                                    @php
+                                        $llmCheck = $kw->latestLlmCheck;
+                                    @endphp
                                     <td>
-                                        @if (!$last || empty($last->llm_visibility))
+                                        @if (!$llmCheck || empty($llmCheck->llm_visibility))
                                             <span class="text-secondary">-</span>
                                         @else
                                             <div class="d-flex flex-wrap gap-1">
-                                                @foreach ($last->llm_visibility as $provider => $result)
+                                                @foreach ($llmCheck->llm_visibility as $provider => $result)
                                                     @php
                                                         $model = $result['model'] ?? null;
                                                     @endphp
@@ -873,6 +919,8 @@
 
         @include('domains.partials.prompt-history')
 
+        @include('domains.partials.llm-mentions')
+
         @if (auth()->user()->is_admin)
 
         <div class="card mb-4">
@@ -888,6 +936,22 @@
                         <input type="checkbox" class="form-check-input" onchange="this.form.submit()" {{ $domain->llm_visibility_enabled ? 'checked' : '' }}>
                         <span class="form-check-label">{{ __('Bu domain için AI görünürlük kontrolü aktif') }}</span>
                     </label>
+                </form>
+
+                <form method="post" action="{{ route('domains.llm-scraper.update', $domain) }}" class="mb-4">
+                    @csrf
+                    @method('patch')
+                    <input type="hidden" name="llm_scraper_enabled" value="{{ $domain->llm_scraper_enabled ? '0' : '1' }}">
+                    <label class="form-check form-switch">
+                        <input type="checkbox" class="form-check-input" onchange="this.form.submit()" {{ $domain->llm_scraper_enabled ? 'checked' : '' }} {{ !$dataForSeoConfigured && !$domain->llm_scraper_enabled ? 'disabled' : '' }}>
+                        <span class="form-check-label">{{ __('ChatGPT ve Gemini web arayüzü cevabını da kontrol et (DataForSEO LLM Scraper)') }}</span>
+                    </label>
+                    <div class="form-hint">
+                        {{ __('API cevabı yerine kullanıcının chatgpt.com ve gemini.google.com\'da gördüğü cevabı, web araması ve kaynak linkleriyle birlikte ölçer. API key gerekmez; maliyet uygulamanın DataForSEO hesabından çıkar.') }}
+                        @if (!$dataForSeoConfigured)
+                            <span class="text-warning">{{ __('DataForSEO yapılandırılmamış (DATAFORSEO_LOGIN/DATAFORSEO_PASSWORD).') }}</span>
+                        @endif
+                    </div>
                 </form>
 
                 <h4 class="mb-3">{{ __('API Key\'ler') }}</h4>

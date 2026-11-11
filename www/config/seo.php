@@ -35,6 +35,27 @@ return [
         // DataForSEO "Turkey" degil "Turkiye" ismini kullaniyor; sayisal kod
         // isim degisikliklerinden bagimsiz oldugu icin ismi degil kodu kullaniyoruz.
         'location_code' => (int) env('DATAFORSEO_LOCATION_CODE', 2792),
+        // Keyword metrikleri, LLM Scraper ve LLM Mentions icin dil kodu.
+        'language_code' => env('DATAFORSEO_LANGUAGE_CODE', env('GOOGLE_HL', 'tr')),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Haftalik otomatik anahtar kelime kontrolu
+    |--------------------------------------------------------------------------
+    | Her hafta tum anahtar kelimeler icin tam kontrol (SERP desktop+mobil,
+    | on-page, Lighthouse) calistirilir. DataForSEO tanimliysa SERP sorgulari
+    | live yerine ~3 kat ucuz Standard kuyruga (task_post + task_get) gider
+    | (bkz. RunWeeklyKeywordChecks, CollectQueuedSerpResults). AI gorunurluk
+    | saglayicilari (kullanicinin kendi API key'leri ve DataForSEO LLM
+    | Scraper) varsayilan olarak cagrilmaz - include_llm ile acilabilir.
+    */
+    'scheduled_checks' => [
+        'enabled' => (bool) env('SCHEDULED_KEYWORD_CHECKS', true),
+        'include_llm' => (bool) env('SCHEDULED_KEYWORD_CHECKS_INCLUDE_LLM', false),
+        // Bu sureden uzun hazir olmayan kuyruk gorevleri basarisiz sayilir
+        // ve kelime live SERP ile kontrol edilir.
+        'queue_timeout_hours' => (int) env('SCHEDULED_SERP_QUEUE_TIMEOUT_HOURS', 6),
     ],
 
     /*

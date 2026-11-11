@@ -68,6 +68,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/domains/{domain}/ga4-properties/fetch', [DomainController::class, 'fetchGa4Properties'])->name('domains.ga4-properties.fetch');
     Route::post('/domains/{domain}/whois/refresh', [DomainController::class, 'refreshWhois'])->name('domains.whois.refresh');
     Route::patch('/domains/{domain}/llm-visibility', [DomainController::class, 'updateLlmVisibility'])->name('domains.llm-visibility.update');
+    Route::patch('/domains/{domain}/llm-scraper', [DomainController::class, 'updateLlmScraper'])->name('domains.llm-scraper.update');
+    Route::post('/domains/{domain}/llm-mentions/fetch', [DomainController::class, 'fetchLlmMentions'])->name('domains.llm-mentions.fetch');
+    Route::post('/domains/{domain}/keyword-metrics/refresh', [DomainController::class, 'refreshKeywordMetrics'])->name('domains.keyword-metrics.refresh');
     Route::post('/domains/{domain}/llm-api-keys', [DomainController::class, 'storeLlmApiKey'])->name('domains.llm-api-keys.store');
     Route::delete('/domains/{domain}/llm-api-keys/{llmApiKey}', [DomainController::class, 'destroyLlmApiKey'])->name('domains.llm-api-keys.destroy');
     Route::get('/domains/{domain}/lighthouse-report', [LighthouseReportController::class, 'show'])->name('domains.lighthouse-report');

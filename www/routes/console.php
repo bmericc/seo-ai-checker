@@ -15,3 +15,11 @@ Schedule::command('domains:run-daily-checks')
 Schedule::command('reports:send-weekly')
     ->weeklyOn(1, '08:00')
     ->withoutOverlapping();
+
+Schedule::command('keywords:run-weekly-checks')
+    ->weeklyOn(0, '02:00')
+    ->withoutOverlapping();
+
+Schedule::command('keywords:collect-queued-serp')
+    ->everyFiveMinutes()
+    ->withoutOverlapping();

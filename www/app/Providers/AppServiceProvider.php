@@ -6,6 +6,10 @@ use App\Services\Bing\BingBacklinksChecker;
 use App\Services\Bing\BingTokenService;
 use App\Services\CanonicalHost\CanonicalHostChecker;
 use App\Services\Crux\CrUxChecker;
+use App\Services\DataForSeo\DataForSeoClient;
+use App\Services\DataForSeo\KeywordMetricsFetcher;
+use App\Services\DataForSeo\LlmMentionsChecker;
+use App\Services\DataForSeo\LlmScraperChecker;
 use App\Services\Ga4\Ga4Checker;
 use App\Services\Ga4\Ga4PropertyLister;
 use App\Services\Google\GoogleTokenService;
@@ -83,6 +87,32 @@ class AppServiceProvider extends ServiceProvider
                 config('seo.serp.hl'),
             );
         });
+
+        // DataForSEO icin scraping proxy'si/User-Agent'i olan paylasilan
+        // Client::class kullanilmaz - resmi API'ye dogrudan gidilir.
+        $this->app->singleton(DataForSeoClient::class, fn () => new DataForSeoClient(
+            new Client(),
+            config('seo.dataforseo.login'),
+            config('seo.dataforseo.password'),
+        ));
+
+        $this->app->singleton(KeywordMetricsFetcher::class, fn ($app) => new KeywordMetricsFetcher(
+            $app->make(DataForSeoClient::class),
+            config('seo.dataforseo.location_code'),
+            config('seo.dataforseo.language_code'),
+        ));
+
+        $this->app->singleton(LlmScraperChecker::class, fn ($app) => new LlmScraperChecker(
+            $app->make(DataForSeoClient::class),
+            config('seo.dataforseo.location_code'),
+            config('seo.dataforseo.language_code'),
+        ));
+
+        $this->app->singleton(LlmMentionsChecker::class, fn ($app) => new LlmMentionsChecker(
+            $app->make(DataForSeoClient::class),
+            config('seo.dataforseo.location_code'),
+            config('seo.dataforseo.language_code'),
+        ));
 
         $this->app->singleton(SerpScraper::class, function ($app) {
             $dataForSeo = config('seo.dataforseo');

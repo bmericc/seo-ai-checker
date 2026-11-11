@@ -12,5 +12,15 @@ namespace App\Services\Serp;
  */
 interface SerpScraper
 {
-    public function search(string $keyword): SerpResult;
+    public const DEVICE_DESKTOP = 'desktop';
+    public const DEVICE_MOBILE = 'mobile';
+
+    public function search(string $keyword, string $device = self::DEVICE_DESKTOP): SerpResult;
+
+    /**
+     * Mobil SERP'i gercekten mobil cihaz olarak sorgulayabiliyor mu? Dogrudan
+     * kazima (GoogleSerpScraper) desteklemez - onda mobil sonuc hic
+     * istenmemeli, yoksa masaustu sonucu "mobil" diye kaydedilir.
+     */
+    public function supportsMobile(): bool;
 }

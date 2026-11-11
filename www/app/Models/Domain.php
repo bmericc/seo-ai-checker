@@ -17,11 +17,13 @@ class Domain extends Model
         'dismissed_keyword_suggestions',
         'ga4_property_id',
         'llm_visibility_enabled',
+        'llm_scraper_enabled',
     ];
 
     protected $casts = [
         'dismissed_keyword_suggestions' => 'array',
         'llm_visibility_enabled' => 'boolean',
+        'llm_scraper_enabled' => 'boolean',
         'indexnow_verified_at' => 'datetime',
     ];
 

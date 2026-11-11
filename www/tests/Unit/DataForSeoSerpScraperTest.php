@@ -171,4 +171,71 @@ class DataForSeoSerpScraperTest extends TestCase
         $this->assertTrue($result->blocked);
         $this->assertStringContainsString('Invalid Field', $result->blockReason);
     }
+
+    public function test_mobile_device_is_sent(): void
+    {
+        $capturedRequest = null;
+        $scraper = $this->scraperWithResponses([new Response(200, [], json_encode($this->envelope([])))], $capturedRequest);
+
+        $this->assertTrue($scraper->supportsMobile());
+        $scraper->search('kelime', 'mobile');
+
+        $body = json_decode((string) $capturedRequest->getBody(), true);
+        $this->assertSame('mobile', $body[0]['device']);
+    }
+
+    public function test_post_tasks_returns_created_task_ids_by_tag(): void
+    {
+        $capturedRequest = null;
+        $scraper = $this->scraperWithResponses([new Response(200, [], json_encode([
+            'status_code' => 20000,
+            'tasks' => [
+                ['id' => 'abc', 'status_code' => 20100, 'data' => ['tag' => '1']],
+                ['id' => 'def', 'status_code' => 40501, 'status_message' => 'Invalid Field', 'data' => ['tag' => '2']],
+            ],
+        ]))], $capturedRequest);
+
+        $ids = $scraper->postTasks([
+            ['keyword' => 'a', 'device' => 'desktop', 'tag' => '1'],
+            ['keyword' => 'a', 'device' => 'mobile', 'tag' => '2'],
+        ]);
+
+        $this->assertSame(['1' => 'abc'], $ids);
+        $this->assertStringEndsWith('/serp/google/organic/task_post', (string) $capturedRequest->getUri());
+        $body = json_decode((string) $capturedRequest->getBody(), true);
+        $this->assertSame('mobile', $body[1]['device']);
+        $this->assertSame('2', $body[1]['tag']);
+    }
+
+    public function test_fetch_task_pending_and_completed(): void
+    {
+        $capturedRequest = null;
+        $scraper = $this->scraperWithResponses([
+            new Response(200, [], json_encode(['status_code' => 20000, 'tasks' => [['status_code' => 40602, 'status_message' => 'Task In Queue.']]])),
+            new Response(200, [], json_encode($this->envelope([
+                ['type' => 'organic', 'rank_absolute' => 3, 'url' => 'https://example.com/a', 'domain' => 'example.com', 'title' => 'A'],
+            ]))),
+        ], $capturedRequest);
+
+        $this->assertNull($scraper->fetchTask('abc', 'kelime'));
+
+        $result = $scraper->fetchTask('abc', 'kelime');
+        $this->assertSame(3, $result->positionOf('example.com'));
+        $this->assertStringEndsWith('/serp/google/organic/task_get/advanced/abc', (string) $capturedRequest->getUri());
+        $this->assertSame('GET', $capturedRequest->getMethod());
+    }
+
+    public function test_serp_result_round_trips_through_array(): void
+    {
+        $scraper = $this->scraperWithResponses([new Response(200, [], json_encode($this->envelope([
+            ['type' => 'organic', 'rank_absolute' => 2, 'url' => 'https://example.com/a', 'domain' => 'example.com', 'title' => 'A'],
+            ['type' => 'ai_overview', 'references' => [['url' => 'https://example.com/b']]],
+        ])))]);
+
+        $result = \App\Services\Serp\SerpResult::fromArray($scraper->search('kelime')->toArray());
+
+        $this->assertSame(2, $result->positionOf('example.com'));
+        $this->assertTrue($result->aiOverview->present);
+        $this->assertSame(['example.com'], $result->aiOverview->citedDomains);
+    }
 }

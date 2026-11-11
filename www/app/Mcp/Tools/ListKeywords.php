@@ -13,7 +13,7 @@ use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 
 #[Name('list_keywords')]
-#[Description('Lists a domain\'s tracked keywords with the latest Google position, whether an AI Overview appeared and cited the site, and Lighthouse scores.')]
+#[Description('Lists a domain\'s tracked keywords with the latest desktop and mobile Google position, search volume / keyword difficulty / CPC / intent (DataForSEO), whether an AI Overview appeared and cited the site, and Lighthouse scores.')]
 #[IsReadOnly]
 class ListKeywords extends SeoTool
 {
@@ -48,7 +48,16 @@ class ListKeywords extends SeoTool
             'target_url' => $keyword->targetUrl(),
             'last_checked_at' => self::iso($check?->created_at),
             'google_position' => $check?->target_position,
+            'google_mobile_position' => $check?->mobile_target_position,
             'serp_blocked' => $check?->blocked,
+            'metrics' => $keyword->metrics_fetched_at === null ? null : [
+                'search_volume' => $keyword->search_volume,
+                'keyword_difficulty' => $keyword->keyword_difficulty,
+                'cpc_usd' => $keyword->cpc,
+                'competition' => $keyword->competition,
+                'search_intent' => $keyword->search_intent,
+                'fetched_at' => self::iso($keyword->metrics_fetched_at),
+            ],
             'ai_overview_present' => $check?->ai_overview_present,
             'ai_overview_cites_site' => $check?->ai_overview_target_cited,
             'lighthouse' => $check === null ? null : [

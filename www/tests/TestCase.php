@@ -40,6 +40,13 @@ abstract class TestCase extends BaseTestCase
         $app['config']->set('database.connections.sqlite.database', ':memory:');
         $app['config']->set('session.driver', 'array');
 
+        // Ayni Docker env sizintisi DataForSEO kimlik bilgilerini de testlere
+        // tasiyor - yoksa Keyword olusturan her test (Keyword::booted)
+        // gercek, ucretli DataForSEO API'sine istek atar. DataForSEO'yu
+        // kullanan testler sahte Client ile kendi servis ornegini kurar.
+        $app['config']->set('seo.dataforseo.login', null);
+        $app['config']->set('seo.dataforseo.password', null);
+
         return $app;
     }
 }

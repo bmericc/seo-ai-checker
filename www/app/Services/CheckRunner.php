@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\Check;
 use App\Models\Keyword;
+use App\Services\DataForSeo\LlmScraperChecker;
 use App\Services\Eeat\EeatScorer;
 use App\Services\Lighthouse\PageSpeedInsightsClient;
 use App\Services\Llm\AnthropicVisibilityChecker;
@@ -33,15 +34,27 @@ final class CheckRunner
         private readonly GeminiVisibilityChecker $geminiChecker,
         private readonly PerplexityVisibilityChecker $perplexityChecker,
         private readonly EeatScorer $eeatScorer,
+        private readonly LlmScraperChecker $llmScraperChecker,
     ) {
     }
 
-    public function run(Keyword $keyword): Check
+    /**
+     * @param  array<string, ?SerpResult>|null  $prefetchedSerp  Haftalik
+     *         otomatik kontrolde Standard kuyruktan onceden toplanmis
+     *         sonuclar (cihaz => sonuc). Verilmezse SERP live sorgulanir.
+     * @param  bool  $includeLlm  false ise AI gorunurluk saglayicilari hic
+     *         cagrilmaz (llm_visibility null kalir, maliyet olusmaz).
+     */
+    public function run(Keyword $keyword, ?array $prefetchedSerp = null, bool $includeLlm = true, string $source = 'manual'): Check
     {
         $domain = $keyword->domain->domain;
         $targetUrl = $keyword->targetUrl();
 
-        $serp = $this->safeSearch($keyword->keyword);
+        $serp = $prefetchedSerp[SerpScraper::DEVICE_DESKTOP] ?? $this->safeSearch($keyword->keyword, SerpScraper::DEVICE_DESKTOP);
+
+        $mobileSerp = $prefetchedSerp !== null
+            ? ($prefetchedSerp[SerpScraper::DEVICE_MOBILE] ?? null)
+            : ($this->serpScraper->supportsMobile() ? $this->safeSearch($keyword->keyword, SerpScraper::DEVICE_MOBILE) : null);
 
         $onPageData = null;
         $onPageError = null;
@@ -98,6 +111,7 @@ final class CheckRunner
         $lighthouse = $this->lighthouseClient->analyze($targetUrl);
 
         return $keyword->checks()->create([
+            'source' => $source,
             'blocked' => $serp->blocked,
             'block_reason' => $serp->blockReason,
             'target_position' => $serp->positionOf($domain),
@@ -105,11 +119,18 @@ final class CheckRunner
                 static fn ($r) => ['position' => $r->position, 'url' => $r->url, 'domain' => $r->domain, 'title' => $r->title],
                 $serp->organicResults
             ),
+            'mobile_target_position' => $mobileSerp?->positionOf($domain),
+            'mobile_organic_results' => $mobileSerp === null ? null : array_map(
+                static fn ($r) => ['position' => $r->position, 'url' => $r->url, 'domain' => $r->domain, 'title' => $r->title],
+                $mobileSerp->organicResults
+            ),
+            'mobile_blocked' => $mobileSerp?->blocked,
+            'mobile_block_reason' => $mobileSerp?->blockReason,
             'ai_overview_present' => $serp->aiOverview->present,
             'ai_overview_cited_domains' => $serp->aiOverview->citedDomains,
             'ai_overview_target_cited' => $serp->aiOverview->present ? $serp->aiOverview->citesDomain($domain) : null,
             'ai_overview_note' => $serp->aiOverview->note,
-            'llm_visibility' => $this->buildLlmVisibility($keyword, $domain),
+            'llm_visibility' => $includeLlm ? $this->buildLlmVisibility($keyword, $domain) : null,
             'onpage' => $onPageData,
             'onpage_error' => $onPageError,
             'eeat_score' => $eeat?->score,
@@ -125,8 +146,9 @@ final class CheckRunner
 
     /**
      * Domain'de AI gorunurluk kontrolu kapaliysa ya da hicbir saglayici icin
-     * API key girilmemisse null doner (hic calistirilmaz, maliyet olusmaz).
-     * Yalnizca gercekten yapilandirilmis saglayicilar icin sonuc uretilir.
+     * API key girilmemisse (ve DataForSEO LLM Scraper da acik degilse) null
+     * doner (hic calistirilmaz, maliyet olusmaz). Yalnizca gercekten
+     * yapilandirilmis saglayicilar icin sonuc uretilir.
      *
      * @return ?array<string, array{present: bool, response: ?string, error: ?string}>
      */
@@ -137,7 +159,9 @@ final class CheckRunner
         }
 
         $apiKeys = $keyword->domain->llmApiKeys->keyBy('provider');
-        if ($apiKeys->isEmpty()) {
+        $scraperEnabled = $keyword->domain->llm_scraper_enabled && $this->llmScraperChecker->isConfigured();
+
+        if ($apiKeys->isEmpty() && !$scraperEnabled) {
             return null;
         }
 
@@ -167,6 +191,12 @@ final class CheckRunner
             );
         }
 
+        if ($scraperEnabled) {
+            foreach (LlmScraperChecker::engines() as $engine) {
+                $results[$engine] = $this->llmScraperChecker->check($engine, $keyword->keyword, $domain)->toArray();
+            }
+        }
+
         return $results;
     }
 
@@ -182,10 +212,10 @@ final class CheckRunner
         }
     }
 
-    private function safeSearch(string $keyword): SerpResult
+    private function safeSearch(string $keyword, string $device): SerpResult
     {
         try {
-            return $this->serpScraper->search($keyword);
+            return $this->serpScraper->search($keyword, $device);
         } catch (GuzzleException $e) {
             return new SerpResult(
                 keyword: $keyword,

@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Jobs\FetchKeywordMetrics;
+use App\Jobs\FetchLlmMentions;
 use App\Jobs\RunDomainWhoisLookup;
 use App\Models\Check;
 use App\Models\Domain;
 use App\Models\DomainLlmApiKey;
 use App\Services\Analytics\CompetitorAnalyzer;
 use App\Services\Analytics\ScoreHistoryBuilder;
+use App\Services\DataForSeo\DataForSeoClient;
 use App\Services\DomainCheckRunner;
 use App\Services\Drift\DomainCheckDrift;
 use App\Services\Ga4\Ga4Property;
@@ -54,13 +57,14 @@ class DomainController extends Controller
 
     private const MAX_SITEMAP_URLS_DISPLAYED = 200;
 
-    public function show(Request $request, Domain $domain, ScoreHistoryBuilder $scoreHistoryBuilder): View
+    public function show(Request $request, Domain $domain, ScoreHistoryBuilder $scoreHistoryBuilder, DataForSeoClient $dataForSeo): View
     {
         $this->ensureCanAccessDomain($request, $domain);
 
         $domain->load([
             'keywords' => fn ($q) => $q->orderBy('keyword'),
             'keywords.latestCheck',
+            'keywords.latestLlmCheck',
             'latestDomainCheck',
             'fact',
             'user',
@@ -115,6 +119,7 @@ class DomainController extends Controller
             'scoreHistory' => $scoreHistory,
             'domainCheckHistory' => $domainCheckHistory,
             'competitorAnalysis' => $competitorAnalysis,
+            'dataForSeoConfigured' => $dataForSeo->isConfigured(),
         ]);
     }
 
@@ -229,6 +234,62 @@ class DomainController extends Controller
         return redirect()
             ->route('domains.show', $domain)
             ->with('flash', ['type' => 'success', 'message' => __('AI görünürlük kontrolü ayarı güncellendi.')]);
+    }
+
+    public function updateLlmScraper(Request $request, Domain $domain, DataForSeoClient $dataForSeo): RedirectResponse
+    {
+        $this->ensureIsAdmin($request);
+
+        $data = $request->validate(['llm_scraper_enabled' => ['required', 'boolean']]);
+
+        if ($data['llm_scraper_enabled'] && !$dataForSeo->isConfigured()) {
+            return redirect()
+                ->route('domains.show', $domain)
+                ->with('flash', ['type' => 'error', 'message' => __('DataForSEO yapılandırılmamış (DATAFORSEO_LOGIN/DATAFORSEO_PASSWORD).')]);
+        }
+
+        $domain->update(['llm_scraper_enabled' => $data['llm_scraper_enabled']]);
+
+        return redirect()
+            ->route('domains.show', $domain)
+            ->with('flash', ['type' => 'success', 'message' => __('ChatGPT/Gemini web arayüzü kontrolü ayarı güncellendi.')]);
+    }
+
+    public function fetchLlmMentions(Request $request, Domain $domain, DataForSeoClient $dataForSeo): RedirectResponse
+    {
+        $this->ensureIsAdmin($request);
+
+        if (!$dataForSeo->isConfigured()) {
+            return redirect()
+                ->route('domains.show', $domain)
+                ->with('flash', ['type' => 'error', 'message' => __('DataForSEO yapılandırılmamış (DATAFORSEO_LOGIN/DATAFORSEO_PASSWORD).')]);
+        }
+
+        FetchLlmMentions::dispatch($domain->id);
+
+        return redirect()
+            ->route('domains.show', $domain)
+            ->with('flash', ['type' => 'success', 'message' => __('AI mention verisi arka planda getiriliyor. Birkaç dakika içinde sayfayı yenileyin.')]);
+    }
+
+    public function refreshKeywordMetrics(Request $request, Domain $domain, DataForSeoClient $dataForSeo): RedirectResponse
+    {
+        $this->ensureCanAccessDomain($request, $domain);
+
+        if (!$dataForSeo->isConfigured()) {
+            return redirect()
+                ->route('domains.show', $domain)
+                ->with('flash', ['type' => 'error', 'message' => __('DataForSEO yapılandırılmamış (DATAFORSEO_LOGIN/DATAFORSEO_PASSWORD).')]);
+        }
+
+        $ids = $domain->keywords()->pluck('id')->all();
+        if ($ids !== []) {
+            FetchKeywordMetrics::dispatch($ids);
+        }
+
+        return redirect()
+            ->route('domains.show', $domain)
+            ->with('flash', ['type' => 'success', 'message' => __('Eksik ya da 30 günden eski anahtar kelime metrikleri arka planda getiriliyor.')]);
     }
 
     public function storeLlmApiKey(Request $request, Domain $domain): RedirectResponse

@@ -12,10 +12,15 @@ class Check extends Model
 {
     protected $fillable = [
         'keyword_id',
+        'source',
         'blocked',
         'block_reason',
         'target_position',
         'organic_results',
+        'mobile_target_position',
+        'mobile_organic_results',
+        'mobile_blocked',
+        'mobile_block_reason',
         'ai_overview_present',
         'ai_overview_cited_domains',
         'ai_overview_target_cited',
@@ -36,6 +41,8 @@ class Check extends Model
     protected $casts = [
         'blocked' => 'boolean',
         'organic_results' => 'array',
+        'mobile_organic_results' => 'array',
+        'mobile_blocked' => 'boolean',
         'ai_overview_present' => 'boolean',
         'ai_overview_cited_domains' => 'array',
         'ai_overview_target_cited' => 'boolean',

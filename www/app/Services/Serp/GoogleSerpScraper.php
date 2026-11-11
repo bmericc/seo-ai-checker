@@ -40,7 +40,12 @@ final class GoogleSerpScraper implements SerpScraper
         $this->aiOverviewSelectors = $aiOverviewSelectors ?? config('seo.ai_overview_selectors', []);
     }
 
-    public function search(string $keyword): SerpResult
+    public function supportsMobile(): bool
+    {
+        return false;
+    }
+
+    public function search(string $keyword, string $device = self::DEVICE_DESKTOP): SerpResult
     {
         $this->requestThrottle?->throttle();
 

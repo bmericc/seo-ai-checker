@@ -42,6 +42,8 @@ class DomainFact extends Model
         'canonical_host',
         'crux',
         'checked_at',
+        'llm_mentions',
+        'llm_mentions_checked_at',
     ];
 
     protected $casts = [
@@ -55,6 +57,8 @@ class DomainFact extends Model
         'canonical_host' => 'array',
         'crux' => 'array',
         'checked_at' => 'datetime',
+        'llm_mentions' => 'array',
+        'llm_mentions_checked_at' => 'datetime',
     ];
 
     public static function forDomain(string $domain): self

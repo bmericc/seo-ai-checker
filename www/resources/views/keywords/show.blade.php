@@ -18,6 +18,55 @@
 @section('content')
     <p class="text-secondary mb-4">{{ __('Sayfa:') }} {{ $keyword->targetUrl() }}</p>
 
+    @if ($keyword->metrics_fetched_at || $keyword->metrics_error)
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="card-title">{{ __('Anahtar Kelime Metrikleri') }}</h3>
+                @if ($keyword->metrics_fetched_at)
+                    <div class="card-actions text-secondary small">{{ __('DataForSEO · :date', ['date' => $keyword->metrics_fetched_at->format('Y-m-d')]) }}</div>
+                @endif
+            </div>
+            <div class="card-body">
+                @if ($keyword->metrics_error)
+                    <p class="text-danger mb-0">{{ $keyword->metrics_error }}</p>
+                @elseif ($keyword->search_volume === null && $keyword->keyword_difficulty === null)
+                    <p class="text-secondary mb-0">{{ __('DataForSEO bu kelime için metrik döndürmedi (arama hacmi çok düşük ya da veritabanında yok).') }}</p>
+                @else
+                    <div class="row g-3 mb-3">
+                        <div class="col-6 col-md-3">
+                            <div class="text-secondary small">{{ __('Aylık arama hacmi') }}</div>
+                            <div class="h2 mb-0">{{ $keyword->search_volume !== null ? number_format($keyword->search_volume, 0, ',', '.') : '-' }}</div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="text-secondary small">{{ __('Keyword difficulty') }}</div>
+                            <div class="h2 mb-0">{{ $keyword->keyword_difficulty ?? '-' }}<span class="text-secondary fs-5">/100</span></div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="text-secondary small">CPC</div>
+                            <div class="h2 mb-0">{{ $keyword->cpc !== null ? '$' . number_format($keyword->cpc, 2) : '-' }}</div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="text-secondary small">{{ __('Arama niyeti') }}</div>
+                            <div class="h2 mb-0">{{ $keyword->search_intent ? __('intent.' . $keyword->search_intent) : '-' }}</div>
+                        </div>
+                    </div>
+                    @php
+                        $monthlySearches = collect($keyword->monthly_searches ?? [])->take(-12)->values();
+                        $maxMonthly = max(1, (int) $monthlySearches->max('search_volume'));
+                    @endphp
+                    @if ($monthlySearches->isNotEmpty())
+                        <div class="text-secondary small mb-1">{{ __('Son 12 ay arama hacmi') }}</div>
+                        <div class="d-flex align-items-end gap-1" style="height: 64px;" role="img" aria-label="{{ __('Son 12 ay arama hacmi') }}">
+                            @foreach ($monthlySearches as $month)
+                                <div class="flex-fill bg-primary rounded-top" style="height: {{ max(2, (int) round($month['search_volume'] / $maxMonthly * 100)) }}%; opacity: .75;" data-bs-toggle="tooltip" title="{{ sprintf('%04d-%02d', $month['year'], $month['month']) }}: {{ number_format($month['search_volume'], 0, ',', '.') }}"></div>
+                            @endforeach
+                        </div>
+                    @endif
+                @endif
+            </div>
+        </div>
+    @endif
+
     @include('domains.partials.prompt-history', ['domain' => $keyword->domain, 'historyKeyword' => $keyword, 'limit' => 10, 'hideEmpty' => true])
 
     @if (count($scoreHistory['labels']) > 0)
@@ -84,6 +133,20 @@
                         <span class="badge bg-secondary-lt">{{ __('İlk sonuçlarda yok') }}</span>
                     @endif
 
+                    @if ($check->mobile_blocked)
+                        <span class="badge bg-warning-lt" data-bs-toggle="tooltip" title="{{ $check->mobile_block_reason }}">{{ __('Mobil: hata') }}</span>
+                    @elseif ($check->mobile_blocked === false)
+                        @if ($check->mobile_target_position)
+                            <span class="badge bg-success-lt">{{ __('Mobil sıralama: :position', ['position' => $check->mobile_target_position]) }}</span>
+                        @else
+                            <span class="badge bg-secondary-lt">{{ __('Mobilde ilk sonuçlarda yok') }}</span>
+                        @endif
+                    @endif
+
+                    @if ($check->source === 'scheduled')
+                        <span class="badge bg-azure-lt">{{ __('Otomatik') }}</span>
+                    @endif
+
                     @if ($check->ai_overview_present)
                         @if ($check->ai_overview_target_cited)
                             <span class="badge bg-success-lt">{{ __('AI Overview: kaynakta') }}</span>
@@ -148,6 +211,14 @@
                                 @if ($result['response'])
                                     <div class="small text-secondary mb-1" style="white-space: pre-wrap;">
                                         <strong>{{ $providerLabel }} — {{ __('Genel cevap:') }}</strong> {{ $result['response'] }}
+                                    </div>
+                                @endif
+                                @if (!empty($result['citations']))
+                                    <div class="small text-secondary mb-1 ps-3">
+                                        <strong>{{ __('Kaynaklar:') }}</strong>
+                                        @foreach (array_filter($result['citations'], fn ($url) => is_string($url) && preg_match('#^https?://#i', $url)) as $citation)
+                                            <a href="{{ $citation }}" target="_blank" rel="noopener noreferrer nofollow" class="me-2">{{ parse_url($citation, PHP_URL_HOST) }}</a>
+                                        @endforeach
                                     </div>
                                 @endif
                                 @if ($result['follow_up_response'] ?? null)

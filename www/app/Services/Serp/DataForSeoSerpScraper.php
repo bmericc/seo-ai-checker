@@ -6,6 +6,7 @@ namespace App\Services\Serp;
 
 use App\Support\Domain;
 use GuzzleHttp\Client;
+use RuntimeException;
 
 /**
  * Google SERP'i dogrudan kazimak yerine DataForSEO'nun "Live Advanced"
@@ -22,7 +23,20 @@ use GuzzleHttp\Client;
  */
 final class DataForSeoSerpScraper implements SerpScraper
 {
-    private const ENDPOINT = 'https://api.dataforseo.com/v3/serp/google/organic/live/advanced';
+    private const BASE_URL = 'https://api.dataforseo.com/v3/serp/google/organic';
+    private const ENDPOINT = self::BASE_URL . '/live/advanced';
+
+    /** DataForSEO'nun tek task_post isteginde kabul ettigi en fazla gorev. */
+    public const MAX_TASKS_PER_POST = 100;
+
+    /** task_post basariyla olusturulan gorev. */
+    private const STATUS_TASK_CREATED = 20100;
+
+    /** task_get: gorev henuz islenmedi (Task Handed / Task in Queue). */
+    private const PENDING_STATUSES = [40601, 40602];
+
+    /** task_get: Google bu sorgu icin hic sonuc donmedi. */
+    private const STATUS_NO_RESULTS = 40102;
 
     public function __construct(
         private readonly Client $client,
@@ -34,22 +48,16 @@ final class DataForSeoSerpScraper implements SerpScraper
     ) {
     }
 
-    public function search(string $keyword): SerpResult
+    public function supportsMobile(): bool
+    {
+        return true;
+    }
+
+    public function search(string $keyword, string $device = self::DEVICE_DESKTOP): SerpResult
     {
         $response = $this->client->post(self::ENDPOINT, [
-            'headers' => [
-                'Authorization' => 'Basic ' . base64_encode($this->login . ':' . $this->password),
-                'Content-Type' => 'application/json',
-            ],
-            'json' => [
-                [
-                    'keyword' => $keyword,
-                    'location_code' => $this->locationCode,
-                    'language_code' => $this->languageCode,
-                    'device' => 'desktop',
-                    'depth' => $this->depth,
-                ],
-            ],
+            'headers' => $this->headers(),
+            'json' => [$this->taskPayload($keyword, $device)],
             'http_errors' => false,
         ]);
 
@@ -77,6 +85,123 @@ final class DataForSeoSerpScraper implements SerpScraper
             ));
         }
 
+        return $this->resultFromTask($keyword, $task);
+    }
+
+    /**
+     * Standard kuyruga (live'dan ~3 kat ucuz, sonuc birkac dakika icinde
+     * hazir olur) gorev birakir. Ucret task_post aninda kesildigi icin bu
+     * istek basarisiz olursa otomatik tekrar denenmemelidir.
+     *
+     * @param  list<array{keyword: string, device: string, tag: string}>  $tasks
+     * @return array<string, string> tag => DataForSEO task id (reddedilen gorevler yer almaz)
+     *
+     * @throws RuntimeException
+     */
+    public function postTasks(array $tasks): array
+    {
+        if ($tasks === [] || count($tasks) > self::MAX_TASKS_PER_POST) {
+            throw new RuntimeException(sprintf('task_post 1-%d görev kabul eder, %d verildi.', self::MAX_TASKS_PER_POST, count($tasks)));
+        }
+
+        $response = $this->client->post(self::BASE_URL . '/task_post', [
+            'headers' => $this->headers(),
+            'json' => array_map(
+                fn (array $task) => $this->taskPayload($task['keyword'], $task['device']) + ['tag' => $task['tag']],
+                $tasks,
+            ),
+            'http_errors' => false,
+        ]);
+
+        $body = json_decode((string) $response->getBody(), true);
+        if ($response->getStatusCode() !== 200 || !is_array($body) || ($body['status_code'] ?? null) !== 20000) {
+            throw new RuntimeException(sprintf(
+                'DataForSEO task_post başarısız oldu: %s',
+                is_array($body) ? ($body['status_message'] ?? 'bilinmeyen hata') : 'HTTP ' . $response->getStatusCode(),
+            ));
+        }
+
+        $posted = [];
+        foreach ($body['tasks'] ?? [] as $entry) {
+            $tag = $entry['data']['tag'] ?? null;
+            if (($entry['status_code'] ?? null) === self::STATUS_TASK_CREATED && is_string($entry['id'] ?? null) && is_string($tag)) {
+                $posted[$tag] = $entry['id'];
+            }
+        }
+
+        return $posted;
+    }
+
+    /**
+     * Kuyruga birakilmis bir gorevin sonucunu alir (task_get ucretsizdir).
+     * Gorev henuz hazir degilse null doner.
+     */
+    public function fetchTask(string $taskId, string $keyword): ?SerpResult
+    {
+        $response = $this->client->get(self::BASE_URL . '/task_get/advanced/' . rawurlencode($taskId), [
+            'headers' => $this->headers(),
+            'http_errors' => false,
+        ]);
+
+        $body = json_decode((string) $response->getBody(), true);
+        if ($response->getStatusCode() !== 200 || !is_array($body) || ($body['status_code'] ?? null) !== 20000) {
+            throw new RuntimeException(sprintf(
+                'DataForSEO task_get başarısız oldu: %s',
+                is_array($body) ? ($body['status_message'] ?? 'bilinmeyen hata') : 'HTTP ' . $response->getStatusCode(),
+            ));
+        }
+
+        $task = $body['tasks'][0] ?? null;
+        $taskStatus = is_array($task) ? ($task['status_code'] ?? null) : null;
+
+        if (in_array($taskStatus, self::PENDING_STATUSES, true)) {
+            return null;
+        }
+
+        if ($taskStatus === self::STATUS_NO_RESULTS) {
+            return new SerpResult(keyword: $keyword, organicResults: [], aiOverview: new AiOverviewResult(present: false));
+        }
+
+        if ($taskStatus !== 20000) {
+            return $this->blockedResult($keyword, sprintf(
+                'DataForSEO görevi başarısız oldu: %s',
+                is_array($task) ? ($task['status_message'] ?? "status_code {$taskStatus}") : 'görev yok',
+            ));
+        }
+
+        return $this->resultFromTask($keyword, $task);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function headers(): array
+    {
+        return [
+            'Authorization' => 'Basic ' . base64_encode($this->login . ':' . $this->password),
+            'Content-Type' => 'application/json',
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function taskPayload(string $keyword, string $device): array
+    {
+        return [
+            'keyword' => $keyword,
+            'location_code' => $this->locationCode,
+            'language_code' => $this->languageCode,
+            'device' => $device === self::DEVICE_MOBILE ? self::DEVICE_MOBILE : self::DEVICE_DESKTOP,
+            'depth' => $this->depth,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $task
+     */
+    private function resultFromTask(string $keyword, array $task): SerpResult
+    {
         $items = $task['result'][0]['items'] ?? [];
         if (!is_array($items)) {
             $items = [];
