@@ -408,17 +408,20 @@
                                 </td>
                                 @if ($showAiColumn)
                                     @php
-                                        $aiCheck = $kw->latestAiCheck;
+                                        // Her asistanin son sonucu; manuel MCP kontrolleri
+                                        // ayri kayit oldugu icin birlestirilir.
+                                        $aiResults = $kw->latestAiResultsByProvider();
                                     @endphp
                                     <td>
-                                        @if (!$aiCheck || empty($aiCheck->results))
+                                        @if ($aiResults === [])
                                             <span class="text-secondary">-</span>
                                         @else
-                                            <a href="{{ route('domains.prompts.show', [$domain, $aiCheck]) }}" class="d-flex flex-wrap gap-1 text-reset text-decoration-none" title="{{ $aiCheck->created_at->toDateTimeString() }}">
-                                                @foreach ($aiCheck->results as $provider => $result)
+                                            <div class="d-flex flex-wrap gap-1">
+                                                @foreach ($aiResults as $provider => ['result' => $result, 'exploration' => $aiCheck])
                                                     @php
                                                         $model = $result['model'] ?? null;
                                                     @endphp
+                                                    <a href="{{ route('domains.prompts.show', [$domain, $aiCheck]) }}" class="d-inline-flex flex-wrap gap-1 text-reset text-decoration-none" title="{{ $aiCheck->created_at->toDateTimeString() }}">
                                                     @if ($result['error'] ?? null)
                                                         <span class="badge bg-danger-lt" data-bs-toggle="tooltip" title="{{ ($model ? '[' . $model . '] ' : '') . \App\Support\StoredText::t($result['error']) }}">
                                                             {{ \App\Support\AiAssistant::label($provider) }}@if ($model) <span class="fw-normal text-muted" style="font-size: 0.75em;">({{ $model }})</span>@endif
@@ -439,8 +442,9 @@
                                                             <span class="badge bg-secondary-lt" data-bs-toggle="tooltip" title="{{ __("Türkiye'den:") }}{{ $model ? ' [' . $model . ']' : '' }}">{{ \App\Support\AiAssistant::label($provider) }} TR</span>
                                                         @endif
                                                     @endif
+                                                    </a>
                                                 @endforeach
-                                            </a>
+                                            </div>
                                         @endif
                                     </td>
                                 @endif

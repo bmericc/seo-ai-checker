@@ -76,6 +76,31 @@ class Keyword extends Model
         return $this->hasOne(PromptExploration::class)->latestOfMany();
     }
 
+    /**
+     * Her asistanin en son sonucu, en yeni once. API kontrolleri tek
+     * kayitta birden fazla saglayici tutarken manuel MCP kontrolleri
+     * (check_ai_answer) tek asistanli ayri kayit acar; yalnizca en son
+     * kaydi gostermek Grok gibi manuel bir kontrolden sonra diger
+     * asistanlarin sonucunu satirdan dusuruyordu. aiChecks yuklu olmali
+     * (controller son birkac kaydi eager-load eder).
+     *
+     * @return array<string, array{result: array<string, mixed>, exploration: PromptExploration}>
+     */
+    public function latestAiResultsByProvider(): array
+    {
+        $latest = [];
+
+        foreach ($this->aiChecks as $exploration) {
+            foreach ($exploration->results ?? [] as $provider => $result) {
+                if (!isset($latest[$provider]) && is_array($result)) {
+                    $latest[$provider] = ['result' => $result, 'exploration' => $exploration];
+                }
+            }
+        }
+
+        return $latest;
+    }
+
     /** Bu kelime icin kaydedilen tum yapay zeka kontrolleri. */
     public function aiChecks(): HasMany
     {

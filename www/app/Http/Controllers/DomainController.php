@@ -77,6 +77,9 @@ class DomainController extends Controller
             'keywords' => fn ($q) => $q->orderBy('keyword'),
             'keywords.latestCheck',
             'keywords.latestAiCheck',
+            // Satirda her asistanin son sonucunu birlestirmek icin
+            // (bkz. Keyword::latestAiResultsByProvider).
+            'keywords.aiChecks' => fn ($q) => $q->limit(10),
             'latestDomainCheck',
             'fact',
             'user',

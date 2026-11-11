@@ -489,6 +489,36 @@ class McpServerTest extends TestCase
         $this->withoutMiddleware(PreventRequestForgery::class)->actingAs($user)->post(route('domains.prompts.store', $domain), ['prompt' => 'x'])->assertForbidden();
     }
 
+    public function test_keyword_row_merges_manual_check_with_earlier_api_results(): void
+    {
+        $user = $this->member();
+        $domain = $this->domainFor($user);
+        $keyword = $domain->keywords()->create(['keyword' => 'muhasebe']);
+        $domain->promptExplorations()->create([
+            'keyword_id' => $keyword->id,
+            'prompt' => 'API question',
+            'providers' => ['openai', 'gemini'],
+            'results' => [
+                'openai' => ['present' => true, 'response' => 'x', 'error' => null, 'model' => 'gpt-api-model'],
+                'gemini' => ['present' => false, 'response' => 'y', 'error' => null, 'model' => 'gemini-api-model'],
+            ],
+            'completed_at' => now(),
+            'created_at' => now()->subHour(),
+        ]);
+        Passport::actingAs($user, ['read', 'write']);
+        $this->manualCheck(['keyword' => 'muhasebe', 'answer' => 'Rival only.', 'assistant' => 'grok', 'model' => 'grok-manual-model'])->assertOk();
+
+        $merged = $keyword->fresh()->load('aiChecks')->latestAiResultsByProvider();
+        $this->assertSame(['grok', 'openai', 'gemini'], array_keys($merged));
+
+        // Gecmis listesi de model adlarini gosterir; anahtar kelime
+        // satirinda da gorunmeleri icin her biri en az iki kez gecmeli.
+        $html = $this->actingAs($user, 'web')->get(route('domains.show', $domain))->assertOk()->getContent();
+        foreach (['grok-manual-model', 'gpt-api-model', 'gemini-api-model'] as $model) {
+            $this->assertGreaterThanOrEqual(2, substr_count($html, $model), $model);
+        }
+    }
+
     public function test_user_can_revoke_an_mcp_app_from_connections(): void
     {
         $this->withoutMiddleware(PreventRequestForgery::class);
