@@ -32,12 +32,14 @@ final class McpScopes
     }
 
     /**
-     * Istemcilere metadata'da ilan edilen scope'lar.
+     * Istemcilere metadata'da ilan edilen scope'lar. Paketin "mcp:use"
+     * scope'u da ilan edilir; ChatGPT yalnizca read/write goren metadata'yi
+     * kayittan once reddediyordu (mcp:use ilan eden mail-mcp sorunsuz).
      *
      * @return list<string>
      */
     public static function supported(): array
     {
-        return [self::READ, self::WRITE];
+        return [self::READ, self::WRITE, Registrar::OAUTH_SCOPE];
     }
 }

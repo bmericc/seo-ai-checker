@@ -70,7 +70,7 @@ class McpServerTest extends TestCase
         $this->getJson('/.well-known/oauth-authorization-server')->assertOk();
         $this->getJson('/.well-known/openid-configuration')->assertOk()
             ->assertJsonPath('registration_endpoint', url('/oauth/register'))
-            ->assertJsonPath('scopes_supported', ['read', 'write']);
+            ->assertJsonPath('scopes_supported', ['read', 'write', 'mcp:use']);
         $this->get('/')->assertOk();
     }
 
@@ -78,11 +78,11 @@ class McpServerTest extends TestCase
     {
         $this->getJson('/.well-known/oauth-protected-resource/mcp')
             ->assertOk()
-            ->assertJsonPath('scopes_supported', ['read', 'write']);
+            ->assertJsonPath('scopes_supported', ['read', 'write', 'mcp:use']);
 
         $this->getJson('/.well-known/oauth-authorization-server')
             ->assertOk()
-            ->assertJsonPath('scopes_supported', ['read', 'write'])
+            ->assertJsonPath('scopes_supported', ['read', 'write', 'mcp:use'])
             ->assertJsonPath('authorization_endpoint', route('passport.authorizations.authorize'));
     }
 
