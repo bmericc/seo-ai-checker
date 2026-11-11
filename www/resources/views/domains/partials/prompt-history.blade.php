@@ -11,7 +11,7 @@
     </div>
     @if ($historyItems->isEmpty())
         <div class="card-body text-secondary">
-            {{ __('Henüz kayıt yok. MCP bağlantısındaki asistanınıza bir soru ve domain verip check_ai_answer ile kontrol ettirebilirsiniz.') }}
+            {{ __('Henüz kayıt yok. MCP bağlantısındaki asistanınıza bir domain verip kelimelerini check_ai_answer ile kontrol ettirebilirsiniz.') }}
         </div>
     @else
         <div class="list-group list-group-flush">
@@ -28,7 +28,7 @@
                         @php $result = $item->resultFor($provider); @endphp
                         @if ($result !== null)
                             <span class="badge {{ ($result['error'] ?? null) ? 'bg-danger-lt' : (($result['present'] ?? false) ? 'bg-success-lt' : 'bg-secondary-lt') }}">
-                                <i class="ti {{ ($result['present'] ?? false) ? 'ti-check' : 'ti-x' }} me-1"></i>{{ \App\Support\AiAssistant::label($provider) }}
+                                <i class="ti {{ ($result['present'] ?? false) ? 'ti-check' : 'ti-x' }} me-1"></i>{{ \App\Support\AiAssistant::label($provider) }}@if ($result['model'] ?? null)<span class="fw-normal ms-1 opacity-75">{{ $result['model'] }}</span>@endif
                             </span>
                             @if (($result['source'] ?? null) === 'manual')
                                 <span class="badge bg-purple-lt">{{ __('Manuel (MCP)') }}</span>

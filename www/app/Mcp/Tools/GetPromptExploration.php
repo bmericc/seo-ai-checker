@@ -43,6 +43,7 @@ class GetPromptExploration extends SeoTool
             $answers[$provider] = $result === null ? ['status' => 'pending'] : array_filter([
                 'status' => ($result['error'] ?? null) === null ? 'answered' : 'error',
                 'mentions_domain' => $result['present'] ?? null,
+                'assistant_label' => \App\Support\AiAssistant::label($provider),
                 'model' => $result['model'] ?? null,
                 'source' => ($result['source'] ?? null) === 'manual' ? 'manual' : 'api',
                 'error' => $result['error'] ?? null,

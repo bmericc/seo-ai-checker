@@ -18,7 +18,7 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
  * manuel olarak (check_ai_answer) kaydedilen sonuclar, en yeniden eskiye.
  */
 #[Name('list_ai_checks')]
-#[Description('History of AI visibility checks for a domain: every saved check_ai_answer (manual) and explore_prompt (API) result, newest first, with per-assistant mention status. Filter by keyword, assistant or prompt text to follow one question over time. Read one entry in full with get_prompt_exploration.')]
+#[Description('History of AI visibility checks for a domain: every saved check_ai_answer (manual) and explore_prompt (API) result, newest first, with per-assistant name, model and mention status. Filter by keyword, assistant or prompt text to follow one question over time. Read one entry in full with get_prompt_exploration.')]
 #[IsReadOnly]
 class ListAiChecks extends SeoTool
 {
@@ -87,7 +87,11 @@ class ListAiChecks extends SeoTool
             $result = $exploration->resultFor($provider);
             $source = ($result['source'] ?? null) === 'manual' ? 'manual' : 'api';
             $sources[] = $source;
-            $assistants[$provider] = $result === null ? 'pending' : (($result['error'] ?? null) !== null ? 'error' : (($result['present'] ?? false) ? 'mentioned' : 'not_mentioned'));
+            $assistants[$provider] = array_filter([
+                'label' => AiAssistant::label($provider),
+                'model' => $result['model'] ?? null,
+                'status' => $result === null ? 'pending' : (($result['error'] ?? null) !== null ? 'error' : (($result['present'] ?? false) ? 'mentioned' : 'not_mentioned')),
+            ], fn ($value) => $value !== null);
         }
 
         return [

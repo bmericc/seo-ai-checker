@@ -77,6 +77,10 @@
                             <div class="text-danger small">{{ \App\Support\StoredText::t($result['error']) }}</div>
                         @else
                             {!! \App\Support\LlmAnswerFormatter::toHtml((string) $result['response'], $domain->domain) !!}
+                            @if (!empty($result['follow_up_response']))
+                                <div class="subheader mt-3 mb-1">{{ $result['follow_up_prompt'] ?? '' }}</div>
+                                <div class="ps-3 border-start">{!! \App\Support\LlmAnswerFormatter::toHtml((string) $result['follow_up_response'], $domain->domain) !!}</div>
+                            @endif
                             @if (!empty($result['citations']))
                                 <div class="subheader mt-3 mb-1">{{ __('Kaynaklar') }}</div>
                                 <ol class="small ps-3 mb-0">

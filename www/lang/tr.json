@@ -748,9 +748,11 @@
     ":domain cevapta geçmiyor.": ":domain cevapta geçmiyor.",
     "Manuel (MCP)": "Manuel (MCP)",
     "Yapay zekâ kontrol geçmişi": "Yapay zekâ kontrol geçmişi",
-    "Henüz kayıt yok. MCP bağlantısındaki asistanınıza bir soru ve domain verip check_ai_answer ile kontrol ettirebilirsiniz.": "Henüz kayıt yok. MCP bağlantısındaki asistanınıza bir soru ve domain verip check_ai_answer ile kontrol ettirebilirsiniz.",
     "Geçersiz asistan adı. Harf, rakam ve tire kullanın (örneğin grok, deepseek).": "Geçersiz asistan adı. Harf, rakam ve tire kullanın (örneğin grok, deepseek).",
-    "Bir anahtar kelime ya da soru verin. Domain'in kelimelerini ve sorulacak soruları get_ai_check_prompts ile alabilirsiniz.": "Bir anahtar kelime ya da soru verin. Domain'in kelimelerini ve sorulacak soruları get_ai_check_prompts ile alabilirsiniz.",
-    "Bu domain'de takip edilen kelime yok. check_ai_answer'a bir keyword verirseniz kelime eklenir.": "Bu domain'de takip edilen kelime yok. check_ai_answer'a bir keyword verirseniz kelime eklenir.",
-    "Her soruyu domain'i bilmiyormuş gibi kendiniz cevaplayın, sonra check_ai_answer'ı keyword, answer ve assistant ile çağırın.": "Her soruyu domain'i bilmiyormuş gibi kendiniz cevaplayın, sonra check_ai_answer'ı keyword, answer ve assistant ile çağırın."
+    "\":keyword\" bu domain'de takip edilmiyor. Önce get_ai_check_prompts'u bu kelimeyle çağırın; kelime eklenir ve sorulacak soru döner.": "\":keyword\" bu domain'de takip edilmiyor. Önce get_ai_check_prompts'u bu kelimeyle çağırın; kelime eklenir ve sorulacak soru döner.",
+    "Yeni kelime eklemek için \"write\" izni gerekiyor. Bağlantıyı yazma izniyle yeniden yetkilendirin.": "Yeni kelime eklemek için \"write\" izni gerekiyor. Bağlantıyı yazma izniyle yeniden yetkilendirin.",
+    "Bu domain'de takip edilen kelime yok. get_ai_check_prompts'u bir keyword ile çağırırsanız kelime eklenir.": "Bu domain'de takip edilen kelime yok. get_ai_check_prompts'u bir keyword ile çağırırsanız kelime eklenir.",
+    "Henüz kayıt yok. MCP bağlantısındaki asistanınıza bir domain verip kelimelerini check_ai_answer ile kontrol ettirebilirsiniz.": "Henüz kayıt yok. MCP bağlantısındaki asistanınıza bir domain verip kelimelerini check_ai_answer ile kontrol ettirebilirsiniz.",
+    "Her kelime için system_instruction'a uyarak prompt'u domain'i bilmiyormuş gibi kendiniz cevaplayın, sonra follow_up_prompt'u aynı sohbetin devamı olarak cevaplayın ve check_ai_answer'ı keyword, answer, follow_up_answer, assistant ve model ile çağırın.": "Her kelime için system_instruction'a uyarak prompt'u domain'i bilmiyormuş gibi kendiniz cevaplayın, sonra follow_up_prompt'u aynı sohbetin devamı olarak cevaplayın ve check_ai_answer'ı keyword, answer, follow_up_answer, assistant ve model ile çağırın.",
+    "Model bilgisi zorunlu (örneğin claude-opus-5-5, grok-5).": "Model bilgisi zorunlu (örneğin claude-opus-5-5, grok-5)."
 }

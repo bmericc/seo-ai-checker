@@ -8,7 +8,6 @@ use App\Models\Domain;
 use App\Models\Keyword;
 use App\Services\Llm\LlmMentions;
 use App\Services\Llm\LlmVisibilityPrompt;
-use App\Services\Llm\PromptExplorer;
 use App\Support\AiAssistant;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
@@ -20,15 +19,15 @@ use Laravel\Mcp\Server\Attributes\Name;
  * Manuel kontrol: API anahtari kullanmadan, MCP istemcisindeki yapay
  * zekanin (Claude, ChatGPT, Grok...) kendi verdigi cevabi alir, domain'in
  * gecip gecmedigini bulur ve gecmis icin Prompt Explorer kaydi olarak
- * saklar. Anahtar kelime verilirse sonuc o kelimeye baglanir; kelime
- * domain'de takip edilmiyorsa eklenir.
+ * saklar. Soru her zaman API kontrolleriyle ayni formattadir
+ * (LlmVisibilityPrompt); serbest soru kabul edilmez. Kelime domain'de
+ * kayitli olmali - yeni kelimeyi once get_ai_check_prompts ekler.
  */
 #[Name('check_ai_answer')]
 #[Description(<<<'TEXT'
-    Manual AI visibility check without API keys. Use it when the user gives a question or keyword and a domain and asks whether an AI assistant's answer mentions that domain.
-    How to use: first answer the prompt yourself exactly as you would for an ordinary user who never mentioned the domain (use web search if you normally would, do not steer the answer towards the domain), then call this tool with your full answer text and the URLs you cited.
-    Give either a keyword or a prompt. With a keyword, the prompt to answer is the one get_ai_check_prompts returns for it (the same question the API checks ask); a keyword the domain does not track yet is added to its keywords. When the user names no keyword or prompt, call get_ai_check_prompts first and check every keyword it returns.
-    The tool reports whether the domain appears in the answer or the cited URLs, lists the other sites mentioned and saves the result as history.
+    Manual AI visibility check of a tracked keyword without API keys, in the same format as the API checks.
+    Steps: 1) call get_ai_check_prompts (with the keyword if the user named one; a new keyword is added to the domain's keywords there first). 2) Follow its system_instruction and answer its prompt yourself as you would for an ordinary user who never mentioned the domain (use web search if you normally would, never steer the answer towards the domain). 3) Answer its follow_up_prompt as the next turn of the same conversation. 4) Call this tool with the keyword, both answers, the URLs you cited, and your assistant name and exact model (both required).
+    The keyword must already be tracked by the domain. The tool reports whether the domain appears in the answers or cited URLs, lists the other sites mentioned and saves the result as history.
     TEXT)]
 class CheckAiAnswer extends SeoTool
 {
@@ -42,12 +41,12 @@ class CheckAiAnswer extends SeoTool
     {
         return [
             'domain' => $schema->string()->description('Domain name (example.com) or numeric id from list_domains.')->required(),
-            'keyword' => $schema->string()->description('Keyword the check is for. If the prompt is omitted, the standard prompt for this keyword is used. Added to the domain\'s keywords when missing.'),
-            'prompt' => $schema->string()->description('The question that was answered, exactly as a user would ask it. Optional when a keyword is given.'),
-            'answer' => $schema->string()->description('Your full answer to the prompt, verbatim.')->required(),
+            'keyword' => $schema->string()->description('A keyword the domain tracks (see get_ai_check_prompts).')->required(),
+            'answer' => $schema->string()->description('Your full answer to the keyword\'s prompt, verbatim.')->required(),
+            'follow_up_answer' => $schema->string()->description('Your answer to the follow_up_prompt, verbatim. Optional but recommended.'),
             'assistant' => $schema->string()
-                ->description('Which assistant wrote the answer, by its own name: claude, chatgpt, gemini, perplexity, grok, deepseek, copilot, mistral… Any name is accepted.')->required(),
-            'model' => $schema->string()->description('Model name, e.g. claude-opus-5-5 or grok-5. Optional.'),
+                ->description('Required. Which assistant wrote the answer, by its own name: claude, chatgpt, gemini, perplexity, grok, deepseek, copilot, mistral… Any name is accepted.')->required(),
+            'model' => $schema->string()->description('Required. The exact model that wrote the answer, e.g. claude-opus-5-5, gpt-5.5, grok-5.')->required(),
             'citations' => $schema->array()->items($schema->string())->description('URLs cited in the answer (web search sources). Optional.'),
         ];
     }
@@ -58,11 +57,11 @@ class CheckAiAnswer extends SeoTool
         $domain = $this->resolveDomain($user, $request->get('domain'));
 
         $data = $request->validate([
-            'keyword' => ['nullable', 'string', 'max:255'],
-            'prompt' => ['nullable', 'string', 'max:' . PromptExplorer::MAX_PROMPT_LENGTH],
+            'keyword' => ['required', 'string', 'max:255'],
             'answer' => ['required', 'string', 'max:' . self::MAX_ANSWER_LENGTH],
+            'follow_up_answer' => ['nullable', 'string', 'max:' . self::MAX_ANSWER_LENGTH],
             'assistant' => ['required', 'string', 'max:60'],
-            'model' => ['nullable', 'string', 'max:100'],
+            'model' => ['required', 'string', 'max:100'],
             'citations' => ['nullable', 'array', 'max:' . self::MAX_CITATIONS],
             'citations.*' => ['string', 'max:2000'],
         ]);
@@ -72,27 +71,27 @@ class CheckAiAnswer extends SeoTool
             throw new ToolError(__('Geçersiz asistan adı. Harf, rakam ve tire kullanın (örneğin grok, deepseek).'));
         }
 
-        $phrase = trim((string) ($data['keyword'] ?? ''));
-        $prompt = trim((string) ($data['prompt'] ?? ''));
-        if ($phrase === '' && $prompt === '') {
-            throw new ToolError(__('Bir anahtar kelime ya da soru verin. Domain\'in kelimelerini ve sorulacak soruları get_ai_check_prompts ile alabilirsiniz.'));
+        $keyword = self::findKeyword($domain, $data['keyword']);
+        if ($keyword === null) {
+            throw new ToolError(__('":keyword" bu domain\'de takip edilmiyor. Önce get_ai_check_prompts\'u bu kelimeyle çağırın; kelime eklenir ve sorulacak soru döner.', ['keyword' => trim($data['keyword'])]));
         }
-
-        [$keyword, $keywordCreated] = $phrase === '' ? [null, false] : $this->findOrCreateKeyword($domain, $phrase);
-        if ($prompt === '') {
-            $prompt = LlmVisibilityPrompt::userPrompt($keyword->keyword);
+        if (trim($data['model']) === '') {
+            throw new ToolError(__('Model bilgisi zorunlu (örneğin claude-opus-5-5, grok-5).'));
         }
+        $prompt = LlmVisibilityPrompt::userPrompt($keyword->keyword);
 
         $answer = trim($data['answer']);
+        $followUp = trim((string) ($data['follow_up_answer'] ?? ''));
         $citations = array_values(array_unique(array_filter(array_map('trim', $data['citations'] ?? []))));
 
         $inText = LlmMentions::mentions($answer, $domain->domain);
+        $inFollowUp = $followUp !== '' && LlmMentions::mentions($followUp, $domain->domain);
         $citedUrls = array_values(array_filter($citations, fn (string $url) => self::isOwnHost($url, $domain->domain)));
         $present = $inText || $citedUrls !== [];
 
         $exploration = $domain->promptExplorations()->create([
             'user_id' => $user->id,
-            'keyword_id' => $keyword?->id,
+            'keyword_id' => $keyword->id,
             'prompt' => $prompt,
             'providers' => [$assistant],
             'results' => [
@@ -100,7 +99,11 @@ class CheckAiAnswer extends SeoTool
                     'present' => $present,
                     'response' => $answer,
                     'error' => null,
-                    'model' => $data['model'] ?? null,
+                    'prompt' => $prompt,
+                    'follow_up_prompt' => $followUp !== '' ? LlmVisibilityPrompt::FOLLOW_UP_PROMPT : null,
+                    'follow_up_response' => $followUp !== '' ? $followUp : null,
+                    'follow_up_present' => $inFollowUp,
+                    'model' => trim($data['model']),
                     'citations' => $citations,
                     'source' => 'manual',
                 ],
@@ -113,11 +116,13 @@ class CheckAiAnswer extends SeoTool
             'exploration_id' => $exploration->id,
             'domain' => $domain->domain,
             'assistant' => $assistant,
-            'keyword' => $keyword?->keyword,
-            'keyword_created' => $keyword !== null ? $keywordCreated : null,
+            'assistant_label' => AiAssistant::label($assistant),
+            'model' => trim($data['model']),
+            'keyword' => $keyword->keyword,
             'prompt' => $prompt,
             'mentions_domain' => $present,
             'mentioned_in_text' => $inText,
+            'mentioned_in_follow_up' => $followUp !== '' ? $inFollowUp : null,
             'cited_urls' => $citedUrls,
             'other_sites_mentioned' => $exploration->mentionedSites(),
             'message' => $present
@@ -128,22 +133,13 @@ class CheckAiAnswer extends SeoTool
     }
 
     /**
-     * Buyuk/kucuk harf ve bosluk farkini yok sayarak domain'in kelimesini
-     * bulur; yoksa ekler.
-     *
-     * @return array{0: Keyword, 1: bool}
+     * Buyuk/kucuk harf ve bosluk farkini yok sayarak domain'in kelimesini bulur.
      */
-    private function findOrCreateKeyword(Domain $domain, string $phrase): array
+    public static function findKeyword(Domain $domain, string $phrase): ?Keyword
     {
-        $phrase = (string) preg_replace('/\s+/u', ' ', $phrase);
-        $needle = mb_strtolower($phrase);
+        $needle = mb_strtolower((string) preg_replace('/\s+/u', ' ', trim($phrase)));
 
-        $existing = $domain->keywords()->get()->first(fn (Keyword $k) => mb_strtolower(trim($k->keyword)) === $needle);
-        if ($existing !== null) {
-            return [$existing, false];
-        }
-
-        return [$domain->keywords()->create(['keyword' => $phrase]), true];
+        return $domain->keywords()->get()->first(fn (Keyword $k) => mb_strtolower(trim($k->keyword)) === $needle);
     }
 
     private static function isOwnHost(string $url, string $domain): bool

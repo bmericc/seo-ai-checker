@@ -35,11 +35,12 @@ use Laravel\Mcp\Server\Attributes\Version;
     - Members see only their own domains; admins see every member's domains.
     - Checks run in the background: after run_domain_check / run_keyword_check /
       explore_prompt, wait a minute or two before reading the result again.
-    - To check whether an AI answer mentions a domain without API keys, answer the
-      prompt yourself first, then pass your answer to check_ai_answer with your own
-      assistant name (claude, chatgpt, grok…). With no keyword or prompt from the
-      user, get_ai_check_prompts lists the domain's keywords and the questions to
-      answer. Results are kept as history: list_ai_checks shows earlier checks.
+    - Manual AI visibility check (no API keys): call get_ai_check_prompts (with the
+      keyword if the user named one - a new keyword is added first, without one
+      every tracked keyword is returned), answer each prompt yourself following its
+      system_instruction, answer the follow_up_prompt, then record it with
+      check_ai_answer using your own assistant name (claude, chatgpt, grok…).
+      Free-form questions are not checked manually. list_ai_checks shows history.
     - Write tools need the "write" permission. Nothing can be deleted through MCP.
     - Reply to the user in their language; tool messages may be in Turkish.
     MARKDOWN)]

@@ -62,19 +62,21 @@ Verdiğiniz erişimleri **Bağlantılar → Yapay zekâ asistanları (MCP)** kar
 | `create_report_link` | write | Giriş gerektirmeyen paylaşılabilir rapor linki |
 | `explore_prompt` | write, yönetici | Bir soruyu ChatGPT, Claude, Gemini ve Perplexity'ye sorar |
 | `get_prompt_exploration` | read | Kayıtlı bir yapay zekâ kontrolünün tamamını döner: cevaplar, anılma durumu, anılan siteler |
-| `check_ai_answer` | write | API anahtarsız manuel kontrol: asistan soruyu kendisi cevaplar, araç domain'in geçip geçmediğini söyler ve sonucu kaydeder |
+| `check_ai_answer` | write | Takip edilen bir kelimenin manuel kontrolünü kaydeder: asistanın kendi cevapları, domain'in geçip geçmediği, anılan diğer siteler |
 | `list_ai_checks` | read | Kayıtlı yapay zekâ kontrollerinin geçmişi (manuel ve API); anahtar kelimeye, asistana, soru metnine ve kaynağa göre süzülebilir |
-| `get_ai_check_prompts` | read | Domain'in anahtar kelimeleri, her biri için sorulacak standart soru ve kelime başına son kontrolünüz |
+| `get_ai_check_prompts` | read (kelime eklemek için write) | Manuel kontrol soruları API formatında; yeni kelimeyi önce ekler ya da takip edilen tüm kelimeleri listeler |
 
 ### Manuel yapay zekâ kontrolü (`check_ai_answer`)
 
-Asistanınıza bir soru ve domain verin, örneğin: *"'Türkiye'de küçük işletmeler için en iyi muhasebe programı hangisi?' sorusunu kendin cevapla ve cevabında example.com geçiyor mu kontrol et."* Asistan önce soruyu cevaplar, sonra cevabını ve kaynak URL'lerini `check_ai_answer` aracına gönderir. Araç domain'in metinde ya da kaynaklarda geçip geçmediğini söyler, anılan diğer siteleri listeler ve sonucu domain'in Prompt Explorer geçmişine "Manuel (MCP)" etiketiyle kaydeder. API anahtarı kullanılmaz.
+Asistanınız kelimelerinizi API anahtarı kullanmadan, API kontrolleriyle aynı formatta kendisi kontrol eder: aynı talimat, aynı soru (*"… konusunda hangi web sitelerine bakmalıyım?"*) ve Türkiye'deki sitelerle ilgili aynı takip sorusu. Serbest sorular manuel olarak kontrol edilmez.
 
-Bunu her asistan yapabilir: Claude, ChatGPT, Gemini ve Perplexity API kontrolleriyle aynı adla, diğerleri (Grok, DeepSeek, Copilot…) kendi adlarıyla kaydedilir.
+1. Asistanınıza örneğin şunu söyleyin: *"example.com'un kelimelerini kontrol et"* ya da *"example.com için 'e-fatura' kelimesini kontrol et"*.
+2. Asistan `get_ai_check_prompts` aracını çağırır. Domain'de takip edilmeyen bir kelime verildiyse kelime önce kelimelere eklenir. Kelime verilmezse takip edilen tüm kelimeler döner.
+3. Asistan her soruyu ve takip sorusunu cevaplar, sonra `check_ai_answer` ile kaydeder. API kontrollerinde olduğu gibi asistan adı ve tam model adı (örneğin `grok` / `grok-5`) zorunludur. Bu araç yalnızca domain'de zaten takip edilen kelimeleri kabul eder.
 
-**Anahtar kelimeler.** Soru yerine `keyword` verirseniz o kelimenin standart sorusu kullanılır (API kontrollerinin sorduğu soruyla aynı). Domain'de takip edilmeyen bir kelimeyse kelimelere eklenir ve sonuç kelimenin sayfasında görünür. Yalnızca domain verirseniz (*"example.com'un kelimelerini kontrol et"*), asistan `get_ai_check_prompts` ile kelimeleri alır, her birinin sorusunu cevaplayıp tek tek kaydeder.
+Araç domain'in cevaplarda ya da kaynak URL'lerde geçip geçmediğini söyler ve anılan diğer siteleri listeler. Claude, ChatGPT, Gemini ve Perplexity API kontrolleriyle aynı adla, diğer asistanlar (Grok, DeepSeek, Copilot…) kendi adlarıyla kaydedilir.
 
-Her sonuç geçmiş olarak saklanır. Üyeler bunu domain sayfasında **Yapay zekâ görünürlüğü → Yapay zekâ kontrol geçmişi** altında görür; `list_ai_checks` de aynı geçmişi döner. Böylece aynı soruyu ileride tekrar sorup domain'in cevaplarda görünmeye başlayıp başlamadığını izleyebilirsiniz.
+Her sonuç geçmiş olarak saklanır. Üyeler bunu kelime sayfasında ve domain sayfasında **Yapay zekâ görünürlüğü → Yapay zekâ kontrol geçmişi** altında "Manuel (MCP)" etiketiyle görür; `list_ai_checks` de aynı geçmişi döner.
 
 Kontroller kuyrukta çalışır. Araç hemen döner; sonucu bir iki dakika sonra okuma araçlarıyla alırsınız.
 

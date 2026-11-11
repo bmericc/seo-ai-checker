@@ -62,19 +62,21 @@ You can see the access you granted on the **Connections → AI assistants (MCP)*
 | `create_report_link` | write | Shareable report link that needs no login |
 | `explore_prompt` | write, admin | Asks a question to ChatGPT, Claude, Gemini and Perplexity |
 | `get_prompt_exploration` | read | Returns one saved AI check in full: answers, mention status and the sites they mention |
-| `check_ai_answer` | write | Manual check without API keys: the assistant answers a prompt itself, the tool reports whether the domain appears and saves the result |
+| `check_ai_answer` | write | Records a manual check of a tracked keyword: the assistant's own answers, whether the domain appears, other sites mentioned |
 | `list_ai_checks` | read | History of saved AI checks (manual and API), filterable by keyword, assistant, prompt text and source |
-| `get_ai_check_prompts` | read | The domain's keywords with the standard question to answer for each, and your last check per keyword |
+| `get_ai_check_prompts` | read (write to add a keyword) | Questions for a manual check in the API format; adds a new keyword first, or lists every tracked keyword |
 
 ### Manual AI check (`check_ai_answer`)
 
-Give your assistant a question and a domain, for example: *"Ask yourself 'Which accounting software is best for small shops in Turkey?' and check whether example.com appears in your answer."* The assistant answers the question first, then sends its answer and cited URLs to `check_ai_answer`. The tool reports whether the domain appears in the text or the sources, lists the other sites mentioned and saves the result to the domain's Prompt Explorer history marked "Manual (MCP)". No API key is used.
+Your assistant checks your keywords itself, without API keys, in the same format as the API checks: the same instruction, the same question (*"… konusunda hangi web sitelerine bakmalıyım?"*) and the same follow-up question about sites from Turkey. Free-form questions are not checked manually.
 
-Any assistant can do this: Claude, ChatGPT, Gemini and Perplexity are stored under the same names as the API checks, and any other assistant (Grok, DeepSeek, Copilot…) is stored under its own name.
+1. Ask your assistant, for example: *"Check example.com's keywords"* or *"Check the keyword 'e-fatura' for example.com"*.
+2. The assistant calls `get_ai_check_prompts`. With a keyword the domain does not track yet, the keyword is added to its keywords first. Without a keyword, every tracked keyword is returned.
+3. The assistant answers each question and the follow-up question, then records them with `check_ai_answer`. The assistant name and the exact model (for example `grok` / `grok-5`) are required, like the API checks record them. It only accepts keywords the domain already tracks.
 
-**Keywords.** Pass `keyword` instead of a prompt and the standard question for that keyword is used (the same question the API checks ask). A keyword the domain does not track yet is added to its keywords, and the result shows on the keyword's page. When you give only a domain (*"check my keywords on example.com"*), the assistant calls `get_ai_check_prompts`, answers every keyword's question and records each one.
+The tool reports whether the domain appears in the answers or the cited URLs and lists the other sites mentioned. Claude, ChatGPT, Gemini and Perplexity are stored under the same names as the API checks; any other assistant (Grok, DeepSeek, Copilot…) is stored under its own name.
 
-Every result is kept as history. Members see it on the domain page under **AI visibility → AI check history**, and `list_ai_checks` returns it, so you can ask the same question again later and follow whether the domain starts (or stops) appearing.
+Every result is kept as history. Members see it on the keyword page and on the domain page under **AI visibility → AI check history**, marked "Manual (MCP)", and `list_ai_checks` returns it.
 
 Checks run in the queue. The tool returns at once; read the result a minute or two later with the read tools.
 
