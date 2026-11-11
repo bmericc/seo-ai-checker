@@ -58,13 +58,22 @@ class McpServerTest extends TestCase
         );
     }
 
-    public function test_site_root_is_not_an_mcp_address(): void
+    public function test_site_root_is_also_an_mcp_address(): void
     {
-        $this->getJson('/.well-known/oauth-protected-resource')->assertNotFound();
+        $this->getJson('/.well-known/oauth-protected-resource')->assertOk()
+            ->assertJsonPath('resource', url('/'))
+            ->assertJsonPath('scopes_supported', ['read', 'write', 'mcp:use']);
 
-        $this->postJson('/', ['jsonrpc' => '2.0', 'id' => 1, 'method' => 'initialize'], [
+        $response = $this->postJson('/', ['jsonrpc' => '2.0', 'id' => 1, 'method' => 'initialize'], [
             'Accept' => 'application/json, text/event-stream',
-        ])->assertNotFound()->assertJsonPath('id', 1)->assertJsonPath('error.code', -32601);
+        ])->assertUnauthorized();
+        $this->assertStringContainsString(
+            'resource_metadata="'.url('/.well-known/oauth-protected-resource').'"',
+            (string) $response->headers->get('WWW-Authenticate'),
+        );
+
+        // SSE isteyen MCP istemcisine HTML degil 405.
+        $this->get('/', ['Accept' => 'text/event-stream'])->assertStatus(405)->assertHeader('Allow', 'POST');
 
         $this->getJson('/.well-known/oauth-protected-resource/mcp')->assertOk();
         $this->getJson('/.well-known/oauth-authorization-server')->assertOk();
