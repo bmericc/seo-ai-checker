@@ -58,22 +58,13 @@ class McpServerTest extends TestCase
         );
     }
 
-    public function test_site_root_is_also_an_mcp_address(): void
+    public function test_site_root_is_not_an_mcp_address(): void
     {
-        $this->getJson('/.well-known/oauth-protected-resource')->assertOk()
-            ->assertJsonPath('resource', url('/'))
-            ->assertJsonPath('scopes_supported', ['read', 'write', 'mcp:use']);
+        $this->getJson('/.well-known/oauth-protected-resource')->assertNotFound();
 
-        $response = $this->postJson('/', ['jsonrpc' => '2.0', 'id' => 1, 'method' => 'initialize'], [
+        $this->postJson('/', ['jsonrpc' => '2.0', 'id' => 1, 'method' => 'initialize'], [
             'Accept' => 'application/json, text/event-stream',
-        ])->assertUnauthorized();
-        $this->assertStringContainsString(
-            'resource_metadata="'.url('/.well-known/oauth-protected-resource').'"',
-            (string) $response->headers->get('WWW-Authenticate'),
-        );
-
-        // SSE isteyen MCP istemcisine HTML degil 405.
-        $this->get('/', ['Accept' => 'text/event-stream'])->assertStatus(405)->assertHeader('Allow', 'POST');
+        ])->assertNotFound()->assertJsonPath('id', 1)->assertJsonPath('error.code', -32601);
 
         $this->getJson('/.well-known/oauth-protected-resource/mcp')->assertOk();
         $this->getJson('/.well-known/oauth-authorization-server')->assertOk();
@@ -84,15 +75,15 @@ class McpServerTest extends TestCase
         $this->get('/')->assertOk();
     }
 
-    public function test_discovery_metadata_advertises_read_and_write_scopes(): void
+    public function test_discovery_metadata_advertises_only_the_mcp_scope(): void
     {
         $this->getJson('/.well-known/oauth-protected-resource/mcp')
             ->assertOk()
-            ->assertJsonPath('scopes_supported', ['read', 'write', 'mcp:use']);
+            ->assertJsonPath('scopes_supported', ['mcp:use']);
 
         $this->getJson('/.well-known/oauth-authorization-server')
             ->assertOk()
-            ->assertJsonPath('scopes_supported', ['read', 'write', 'mcp:use'])
+            ->assertJsonPath('scopes_supported', ['mcp:use'])
             ->assertJsonPath('authorization_endpoint', route('passport.authorizations.authorize'));
     }
 

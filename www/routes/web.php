@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Auth\BingController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\CheckController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DomainController;
 use App\Http\Controllers\DomainMemberController;
 use App\Http\Controllers\IndexNowController;
@@ -40,7 +41,7 @@ Route::post('/logout', function () {
     return redirect('/');
 })->middleware('auth')->name('logout');
 
-// GET / (dashboard) routes/ai.php'de: kok adres ayni zamanda MCP adresi.
+Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
 // Paylasilan rapor linki: giris gerektirmez (bkz. ReportShareController::show).
 Route::get('/r/{token}', [ReportShareController::class, 'show'])

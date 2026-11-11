@@ -32,14 +32,17 @@ final class McpScopes
     }
 
     /**
-     * Istemcilere metadata'da ilan edilen scope'lar. Paketin "mcp:use"
-     * scope'u da ilan edilir; ChatGPT yalnizca read/write goren metadata'yi
-     * kayittan once reddediyordu (mcp:use ilan eden mail-mcp sorunsuz).
+     * Istemcilere metadata'da ilan edilen scope'lar: yalnizca paketin
+     * "mcp:use" scope'u (ChatGPT'de calisan mail-mcp ile birebir ayni).
+     * read/write da ilan edildiginde ChatGPT kesiften sonra istemci kaydina
+     * gecmeden "Some app settings were rejected" diyordu. read/write
+     * Passport'ta tanimli kalir; acikca isteyen istemci alir, digerleri
+     * onay ekranindaki "Yazma izni de ver" kutusuyla yazma izni verir.
      *
      * @return list<string>
      */
     public static function supported(): array
     {
-        return [self::READ, self::WRITE, Registrar::OAUTH_SCOPE];
+        return [Registrar::OAUTH_SCOPE];
     }
 }

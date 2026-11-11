@@ -9,7 +9,7 @@ use Laravel\Mcp\Server\Registrar;
 /**
  * laravel/mcp'nin OAuth metadata'si yalnizca "mcp:use" scope'unu ilan eder.
  * Istemciler (Claude, ChatGPT...) hangi scope'lari isteyecegini bu
- * metadata'dan okudugu icin read/write scope'larimizi buraya ekliyoruz;
+ * metadata'dan okudugu icin ilan edilen listeyi McpScopes::supported() belirler;
  * geri kalan her sey paketin kendi davranisi.
  */
 class McpRegistrar extends Registrar

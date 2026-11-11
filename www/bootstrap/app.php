@@ -38,8 +38,6 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
-            // POST / de MCP adresi (bkz. routes/ai.php); 302 yerine 401 JSON.
-            fn (Request $request) => $request->is('api/*', 'mcp', 'oauth/token', 'oauth/register')
-                || ($request->is('/') && !$request->isMethod('GET')),
+            fn (Request $request) => $request->is('api/*', 'mcp', 'oauth/token', 'oauth/register'),
         );
     })->create();
