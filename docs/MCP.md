@@ -44,7 +44,7 @@ You can see the access you granted on the **Connections → AI assistants (MCP)*
   - `write`: adding, starting checks, IndexNow submissions and report links.
 - Tools you have no permission for are not listed either.
 - Nothing can be deleted through MCP.
-- `explore_prompt` and `get_prompt_exploration` are admin-only.
+- `explore_prompt` is admin-only (it uses the domain's AI API keys).
 
 ## Tools
 
@@ -61,7 +61,20 @@ You can see the access you granted on the **Connections → AI assistants (MCP)*
 | `submit_indexnow` | write | Submits URLs or the sitemap to IndexNow |
 | `create_report_link` | write | Shareable report link that needs no login |
 | `explore_prompt` | write, admin | Asks a question to ChatGPT, Claude, Gemini and Perplexity |
-| `get_prompt_exploration` | read, admin | Returns the `explore_prompt` answers and the sites they mention |
+| `get_prompt_exploration` | read | Returns one saved AI check in full: answers, mention status and the sites they mention |
+| `check_ai_answer` | write | Manual check without API keys: the assistant answers a prompt itself, the tool reports whether the domain appears and saves the result |
+| `list_ai_checks` | read | History of saved AI checks (manual and API), filterable by keyword, assistant, prompt text and source |
+| `get_ai_check_prompts` | read | The domain's keywords with the standard question to answer for each, and your last check per keyword |
+
+### Manual AI check (`check_ai_answer`)
+
+Give your assistant a question and a domain, for example: *"Ask yourself 'Which accounting software is best for small shops in Turkey?' and check whether example.com appears in your answer."* The assistant answers the question first, then sends its answer and cited URLs to `check_ai_answer`. The tool reports whether the domain appears in the text or the sources, lists the other sites mentioned and saves the result to the domain's Prompt Explorer history marked "Manual (MCP)". No API key is used.
+
+Any assistant can do this: Claude, ChatGPT, Gemini and Perplexity are stored under the same names as the API checks, and any other assistant (Grok, DeepSeek, Copilot…) is stored under its own name.
+
+**Keywords.** Pass `keyword` instead of a prompt and the standard question for that keyword is used (the same question the API checks ask). A keyword the domain does not track yet is added to its keywords, and the result shows on the keyword's page. When you give only a domain (*"check my keywords on example.com"*), the assistant calls `get_ai_check_prompts`, answers every keyword's question and records each one.
+
+Every result is kept as history. Members see it on the domain page under **AI visibility → AI check history**, and `list_ai_checks` returns it, so you can ask the same question again later and follow whether the domain starts (or stops) appearing.
 
 Checks run in the queue. The tool returns at once; read the result a minute or two later with the read tools.
 

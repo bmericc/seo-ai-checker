@@ -14,7 +14,8 @@ use InvalidArgumentException;
 
 /**
  * Yapay zeka API anahtarlari (ve dolayisiyla maliyet) admin'e ait oldugu
- * icin "Yapay zeka gorunurlugu" sekmesi gibi yalnizca admin kullanabilir.
+ * icin yeni soru sormak yalnizca admin'e aciktir; sonuc gecmisini domain'e
+ * erisimi olan herkes gorebilir.
  */
 class PromptExplorerController extends Controller
 {
@@ -43,8 +44,9 @@ class PromptExplorerController extends Controller
 
     public function show(Request $request, Domain $domain, PromptExploration $exploration): View
     {
+        // Gecmisi (manuel MCP kontrolleri dahil) domain sahibi de gorur;
+        // yeni soru sormak (API maliyeti) admin'e ozel kalir.
         $this->ensureCanAccessDomain($request, $domain);
-        $this->ensureIsAdmin($request);
         abort_unless($exploration->domain_id === $domain->id, 404);
 
         $exploration->setRelation('domain', $domain);

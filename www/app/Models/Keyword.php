@@ -28,6 +28,12 @@ class Keyword extends Model
         return $this->hasOne(Check::class)->latestOfMany();
     }
 
+    /** Bu kelime icin kaydedilen yapay zeka kontrolleri (check_ai_answer). */
+    public function aiChecks(): HasMany
+    {
+        return $this->hasMany(PromptExploration::class)->orderByDesc('created_at')->orderByDesc('id');
+    }
+
     public function targetUrl(): string
     {
         return $this->url ?: $this->domain->rootUrl();

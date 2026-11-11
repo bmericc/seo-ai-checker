@@ -7,16 +7,20 @@ use App\Jobs\RunKeywordCheck;
 use App\Mcp\Servers\SeoCheckerServer;
 use App\Mcp\Tools\AddDomain;
 use App\Mcp\Tools\AddKeyword;
+use App\Mcp\Tools\CheckAiAnswer;
 use App\Mcp\Tools\CreateReportLink;
 use App\Mcp\Tools\ExplorePrompt;
+use App\Mcp\Tools\GetAiCheckPrompts;
 use App\Mcp\Tools\GetDomain;
 use App\Mcp\Tools\GetPromptExploration;
+use App\Mcp\Tools\ListAiChecks;
 use App\Mcp\Tools\ListDomains;
 use App\Mcp\Tools\ListKeywords;
 use App\Mcp\Tools\RunDomainCheck;
 use App\Mcp\Tools\RunKeywordCheck as RunKeywordCheckTool;
 use App\Mcp\Tools\SubmitIndexNow;
 use App\Models\Domain;
+use App\Models\PromptExploration;
 use App\Models\ReportShare;
 use App\Models\User;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -262,10 +266,166 @@ class McpServerTest extends TestCase
     public function test_prompt_explorer_tools_are_admin_only(): void
     {
         Passport::actingAs($this->member(), ['read', 'write']);
-        SeoCheckerServer::tools()->assertNotRegistered([ExplorePrompt::class, GetPromptExploration::class]);
+        SeoCheckerServer::tools()->assertNotRegistered([ExplorePrompt::class]);
+        SeoCheckerServer::tools()->assertRegistered([GetPromptExploration::class, ListAiChecks::class, CheckAiAnswer::class]);
 
         Passport::actingAs($this->member(['is_admin' => true]), ['read', 'write']);
         SeoCheckerServer::tools()->assertRegistered([ExplorePrompt::class, GetPromptExploration::class]);
+    }
+
+    public function test_check_ai_answer_detects_domain_in_text_and_saves_manual_result(): void
+    {
+        $user = $this->member();
+        $domain = $this->domainFor($user);
+        Passport::actingAs($user, ['read', 'write']);
+
+        SeoCheckerServer::tool(CheckAiAnswer::class, [
+            'domain' => 'example.com',
+            'prompt' => 'Best accounting software?',
+            'answer' => 'Try Example.com or rival.io for small shops.',
+            'assistant' => 'anthropic',
+            'model' => 'claude-opus-5-5',
+        ])->assertOk()->assertSee('"mentions_domain":true')->assertSee('rival.io');
+
+        $exploration = PromptExploration::query()->sole();
+        $this->assertSame($domain->id, $exploration->domain_id);
+        $this->assertTrue($exploration->isComplete());
+        $this->assertSame(['anthropic'], $exploration->providers);
+        $this->assertSame('manual', $exploration->resultFor('anthropic')['source']);
+        $this->assertTrue($exploration->resultFor('anthropic')['present']);
+    }
+
+    public function test_check_ai_answer_counts_cited_urls_and_reports_absence(): void
+    {
+        $user = $this->member();
+        $this->domainFor($user);
+        Passport::actingAs($user, ['read', 'write']);
+
+        SeoCheckerServer::tool(CheckAiAnswer::class, [
+            'domain' => 'example.com',
+            'prompt' => 'Best accounting software?',
+            'answer' => 'Rival is popular.',
+            'assistant' => 'openai',
+            'citations' => ['https://blog.example.com/post', 'https://rival.io'],
+        ])->assertOk()->assertSee('"mentions_domain":true')->assertSee('"mentioned_in_text":false');
+
+        SeoCheckerServer::tool(CheckAiAnswer::class, [
+            'domain' => 'example.com',
+            'prompt' => 'Best accounting software?',
+            'answer' => 'Rival is popular.',
+            'assistant' => 'other',
+            'citations' => ['https://notexample.com/x'],
+        ])->assertOk()->assertSee('"mentions_domain":false');
+    }
+
+    public function test_check_ai_answer_needs_write_scope_and_own_domain(): void
+    {
+        $owner = $this->member();
+        $this->domainFor($owner);
+
+        Passport::actingAs($this->member(), ['read']);
+        SeoCheckerServer::tools()->assertNotRegistered([CheckAiAnswer::class]);
+
+        Passport::actingAs($this->member(), ['read', 'write']);
+        SeoCheckerServer::tool(CheckAiAnswer::class, [
+            'domain' => 'example.com',
+            'prompt' => 'q',
+            'answer' => 'example.com',
+            'assistant' => 'anthropic',
+        ])->assertHasErrors();
+
+        $this->assertSame(0, PromptExploration::query()->count());
+    }
+
+    public function test_manual_checks_are_kept_as_history_for_members(): void
+    {
+        $user = $this->member();
+        $domain = $this->domainFor($user);
+        Passport::actingAs($user, ['read', 'write']);
+
+        foreach (['Rival only.', 'Now example.com too.'] as $answer) {
+            SeoCheckerServer::tool(CheckAiAnswer::class, [
+                'domain' => 'example.com',
+                'prompt' => 'Best accounting software?',
+                'answer' => $answer,
+                'assistant' => 'anthropic',
+            ])->assertOk();
+        }
+        $domain->promptExplorations()->create([
+            'user_id' => $user->id, 'prompt' => 'Other question', 'providers' => ['openai'],
+            'results' => ['openai' => ['present' => false, 'response' => 'x', 'error' => null]], 'completed_at' => now(),
+        ]);
+
+        SeoCheckerServer::tool(ListAiChecks::class, ['domain' => 'example.com', 'prompt_contains' => 'accounting'])
+            ->assertOk()->assertSee('"count":2')->assertSee('"mentioned_count":1')->assertSee('"mentioned"')->assertSee('"not_mentioned"');
+
+        SeoCheckerServer::tool(ListAiChecks::class, ['domain' => 'example.com', 'source' => 'api'])
+            ->assertOk()->assertSee('"count":1')->assertSee('Other question');
+
+        $exploration = PromptExploration::query()->where('prompt', 'Best accounting software?')->latest('id')->first();
+        SeoCheckerServer::tool(GetPromptExploration::class, ['exploration_id' => $exploration->id])
+            ->assertOk()->assertSee('"source":"manual"');
+
+        $this->actingAs($user)->get(route('domains.show', $domain))->assertOk()->assertSee('Best accounting software?');
+        $this->actingAs($user)->get(route('domains.prompts.show', [$domain, $exploration]))->assertOk()->assertSee('Manuel (MCP)');
+        $this->withoutMiddleware(PreventRequestForgery::class)->actingAs($user)->post(route('domains.prompts.store', $domain), ['prompt' => 'x'])->assertForbidden();
+    }
+
+    public function test_check_ai_answer_accepts_any_assistant_and_links_keywords(): void
+    {
+        $user = $this->member();
+        $domain = $this->domainFor($user);
+        $existing = $domain->keywords()->create(['keyword' => 'Muhasebe Programı']);
+        Passport::actingAs($user, ['read', 'write']);
+
+        SeoCheckerServer::tool(CheckAiAnswer::class, [
+            'domain' => 'example.com',
+            'keyword' => '  muhasebe   programı ',
+            'answer' => 'example.com is good.',
+            'assistant' => 'Grok',
+            'model' => 'grok-5',
+        ])->assertOk()->assertSee('"assistant":"grok"')->assertSee('"keyword_created":false')
+            ->assertSee('Muhasebe Programı konusunda hangi web sitelerine bakmalıyım?');
+
+        SeoCheckerServer::tool(CheckAiAnswer::class, [
+            'domain' => 'example.com',
+            'keyword' => 'e-fatura',
+            'answer' => 'Rival.',
+            'assistant' => 'ChatGPT',
+        ])->assertOk()->assertSee('"assistant":"openai"')->assertSee('"keyword_created":true');
+
+        $this->assertSame(2, $domain->keywords()->count());
+        $grok = PromptExploration::query()->where('providers', 'like', '%grok%')->sole();
+        $this->assertSame($existing->id, $grok->keyword_id);
+        $this->assertNotNull($domain->keywords()->where('keyword', 'e-fatura')->first()?->aiChecks()->first());
+
+        SeoCheckerServer::tool(CheckAiAnswer::class, [
+            'domain' => 'example.com',
+            'answer' => 'x',
+            'assistant' => 'grok',
+        ])->assertHasErrors(['get_ai_check_prompts']);
+
+        SeoCheckerServer::tool(ListAiChecks::class, ['domain' => 'example.com', 'assistant' => 'grok'])
+            ->assertOk()->assertSee('"count":1')->assertSee('"keyword":"Muhasebe Programı"');
+
+        $this->actingAs($user)->get(route('keywords.show', $existing))->assertOk()->assertSee('Grok')->assertSee('Manuel (MCP)');
+    }
+
+    public function test_get_ai_check_prompts_lists_keywords_with_last_check(): void
+    {
+        $user = $this->member();
+        $domain = $this->domainFor($user);
+        $domain->keywords()->create(['keyword' => 'e-fatura']);
+        $domain->keywords()->create(['keyword' => 'muhasebe']);
+        Passport::actingAs($user, ['read', 'write']);
+
+        SeoCheckerServer::tool(CheckAiAnswer::class, [
+            'domain' => 'example.com', 'keyword' => 'muhasebe', 'answer' => 'example.com', 'assistant' => 'grok',
+        ])->assertOk();
+
+        SeoCheckerServer::tool(GetAiCheckPrompts::class, ['domain' => 'example.com', 'assistant' => 'grok'])
+            ->assertOk()->assertSee('"count":2')->assertSee('e-fatura konusunda hangi web sitelerine bakmalıyım?')
+            ->assertSee('"last_mentioned":true');
     }
 
     public function test_user_can_revoke_an_mcp_app_from_connections(): void

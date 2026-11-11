@@ -17,13 +17,15 @@
     @php
         $summary = $exploration->mentionSummary();
         $sites = $exploration->mentionedSites();
-        $labels = \App\Models\DomainLlmApiKey::PROVIDER_LABELS;
     @endphp
 
     <div class="card mb-3">
         <div class="card-body">
             <div class="subheader mb-1">{{ __('Soru') }}</div>
             <div class="h3 mb-2">{{ $exploration->prompt }}</div>
+            @if ($exploration->keyword)
+                <a href="{{ route('keywords.show', $exploration->keyword) }}" class="badge bg-azure-lt mb-2"><i class="ti ti-key me-1"></i>{{ $exploration->keyword->keyword }}</a>
+            @endif
             <div class="d-flex flex-wrap align-items-center gap-2">
                 @if ($exploration->isComplete())
                     <span class="badge {{ $summary['mentioned'] > 0 ? 'bg-success-lt' : 'bg-secondary-lt' }} fs-5">
@@ -44,7 +46,10 @@
                 <div class="card h-100">
                     <div class="card-header">
                         <h3 class="card-title">
-                            {{ $labels[$provider] ?? $provider }}
+                            {{ \App\Support\AiAssistant::label($provider) }}
+                            @if (($result['source'] ?? null) === 'manual')
+                                <span class="badge bg-purple-lt ms-1">{{ __('Manuel (MCP)') }}</span>
+                            @endif
                             @if ($result['model'] ?? null)
                                 <span class="text-secondary fw-normal small ms-1">{{ $result['model'] }}</span>
                             @endif
@@ -106,7 +111,11 @@
             </div>
         </div>
         <div class="col-12 col-lg-6">
-            @include('domains.partials.prompt-explorer-form', ['prefill' => $exploration->prompt])
+            @if (auth()->user()->is_admin)
+                @include('domains.partials.prompt-explorer-form', ['prefill' => $exploration->prompt])
+            @else
+                @include('domains.partials.prompt-history', ['limit' => 10])
+            @endif
         </div>
     </div>
 @endsection

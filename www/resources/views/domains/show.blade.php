@@ -70,9 +70,7 @@
         <li class="nav-item" role="presentation"><a href="#tab-overview" class="nav-link active" data-bs-toggle="tab" role="tab" aria-selected="true"><i class="ti ti-layout-dashboard me-1"></i>{{ __('Genel bakış') }}</a></li>
         <li class="nav-item" role="presentation"><a href="#tab-keywords" class="nav-link" data-bs-toggle="tab" role="tab" aria-selected="false"><i class="ti ti-key me-1"></i>{{ __('Anahtar kelimeler') }} <span class="badge bg-secondary-lt ms-1">{{ $domain->keywords->count() }}</span></a></li>
         <li class="nav-item" role="presentation"><a href="#tab-health" class="nav-link" data-bs-toggle="tab" role="tab" aria-selected="false"><i class="ti ti-heart-rate-monitor me-1"></i>{{ __('Site sağlığı') }}@if (count($health->issues) > 0) <span class="badge bg-warning-lt ms-1">{{ count($health->issues) }}</span>@endif</a></li>
-        @if (auth()->user()->is_admin)
-            <li class="nav-item" role="presentation"><a href="#tab-ai" class="nav-link" data-bs-toggle="tab" role="tab" aria-selected="false"><i class="ti ti-sparkles me-1"></i>{{ __('Yapay zekâ görünürlüğü') }}</a></li>
-        @endif
+        <li class="nav-item" role="presentation"><a href="#tab-ai" class="nav-link" data-bs-toggle="tab" role="tab" aria-selected="false"><i class="ti ti-sparkles me-1"></i>{{ __('Yapay zekâ görünürlüğü') }}</a></li>
         @if ($hasSitemapPages)
             <li class="nav-item" role="presentation"><a href="#tab-pages" class="nav-link" data-bs-toggle="tab" role="tab" aria-selected="false"><i class="ti ti-files me-1"></i>{{ __('Sayfalar') }}</a></li>
         @endif
@@ -868,9 +866,14 @@
         @include('domains.partials.indexnow')
     </div>
 
-    @if (auth()->user()->is_admin)
     <div class="tab-pane" id="tab-ai" role="tabpanel">
+        @if (auth()->user()->is_admin)
         @include('domains.partials.prompt-explorer-form')
+        @endif
+
+        @include('domains.partials.prompt-history')
+
+        @if (auth()->user()->is_admin)
 
         <div class="card mb-4">
             <div class="card-header">
@@ -947,9 +950,8 @@
                 </form>
             </div>
         </div>
+        @endif
     </div>
-
-    @endif
 
     @if ($sitemapUrlCounts['active'] + $sitemapUrlCounts['removed'] > 0)
     <div class="tab-pane" id="tab-pages" role="tabpanel">

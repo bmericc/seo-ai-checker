@@ -743,5 +743,14 @@
     "Domain kayıtlı görünmüyor (WHOIS sunucusu \"müsait\" yanıtı verdi).": "Domain kayıtlı görünmüyor (WHOIS sunucusu \"müsait\" yanıtı verdi).",
     "x-default eksik": "x-default eksik",
     "Sayfa kendi hreflang kümesinde yok (self-reference eksik)": "Sayfa kendi hreflang kümesinde yok (self-reference eksik)",
-    "Diğer": "Diğer"
+    "Diğer": "Diğer",
+    ":domain cevapta geçiyor.": ":domain cevapta geçiyor.",
+    ":domain cevapta geçmiyor.": ":domain cevapta geçmiyor.",
+    "Manuel (MCP)": "Manuel (MCP)",
+    "Yapay zekâ kontrol geçmişi": "Yapay zekâ kontrol geçmişi",
+    "Henüz kayıt yok. MCP bağlantısındaki asistanınıza bir soru ve domain verip check_ai_answer ile kontrol ettirebilirsiniz.": "Henüz kayıt yok. MCP bağlantısındaki asistanınıza bir soru ve domain verip check_ai_answer ile kontrol ettirebilirsiniz.",
+    "Geçersiz asistan adı. Harf, rakam ve tire kullanın (örneğin grok, deepseek).": "Geçersiz asistan adı. Harf, rakam ve tire kullanın (örneğin grok, deepseek).",
+    "Bir anahtar kelime ya da soru verin. Domain'in kelimelerini ve sorulacak soruları get_ai_check_prompts ile alabilirsiniz.": "Bir anahtar kelime ya da soru verin. Domain'in kelimelerini ve sorulacak soruları get_ai_check_prompts ile alabilirsiniz.",
+    "Bu domain'de takip edilen kelime yok. check_ai_answer'a bir keyword verirseniz kelime eklenir.": "Bu domain'de takip edilen kelime yok. check_ai_answer'a bir keyword verirseniz kelime eklenir.",
+    "Her soruyu domain'i bilmiyormuş gibi kendiniz cevaplayın, sonra check_ai_answer'ı keyword, answer ve assistant ile çağırın.": "Her soruyu domain'i bilmiyormuş gibi kendiniz cevaplayın, sonra check_ai_answer'ı keyword, answer ve assistant ile çağırın."
 }

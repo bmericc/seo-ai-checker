@@ -18,6 +18,8 @@
 @section('content')
     <p class="text-secondary mb-4">{{ __('Sayfa:') }} {{ $keyword->targetUrl() }}</p>
 
+    @include('domains.partials.prompt-history', ['domain' => $keyword->domain, 'historyKeyword' => $keyword, 'limit' => 10, 'hideEmpty' => true])
+
     @if (count($scoreHistory['labels']) > 0)
         <div class="card mb-4">
             <div class="card-header">

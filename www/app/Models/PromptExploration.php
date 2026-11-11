@@ -18,6 +18,7 @@ class PromptExploration extends Model
     protected $fillable = [
         'domain_id',
         'user_id',
+        'keyword_id',
         'prompt',
         'providers',
         'results',
@@ -33,6 +34,11 @@ class PromptExploration extends Model
     public function domain(): BelongsTo
     {
         return $this->belongsTo(Domain::class);
+    }
+
+    public function keyword(): BelongsTo
+    {
+        return $this->belongsTo(Keyword::class);
     }
 
     public function user(): BelongsTo

@@ -743,5 +743,14 @@
     "Domain kayıtlı görünmüyor (WHOIS sunucusu \"müsait\" yanıtı verdi).": "Domain does not appear to be registered (the WHOIS server answered \"available\").",
     "x-default eksik": "x-default is missing",
     "Sayfa kendi hreflang kümesinde yok (self-reference eksik)": "Page is missing from its own hreflang set (no self-reference)",
-    "Diğer": "Other"
+    "Diğer": "Other",
+    ":domain cevapta geçiyor.": ":domain appears in the answer.",
+    ":domain cevapta geçmiyor.": ":domain does not appear in the answer.",
+    "Manuel (MCP)": "Manual (MCP)",
+    "Yapay zekâ kontrol geçmişi": "AI check history",
+    "Henüz kayıt yok. MCP bağlantısındaki asistanınıza bir soru ve domain verip check_ai_answer ile kontrol ettirebilirsiniz.": "No entries yet. Give your assistant connected over MCP a question and a domain, and have it check with check_ai_answer.",
+    "Geçersiz asistan adı. Harf, rakam ve tire kullanın (örneğin grok, deepseek).": "Invalid assistant name. Use letters, digits and hyphens (for example grok, deepseek).",
+    "Bir anahtar kelime ya da soru verin. Domain'in kelimelerini ve sorulacak soruları get_ai_check_prompts ile alabilirsiniz.": "Give a keyword or a question. get_ai_check_prompts lists the domain's keywords and the questions to answer.",
+    "Bu domain'de takip edilen kelime yok. check_ai_answer'a bir keyword verirseniz kelime eklenir.": "This domain tracks no keywords. Give check_ai_answer a keyword and it will be added.",
+    "Her soruyu domain'i bilmiyormuş gibi kendiniz cevaplayın, sonra check_ai_answer'ı keyword, answer ve assistant ile çağırın.": "Answer each question yourself as if you did not know the domain, then call check_ai_answer with keyword, answer and assistant."
 }

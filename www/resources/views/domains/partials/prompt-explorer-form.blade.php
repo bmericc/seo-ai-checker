@@ -1,6 +1,5 @@
 @php
     $explorerProviders = app(\App\Services\Llm\PromptExplorer::class)->availableProviders($domain);
-    $recentExplorations = $domain->promptExplorations()->limit(5)->get();
     $prefill = $prefill ?? old('prompt');
 @endphp
 
@@ -31,24 +30,5 @@
             </form>
         @endif
 
-        @if ($recentExplorations->isNotEmpty())
-            <div class="mt-4">
-                <div class="subheader mb-2">{{ __('Son sorular') }}</div>
-                <div class="list-group list-group-flush border rounded">
-                    @foreach ($recentExplorations as $item)
-                        @php $summary = $item->mentionSummary(); @endphp
-                        <a href="{{ route('domains.prompts.show', [$domain, $item]) }}" class="list-group-item list-group-item-action d-flex align-items-center gap-2">
-                            <span class="text-truncate flex-fill" style="min-width: 0">{{ $item->prompt }}</span>
-                            @if (!$item->isComplete())
-                                <span class="badge bg-blue-lt">{{ __('Çalışıyor') }}</span>
-                            @else
-                                <span class="badge {{ $summary['mentioned'] > 0 ? 'bg-success-lt' : 'bg-secondary-lt' }}">{{ __(':mentioned/:answered andı', $summary) }}</span>
-                            @endif
-                            <span class="small text-secondary">{{ $item->created_at->diffForHumans() }}</span>
-                        </a>
-                    @endforeach
-                </div>
-            </div>
-        @endif
     </div>
 </div>
