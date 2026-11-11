@@ -14,12 +14,22 @@ use Laravel\Mcp\Server\Registrar;
  */
 class McpRegistrar extends Registrar
 {
+    /**
+     * token_endpoint_auth_methods_supported ilan edilmez: ChatGPT'de calisan
+     * radyoc MCP'sinin belgesinde bu alan yok; bizde ["none",
+     * "client_secret_basic", "client_secret_post"] varken ChatGPT kesiften
+     * sonra istemci kaydina gecmiyordu. DCR zaten yalnizca public (none)
+     * istemci acar.
+     */
     protected static function authorizationServerMetadata(string $oauthPrefix): array
     {
-        return [
+        $metadata = [
             ...parent::authorizationServerMetadata($oauthPrefix),
             'scopes_supported' => McpScopes::supported(),
         ];
+        unset($metadata['token_endpoint_auth_methods_supported']);
+
+        return $metadata;
     }
 
     protected static function protectedResourceMetadata(string $path): array

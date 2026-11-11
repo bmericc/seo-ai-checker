@@ -84,7 +84,8 @@ class McpServerTest extends TestCase
         $this->getJson('/.well-known/oauth-authorization-server')
             ->assertOk()
             ->assertJsonPath('scopes_supported', ['mcp:use'])
-            ->assertJsonPath('authorization_endpoint', route('passport.authorizations.authorize'));
+            ->assertJsonPath('authorization_endpoint', route('passport.authorizations.authorize'))
+            ->assertJsonMissingPath('token_endpoint_auth_methods_supported');
     }
 
     public function test_guest_on_the_authorize_page_is_sent_straight_to_google_login(): void
