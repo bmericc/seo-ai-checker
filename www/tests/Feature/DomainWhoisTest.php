@@ -81,6 +81,21 @@ class DomainWhoisTest extends TestCase
         $response->assertOk();
         $response->assertSee('Example Registrar Inc.');
         $response->assertSee('5 yıl');
+        $response->assertDontSee('Yakında doluyor');
+    }
+
+    public function test_domain_page_flags_registration_expiring_within_45_days(): void
+    {
+        $user = User::factory()->create(['approved_at' => now()]);
+        $domain = Domain::query()->create(['domain' => 'example.com', 'user_id' => $user->id]);
+        DomainFact::forDomain('example.com')->update([
+            'whois_expires_at' => now()->addDays(20),
+            'whois_checked_at' => now(),
+        ]);
+
+        $this->actingAs($user)->get(route('domains.show', $domain))
+            ->assertOk()
+            ->assertSee('Yakında doluyor');
     }
 
     public function test_domain_page_shows_the_error_when_the_last_whois_lookup_failed(): void

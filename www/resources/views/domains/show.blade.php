@@ -237,7 +237,7 @@
                             <dd class="col-7 mb-1 fw-semibold">
                                 @if ($domain->fact?->whois_expires_at)
                                     {{ $domain->fact->whois_expires_at->format('Y-m-d') }}
-                                    @if ($domain->fact->whois_expires_at->isFuture() && $domain->fact->whois_expires_at->diffInDays() < 45)
+                                    @if ($domain->fact->whois_expires_at->isFuture() && now()->diffInDays($domain->fact->whois_expires_at) < 45)
                                         <span class="badge bg-danger-lt ms-1">{{ __('Yakında doluyor') }}</span>
                                     @endif
                                 @else
