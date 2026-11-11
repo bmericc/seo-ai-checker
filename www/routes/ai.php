@@ -28,6 +28,12 @@ Route::post('/', fn () => response()->json([
 // route'laridir; giris sistemdeki Google girisiyle yapilir.
 Mcp::oauthRoutes();
 
+// ChatGPT oauth-authorization-server belgesinden sonra OpenID kesif adresini
+// de okuyor; HTML 404 yerine ayni OAuth sunucu bilgisini JSON olarak verir.
+Route::get('/.well-known/openid-configuration', fn () => response()->json(
+    \App\Mcp\McpRegistrar::oauthServerMetadata(),
+))->name('mcp.oauth.openid-configuration');
+
 // Her uye yalnizca kendi domainlerini, admin tum domainleri gorur
 // (bkz. App\Mcp\Tools\SeoTool).
 Mcp::web('/mcp', SeoCheckerServer::class)

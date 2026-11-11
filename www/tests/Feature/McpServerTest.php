@@ -68,6 +68,9 @@ class McpServerTest extends TestCase
 
         $this->getJson('/.well-known/oauth-protected-resource/mcp')->assertOk();
         $this->getJson('/.well-known/oauth-authorization-server')->assertOk();
+        $this->getJson('/.well-known/openid-configuration')->assertOk()
+            ->assertJsonPath('registration_endpoint', url('/oauth/register'))
+            ->assertJsonPath('scopes_supported', ['read', 'write']);
         $this->get('/')->assertOk();
     }
 
