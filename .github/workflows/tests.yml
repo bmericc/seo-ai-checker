@@ -46,5 +46,8 @@ jobs:
       - name: Generate app key
         run: php artisan key:generate
 
+      - name: Generate Passport keys
+        run: php artisan passport:keys --force
+
       - name: Execute tests
         run: php artisan test
