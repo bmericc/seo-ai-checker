@@ -826,5 +826,7 @@
     "Yetki": "Permission",
     "Yetki: :email": "Permission: :email",
     "Anahtar kelime kontrolü sırasında otomatik soruldu": "Asked automatically during the keyword check",
-    "Henüz kayıt yok. AI görünürlük kontrolü açıksa her anahtar kelime kontrolünde sonuçlar buraya düşer; MCP bağlantısındaki asistanınıza da check_ai_answer ile kontrol ettirebilirsiniz.": "No records yet. When AI visibility checks are on, every keyword check lands here; you can also have your MCP-connected assistant check keywords with check_ai_answer."
+    "Henüz kayıt yok. AI görünürlük kontrolü açıksa her anahtar kelime kontrolünde sonuçlar buraya düşer; MCP bağlantısındaki asistanınıza da check_ai_answer ile kontrol ettirebilirsiniz.": "No records yet. When AI visibility checks are on, every keyword check lands here; you can also have your MCP-connected assistant check keywords with check_ai_answer.",
+    "Yazma izni de ver": "Also grant write access",
+    "Silme işlemi yapamaz.": "It cannot delete anything."
 }

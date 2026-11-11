@@ -165,6 +165,70 @@ class McpServerTest extends TestCase
         $this->assertFalse($names->contains('explore_prompt'), 'explore_prompt is admin only');
     }
 
+    public function test_user_can_grant_write_when_client_requests_no_scope(): void
+    {
+        $this->withoutMiddleware(PreventRequestForgery::class);
+
+        $user = $this->member();
+        $this->domainFor($user);
+        $client = app(ClientRepository::class)->createAuthorizationCodeGrantClient(
+            name: 'Grok',
+            redirectUris: ['https://grok.com/oauth/callback'],
+            confidential: false,
+        );
+
+        $issue = function (bool $grantWrite) use ($user, $client): array {
+            $verifier = Str::random(64);
+            $challenge = rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '=');
+
+            // Grok scope gondermiyor: varsayilan "read" uygulanir.
+            $this->actingAs($user, 'web')->get('/oauth/authorize?'.http_build_query([
+                'client_id' => $client->getKey(),
+                'redirect_uri' => 'https://grok.com/oauth/callback',
+                'response_type' => 'code',
+                'state' => 'abc',
+                'code_challenge' => $challenge,
+                'code_challenge_method' => 'S256',
+                'prompt' => 'consent',
+            ]))->assertOk()->assertSee(__('Yazma izni de ver'));
+
+            $approve = $this->actingAs($user, 'web')->post('/oauth/authorize', array_filter([
+                'state' => 'abc',
+                'client_id' => $client->getKey(),
+                'auth_token' => session('authToken'),
+                'grant_write' => $grantWrite ? '1' : null,
+            ]));
+            parse_str((string) parse_url((string) $approve->headers->get('Location'), PHP_URL_QUERY), $query);
+
+            $token = $this->post('/oauth/token', [
+                'grant_type' => 'authorization_code',
+                'client_id' => $client->getKey(),
+                'redirect_uri' => 'https://grok.com/oauth/callback',
+                'code_verifier' => $verifier,
+                'code' => $query['code'],
+            ])->assertOk()->json('access_token');
+
+            $this->app['auth']->forgetGuards();
+
+            $names = collect($this->postJson('/mcp', ['jsonrpc' => '2.0', 'id' => 1, 'method' => 'tools/list'], [
+                'Accept' => 'application/json, text/event-stream',
+                'Authorization' => 'Bearer '.$token,
+            ])->assertOk()->json('result.tools'))->pluck('name')->all();
+
+            $this->app['auth']->forgetGuards();
+
+            return $names;
+        };
+
+        $readOnly = $issue(false);
+        $this->assertContains('get_ai_check_prompts', $readOnly);
+        $this->assertNotContains('check_ai_answer', $readOnly);
+
+        $withWrite = $issue(true);
+        $this->assertContains('check_ai_answer', $withWrite);
+        $this->assertContains('add_keyword', $withWrite);
+    }
+
     public function test_read_only_token_does_not_see_or_run_write_tools(): void
     {
         $user = $this->member();

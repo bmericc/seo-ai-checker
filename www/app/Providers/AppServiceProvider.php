@@ -213,6 +213,11 @@ class AppServiceProvider extends ServiceProvider
         Passport::tokensCan(McpScopes::descriptions());
         Passport::defaultScopes([McpScopes::READ]);
         Passport::authorizationView('auth.oauth-authorize');
+        // Onay ekranindaki "yazma izni de ver" secenegi icin.
+        $this->app->bind(
+            \Laravel\Passport\Http\Controllers\ApproveAuthorizationController::class,
+            \App\Http\Controllers\Auth\ApproveOAuthAuthorizationController::class,
+        );
         Passport::tokensExpireIn(now()->addDays(15));
         Passport::refreshTokensExpireIn(now()->addDays(90));
     }

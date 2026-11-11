@@ -11,6 +11,10 @@
     $scopeLabels = \App\Mcp\McpScopes::descriptions();
     $scopeIds = collect($scopes)->map(fn ($scope) => $scope->id)->all();
     $canWrite = in_array(\App\Mcp\McpScopes::WRITE, $scopeIds, true);
+    // Istemci yazma istemediyse kullanici yine de verebilsin (Grok gibi
+    // istemciler scope gondermiyor). Istemcinin scope listesi kisitliysa
+    // ve write icermiyorsa secenek gosterilmez.
+    $offerWrite = !$canWrite && $client->hasScope(\App\Mcp\McpScopes::WRITE);
 @endphp
 
 @section('content')
@@ -51,6 +55,17 @@
                         </div>
                     @endif
 
+                    @if ($offerWrite)
+                        <label class="form-check mb-3">
+                            <input type="checkbox" class="form-check-input" name="grant_write" value="1" form="oauth-approve-form">
+                            <span class="form-check-label">
+                                <i class="ti ti-pencil text-warning"></i>
+                                {{ __('Yazma izni de ver') }}
+                                <span class="form-check-description">{{ $scopeLabels[\App\Mcp\McpScopes::WRITE] }}. {{ __('Silme işlemi yapamaz.') }}</span>
+                            </span>
+                        </label>
+                    @endif
+
                     <div class="d-flex gap-2">
                         <form method="post" action="{{ route('passport.authorizations.deny') }}" class="flex-fill">
                             @csrf
@@ -60,7 +75,7 @@
                             <input type="hidden" name="auth_token" value="{{ $authToken }}">
                             <button type="submit" class="btn btn-outline-secondary w-100">{{ __('Reddet') }}</button>
                         </form>
-                        <form method="post" action="{{ route('passport.authorizations.approve') }}" class="flex-fill">
+                        <form method="post" action="{{ route('passport.authorizations.approve') }}" class="flex-fill" id="oauth-approve-form">
                             @csrf
                             <input type="hidden" name="state" value="{{ $request->state }}">
                             <input type="hidden" name="client_id" value="{{ $client->getKey() }}">
