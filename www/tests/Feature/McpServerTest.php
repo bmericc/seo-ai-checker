@@ -58,6 +58,21 @@ class McpServerTest extends TestCase
         );
     }
 
+    public function test_root_address_also_serves_mcp_and_points_to_root_discovery(): void
+    {
+        $response = $this->postJson('/', ['jsonrpc' => '2.0', 'id' => 1, 'method' => 'ping'], [
+            'Accept' => 'application/json, text/event-stream',
+        ]);
+
+        $response->assertStatus(401);
+        $this->assertStringContainsString(
+            'resource_metadata="'.url('/.well-known/oauth-protected-resource').'"',
+            (string) $response->headers->get('WWW-Authenticate'),
+        );
+
+        $this->get('/')->assertOk();
+    }
+
     public function test_discovery_metadata_advertises_read_and_write_scopes(): void
     {
         $this->getJson('/.well-known/oauth-protected-resource/mcp')
@@ -145,6 +160,15 @@ class McpServerTest extends TestCase
         $list->assertOk();
         $names = collect($list->json('result.tools'))->pluck('name');
         $this->assertTrue($names->contains('list_domains'));
+
+        // Connector adresi yalnizca site adresi girildiginde istekler kok adrese gelir.
+        $this->app['auth']->forgetGuards();
+        $root = $this->postJson('/', ['jsonrpc' => '2.0', 'id' => 2, 'method' => 'tools/list'], [
+            'Accept' => 'application/json, text/event-stream',
+            'Authorization' => 'Bearer '.$token,
+        ]);
+        $root->assertOk();
+        $this->assertTrue(collect($root->json('result.tools'))->pluck('name')->contains('check_ai_answer'));
         $this->assertTrue($names->contains('add_keyword'));
         $this->assertFalse($names->contains('explore_prompt'), 'explore_prompt is admin only');
     }

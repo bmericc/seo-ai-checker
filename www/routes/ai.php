@@ -12,3 +12,8 @@ Mcp::oauthRoutes();
 // (bkz. App\Mcp\Tools\SeoTool).
 Mcp::web('/mcp', SeoCheckerServer::class)
     ->middleware(['auth:api', 'throttle:120,1']);
+
+// Connector adresi olarak yalnizca site adresi (https://site) girildiginde
+// de calissin; bkz. McpRegistrar::webAtRoot.
+app(\Laravel\Mcp\Server\Registrar::class)->webAtRoot(SeoCheckerServer::class)
+    ->middleware(['auth:api', 'throttle:120,1']);
