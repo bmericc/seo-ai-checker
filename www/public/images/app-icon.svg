@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#ffffff"/>
-  <!-- Ayni 2x2 logo: mavi, kirmizi / sari, yesil; dis koseler daha yuvarlak -->
-  <path fill="#4285F4" d="M144 80h80q16 0 16 16v128q0 16-16 16H96q-16 0-16-16v-80q0-64 64-64z"/>
-  <path fill="#EA4335" d="M288 80h80q64 0 64 64v80q0 16-16 16H288q-16 0-16-16V96q0-16 16-16z"/>
-  <path fill="#FBBC05" d="M96 272h128q16 0 16 16v128q0 16-16 16h-80q-64 0-64-64v-80q0-16 16-16z"/>
-  <path fill="#34A853" d="M288 272h128q16 0 16 16v80q0 64-64 64h-80q-16 0-16-16V288q0-16 16-16z"/>
-</svg>

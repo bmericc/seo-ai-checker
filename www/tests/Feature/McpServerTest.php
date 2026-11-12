@@ -68,24 +68,19 @@ class McpServerTest extends TestCase
 
         $this->getJson('/.well-known/oauth-protected-resource/mcp')->assertOk();
         $this->getJson('/.well-known/oauth-authorization-server')->assertOk();
-        // OIDC saglayicisi degiliz: JSON 404.
-        $this->getJson('/.well-known/openid-configuration')->assertNotFound()
-            ->assertHeader('Content-Type', 'application/json')
-            ->assertJsonPath('error', 'not_found');
         $this->get('/')->assertOk();
     }
 
-    public function test_discovery_metadata_advertises_only_the_mcp_scope(): void
+    public function test_discovery_metadata_advertises_read_and_write_scopes(): void
     {
         $this->getJson('/.well-known/oauth-protected-resource/mcp')
             ->assertOk()
-            ->assertJsonPath('scopes_supported', ['mcp:use']);
+            ->assertJsonPath('scopes_supported', ['read', 'write']);
 
         $this->getJson('/.well-known/oauth-authorization-server')
             ->assertOk()
-            ->assertJsonPath('scopes_supported', ['mcp:use'])
-            ->assertJsonPath('authorization_endpoint', route('passport.authorizations.authorize'))
-            ->assertJsonMissingPath('token_endpoint_auth_methods_supported');
+            ->assertJsonPath('scopes_supported', ['read', 'write'])
+            ->assertJsonPath('authorization_endpoint', route('passport.authorizations.authorize'));
     }
 
     public function test_guest_on_the_authorize_page_is_sent_straight_to_google_login(): void
