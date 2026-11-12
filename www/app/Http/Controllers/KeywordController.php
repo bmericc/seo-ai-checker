@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Domain;
 use App\Models\Keyword;
+use App\Services\Analytics\AiOverviewVolatility;
 use App\Services\Analytics\ScoreHistoryBuilder;
 use App\Services\CheckRunner;
 use Illuminate\Contracts\View\View;
@@ -56,6 +57,7 @@ class KeywordController extends Controller
         return view('keywords.show', [
             'keyword' => $keyword,
             'scoreHistory' => $scoreHistory,
+            'aioKeywordStability' => AiOverviewVolatility::forChecks($keyword->checks),
             'canEdit' => $keyword->domain->canBeEditedBy($request->user()),
         ]);
     }

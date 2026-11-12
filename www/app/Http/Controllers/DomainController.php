@@ -10,7 +10,9 @@ use App\Jobs\RunDomainWhoisLookup;
 use App\Models\Check;
 use App\Models\Domain;
 use App\Models\DomainLlmApiKey;
+use App\Services\Analytics\AiOverviewVolatility;
 use App\Services\Analytics\CompetitorAnalyzer;
+use App\Services\Analytics\LlmShareOfModel;
 use App\Services\Analytics\ScoreHistoryBuilder;
 use App\Services\DataForSeo\DataForSeoClient;
 use App\Services\DomainCheckRunner;
@@ -127,6 +129,8 @@ class DomainController extends Controller
 
         $competitorAnalysis = (new CompetitorAnalyzer())->frequentCompetitors($domain->domain, $domain->keywords);
 
+        $shareOfModel = LlmShareOfModel::forDomain($domain, $competitorAnalysis);
+
         $accessLevel = $domain->accessLevelFor($request->user());
 
         return view('domains.show', [
@@ -141,6 +145,8 @@ class DomainController extends Controller
             'scoreHistory' => $scoreHistory,
             'domainCheckHistory' => $domainCheckHistory,
             'competitorAnalysis' => $competitorAnalysis,
+            'shareOfModel' => $shareOfModel,
+            'aioStability' => AiOverviewVolatility::forKeywords($domain->keywords),
             'dataForSeoConfigured' => $dataForSeo->isConfigured(),
         ]);
     }

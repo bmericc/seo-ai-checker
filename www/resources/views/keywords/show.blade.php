@@ -69,6 +69,8 @@
         </div>
     @endif
 
+    @include('domains.partials.aio-stability', ['aioKeywordStability' => $aioKeywordStability])
+
     @include('domains.partials.prompt-history', ['domain' => $keyword->domain, 'historyKeyword' => $keyword, 'limit' => 10, 'hideEmpty' => true])
 
     @if (count($scoreHistory['labels']) > 0)

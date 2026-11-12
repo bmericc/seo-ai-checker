@@ -9,7 +9,9 @@ use App\Mcp\Tools\AddKeyword;
 use App\Mcp\Tools\CheckAiAnswer;
 use App\Mcp\Tools\CreateReportLink;
 use App\Mcp\Tools\ExplorePrompt;
+use App\Mcp\Tools\GenerateLlmsTxt;
 use App\Mcp\Tools\GetAiCheckPrompts;
+use App\Mcp\Tools\GetCompetitors;
 use App\Mcp\Tools\GetDomain;
 use App\Mcp\Tools\GetIndexNowStatus;
 use App\Mcp\Tools\GetPromptExploration;
@@ -32,6 +34,10 @@ use Laravel\Mcp\Server\Attributes\Version;
 
     - Start with list_domains, then get_domain for health issues and how to fix them,
       and list_keywords for rankings and AI Overview citations.
+    - get_competitors compares the site with SERP competitors and shows how often
+      each AI assistant mentions them (Share of Model).
+    - generate_llms_txt returns an llms.txt draft built from the sitemap; refine
+      the summary and descriptions before handing it to the user.
     - Members see their own domains plus domains other members shared with them
       (list_domains shows "access": owner, write or read; write tools fail on
       read-only shares); admins see every member's domains.
@@ -52,6 +58,8 @@ class SeoCheckerServer extends Server
         ListDomains::class,
         GetDomain::class,
         ListKeywords::class,
+        GetCompetitors::class,
+        GenerateLlmsTxt::class,
         GetIndexNowStatus::class,
         AddDomain::class,
         AddKeyword::class,

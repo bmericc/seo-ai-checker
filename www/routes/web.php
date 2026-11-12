@@ -11,6 +11,7 @@ use App\Http\Controllers\IndexNowController;
 use App\Http\Controllers\KeywordController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\LighthouseReportController;
+use App\Http\Controllers\LlmsTxtController;
 use App\Http\Controllers\McpConnectionController;
 use App\Http\Controllers\PromptExplorerController;
 use App\Http\Controllers\ReportShareController;
@@ -77,6 +78,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/domains/{domain}/lighthouse-report', [LighthouseReportController::class, 'show'])->name('domains.lighthouse-report');
     Route::post('/domains/{domain}/lighthouse-report/start', [LighthouseReportController::class, 'start'])->name('domains.lighthouse-report.start');
     Route::post('/domains/{domain}/lighthouse-report/start-onpage', [LighthouseReportController::class, 'startOnPage'])->name('domains.lighthouse-report.start-onpage');
+    Route::get('/domains/{domain}/llms-txt', [LlmsTxtController::class, 'show'])->name('domains.llms-txt');
+    Route::get('/domains/{domain}/llms-txt/download', [LlmsTxtController::class, 'download'])->name('domains.llms-txt.download');
 
     Route::get('/domains/{domain}/indexnow/key-file', [IndexNowController::class, 'keyFile'])->name('domains.indexnow.key-file');
     Route::post('/domains/{domain}/indexnow/regenerate', [IndexNowController::class, 'regenerate'])->name('domains.indexnow.regenerate');

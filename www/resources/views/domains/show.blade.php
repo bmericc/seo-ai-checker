@@ -620,6 +620,9 @@
                                 @else
                                     <p class="text-secondary mb-0">{{ __(':url bulunamadı.', ['url' => $llmsTxt['url'] ?? '']) }}</p>
                                 @endif
+                                <a href="{{ route('domains.llms-txt', $domain) }}" class="btn btn-sm btn-outline-primary mt-2">
+                                    <i class="ti ti-file-text icon"></i> {{ ($llmsTxt['found'] ?? false) ? __('Sitemap\'ten yeni taslak oluştur') : __('llms.txt taslağı oluştur') }}
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -952,6 +955,8 @@
     </div>
 
     <div class="tab-pane" id="tab-ai" role="tabpanel">
+        @include('domains.partials.aio-stability', ['aioStability' => $aioStability])
+
         @if (auth()->user()->is_admin)
         @include('domains.partials.prompt-explorer-form')
         @endif
@@ -1162,6 +1167,8 @@
             @endif
         </div>
     </div>
+
+        @include('domains.partials.share-of-model', ['shareOfModel' => $shareOfModel])
     </div>
 
     <div class="tab-pane" id="tab-history" role="tabpanel">
