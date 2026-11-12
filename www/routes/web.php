@@ -65,6 +65,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/domains/{domain}', [DomainController::class, 'show'])->name('domains.show');
     Route::post('/domains/{domain}/check', [DomainController::class, 'check'])->name('domains.check');
     Route::delete('/domains/{domain}', [DomainController::class, 'destroy'])->name('domains.destroy');
+    Route::get('/domains/{domain}/keyword-suggestions', [DomainController::class, 'keywordSuggestions'])->name('domains.keyword-suggestions');
     Route::post('/domains/{domain}/keyword-suggestions/dismiss', [DomainController::class, 'dismissKeywordSuggestion'])->name('domains.keyword-suggestions.dismiss');
     Route::patch('/domains/{domain}/ga4-property', [DomainController::class, 'updateGa4Property'])->name('domains.ga4-property.update');
     Route::post('/domains/{domain}/ga4-properties/fetch', [DomainController::class, 'fetchGa4Properties'])->name('domains.ga4-properties.fetch');

@@ -158,6 +158,7 @@ final class OnPageSeoAnalyzer
             aboutPageLinked: $aboutContact['about'],
             contactPageLinked: $aboutContact['contact'],
             recommendedSchemaTypes: $recommendedSchemaTypes,
+            html: $html,
         );
     }
 

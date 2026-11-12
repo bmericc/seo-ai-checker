@@ -22,6 +22,7 @@ use App\Services\Ga4\Ga4PropertyLister;
 use App\Services\Google\GoogleTokenService;
 use App\Support\Domain as DomainHelper;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -182,6 +183,22 @@ class DomainController extends Controller
         return redirect()
             ->route('dashboard')
             ->with('flash', ['type' => 'success', 'message' => __('Domain ve tüm kayıtlı anahtar kelimeleri silindi.')]);
+    }
+
+    /**
+     * Arka plan site taramasi surerken domain sayfasindaki oneri kartinin
+     * tazelenmesi icin: kartin HTML'i + taramanin hala surup surmedigi.
+     */
+    public function keywordSuggestions(Request $request, Domain $domain): JsonResponse
+    {
+        $this->ensureCanEditDomain($request, $domain);
+
+        $domain->load('latestDomainCheck');
+
+        return response()->json([
+            'running' => ($domain->site_keyword_scan['status'] ?? null) === 'running',
+            'html' => view('domains.partials.keyword-suggestions', ['domain' => $domain])->render(),
+        ]);
     }
 
     public function dismissKeywordSuggestion(Request $request, Domain $domain): RedirectResponse

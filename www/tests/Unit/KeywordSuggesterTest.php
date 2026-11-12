@@ -124,4 +124,32 @@ class KeywordSuggesterTest extends TestCase
 
         $this->assertSame([], $suggestions);
     }
+
+    public function test_strip_chrome_ignores_navigation_header_and_footer_text(): void
+    {
+        $suggester = new KeywordSuggester(new Client());
+        $html = <<<'HTML'
+            <html><head><title>Dernek Muhasebe Yazilimi</title></head>
+            <body>
+                <header><nav><a href="/">Kurumsal Iletisim Bilgileri</a></nav></header>
+                <h1>Dernek Muhasebe Yazilimi</h1>
+                <footer>Kurumsal Iletisim Bilgileri</footer>
+            </body></html>
+            HTML;
+
+        $withChrome = array_map(fn ($s) => $s->phrase, $suggester->suggestFromHtml($html, 'https://example.com/a'));
+        $withoutChrome = array_map(fn ($s) => $s->phrase, $suggester->suggestFromHtml($html, 'https://example.com/a', stripChrome: true));
+
+        $this->assertContains('kurumsal iletisim bilgileri', $withChrome);
+        $this->assertNotContains('kurumsal iletisim bilgileri', $withoutChrome);
+        $this->assertContains('dernek muhasebe yazilimi', $withoutChrome);
+    }
+
+    public function test_suggest_from_html_respects_the_limit(): void
+    {
+        $suggester = new KeywordSuggester(new Client());
+        $html = '<html><head><title>Alfa Beta Gama Delta Epsilon Zeta Eta Teta</title></head><body></body></html>';
+
+        $this->assertCount(3, $suggester->suggestFromHtml($html, 'https://example.com/', limit: 3));
+    }
 }

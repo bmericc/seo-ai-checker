@@ -274,39 +274,32 @@
             <p class="text-secondary mb-0">{{ __('"Kontrol Et" butonu SERP + on-page + Lighthouse taramasını aynı anda çalıştırır; bu 20-60 saniye sürebilir, sayfa kapanmadan bekleyin.') }}</p>
         </div>
 
-        @php
-            $trackedKeywords = $domain->keywords->pluck('keyword')->map(fn ($k) => mb_strtolower(trim($k)));
-            $dismissedSuggestions = collect($domain->dismissed_keyword_suggestions ?? []);
-            $suggestedKeywords = collect($domain->latestDomainCheck?->suggested_keywords ?? [])
-                ->reject(fn ($s) => $trackedKeywords->contains(mb_strtolower($s['phrase'])))
-                ->reject(fn ($s) => $dismissedSuggestions->contains(mb_strtolower($s['phrase'])));
-        @endphp
-        @if ($canEdit && $suggestedKeywords->isNotEmpty())
-            <div class="card-body border-bottom py-3">
-                <div class="text-secondary small mb-2">
-                    {{ __('Ana sayfa HTML\'inden otomatik çıkarılan anahtar kelime önerileri — eklemek için "+", istemiyorsanız "×" tıklayın:') }}
-                </div>
-                <div class="d-flex flex-wrap gap-2">
-                    @foreach ($suggestedKeywords as $suggestion)
-                        <div class="btn-group">
-                            <form method="post" action="{{ route('keywords.store', $domain) }}">
-                                @csrf
-                                <input type="hidden" name="keyword" value="{{ $suggestion['phrase'] }}">
-                                <button type="submit" class="btn btn-sm btn-outline-secondary">
-                                    <i class="ti ti-plus icon"></i> {{ $suggestion['phrase'] }}
-                                </button>
-                            </form>
-                            <form method="post" action="{{ route('domains.keyword-suggestions.dismiss', $domain) }}">
-                                @csrf
-                                <input type="hidden" name="phrase" value="{{ $suggestion['phrase'] }}">
-                                <button type="submit" class="btn btn-sm btn-outline-secondary" aria-label="{{ __('Öneriyi kaldır: :phrase', ['phrase' => $suggestion['phrase']]) }}">
-                                    <i class="ti ti-x"></i>
-                                </button>
-                            </form>
-                        </div>
-                    @endforeach
-                </div>
+        @if ($canEdit)
+            @php $siteKeywordScanRunning = ($domain->site_keyword_scan['status'] ?? null) === 'running'; @endphp
+            <div id="keyword-suggestions"
+                 data-refresh-url="{{ route('domains.keyword-suggestions', $domain) }}"
+                 data-running="{{ $siteKeywordScanRunning ? '1' : '0' }}">
+                @include('domains.partials.keyword-suggestions', ['domain' => $domain])
             </div>
+            <script>
+                // Arka plan site taramasi surerken oneri kartini 15 sn'de bir
+                // tazeler (bkz. CrawlSiteKeywordCandidates); tarama bitince durur.
+                (function () {
+                    var box = document.getElementById('keyword-suggestions');
+                    if (!box || box.dataset.running !== '1') { return; }
+                    var timer = setInterval(function () {
+                        if (document.hidden) { return; }
+                        fetch(box.dataset.refreshUrl, { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
+                            .then(function (r) { return r.ok ? r.json() : null; })
+                            .then(function (data) {
+                                if (!data) { return; }
+                                box.innerHTML = data.html;
+                                if (!data.running) { clearInterval(timer); }
+                            })
+                            .catch(function () {});
+                    }, 15000);
+                })();
+            </script>
         @endif
 
         @if ($domain->keywords->isEmpty())

@@ -17,6 +17,7 @@ use App\Services\Google\GoogleTokenService;
 use App\Services\Gsc\GscChecker;
 use App\Services\Keywords\KeywordSuggester;
 use App\Services\Keywords\KeywordSuggestion;
+use App\Services\Keywords\SiteKeywordSuggestionRefresher;
 use App\Services\Llms\LlmsTxtChecker;
 use App\Services\Robots\RobotsTxtChecker;
 use App\Services\Security\SecurityHeadersChecker;
@@ -41,7 +42,8 @@ use App\Services\Sitemap\SitemapUrlSync;
  * Sitemap (SitemapUrl senkronizasyonu icin URL listesi gerekir), GSC/GA4/
  * Bing backlink (kullaniciya ozel OAuth) ve anahtar kelime onerileri
  * (kullaniciya ozel disleme listesi) bu paylasima dahil degildir, her
- * zaman taze calisir.
+ * zaman taze calisir. Site geneli oneriler ise sayfa basina paylasilir
+ * (sitemap_urls.keyword_phrases, bkz. SharedSitemapUrlLookup).
  */
 final class DomainCheckRunner
 {
@@ -67,6 +69,7 @@ final class DomainCheckRunner
         private readonly BingTokenService $bingTokenService,
         private readonly SitemapUrlSync $sitemapUrlSync,
         private readonly KeywordSuggester $keywordSuggester,
+        private readonly SiteKeywordSuggestionRefresher $siteKeywordRefresher,
     ) {
     }
 
@@ -133,7 +136,7 @@ final class DomainCheckRunner
         ];
         $keywordSuggestions = $this->keywordSuggester->suggest($rootUrl, $excludedPhrases);
 
-        return $domain->domainChecks()->create([
+        $domainCheck = $domain->domainChecks()->create([
             'ai_crawlers' => $aiCrawlersData,
             'sitemap' => [
                 'url' => $sitemap->url,
@@ -177,6 +180,13 @@ final class DomainCheckRunner
                 $keywordSuggestions,
             ),
         ]);
+
+        // Site geneli oneriler arka planda dilim dilim taranir (bkz.
+        // CrawlSiteKeywordCandidates); kullanici beklemez, ana sayfa
+        // onerileri hemen gorunur, liste tarama ilerledikce zenginlesir.
+        $this->siteKeywordRefresher->start($domain);
+
+        return $domainCheck;
     }
 
     /**

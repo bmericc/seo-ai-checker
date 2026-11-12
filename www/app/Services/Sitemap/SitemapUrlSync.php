@@ -62,6 +62,7 @@ final class SitemapUrlSync
                         'last_seen_at' => $now,
                         ...($sibling !== null ? $this->sharedLookup->lighthouseFields($sibling) : []),
                         ...($sibling !== null ? $this->sharedLookup->onPageFields($sibling) : []),
+                        ...($sibling !== null ? $this->sharedLookup->keywordPhraseFields($sibling) : []),
                     ]);
                 }
             }

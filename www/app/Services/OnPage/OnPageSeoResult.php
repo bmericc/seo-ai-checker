@@ -51,6 +51,12 @@ final class OnPageSeoResult
         public readonly bool $contactPageLinked = false,
         /** @var array<int, array{type: string, reason_key: string, reason_params: array<string, int|string>}> */
         public readonly array $recommendedSchemaTypes = [],
+        /**
+         * Analiz edilen ham HTML - kaydedilmez; ayni sayfa icin ikinci bir
+         * HTTP istegi atmadan anahtar kelime adayi cikarmak icin (bkz.
+         * RunSitemapUrlOnPageCheck).
+         */
+        public readonly ?string $html = null,
     ) {
     }
 

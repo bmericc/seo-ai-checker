@@ -95,13 +95,35 @@ final class KeywordSuggester
             return [];
         }
 
-        $html = (string) $response->getBody();
+        return $this->suggestFromHtml((string) $response->getBody(), $url, $exclude);
+    }
+
+    /**
+     * Zaten cekilmis bir HTML'den oneri cikarir (bkz. CrawlSiteKeywordCandidates,
+     * RunSitemapUrlOnPageCheck - ayni sayfa icin ikinci HTTP istegi atilmaz).
+     *
+     * $stripChrome, site geneli taramada nav/header/footer/aside'i da
+     * atlar: bunlar her sayfada ayni tekrarlanir ve birlestirilmis listede
+     * menu/footer ifadelerini ("hakkimizda", "tum haklari saklidir") one
+     * cikarir. Ana sayfa onerisinde (tek sayfa) acik birakilir, cunku orada
+     * menu ogeleri sitenin ana konularini yansitir.
+     *
+     * @param  string[]  $exclude
+     * @return KeywordSuggestion[]
+     */
+    public function suggestFromHtml(
+        string $html,
+        string $url,
+        array $exclude = [],
+        int $limit = self::MAX_SUGGESTIONS,
+        bool $stripChrome = false,
+    ): array {
         if (trim($html) === '') {
             return [];
         }
 
         $crawler = new Crawler($html, $url);
-        $this->stripNoiseElements($crawler);
+        $this->stripNoiseElements($crawler, $stripChrome);
 
         $metaScores = $this->metaKeywordScores($crawler);
 
@@ -129,7 +151,7 @@ final class KeywordSuggester
             }
 
             $suggestions[] = new KeywordSuggestion($phrase, $score);
-            if (count($suggestions) >= self::MAX_SUGGESTIONS) {
+            if (count($suggestions) >= $limit) {
                 break;
             }
         }
@@ -143,9 +165,14 @@ final class KeywordSuggester
      * Bunlar govde metninden anahtar kelime cikarirken salt gurultudur;
      * asil metni okumadan once DOM'dan kaldirilir.
      */
-    private function stripNoiseElements(Crawler $crawler): void
+    private function stripNoiseElements(Crawler $crawler, bool $stripChrome = false): void
     {
-        foreach ($crawler->filter('script, style, noscript, code, pre') as $node) {
+        $selector = 'script, style, noscript, code, pre';
+        if ($stripChrome) {
+            $selector .= ', nav, header, footer, aside';
+        }
+
+        foreach ($crawler->filter($selector) as $node) {
             $node->parentNode?->removeChild($node);
         }
     }

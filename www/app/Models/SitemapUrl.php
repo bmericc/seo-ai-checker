@@ -41,6 +41,8 @@ class SitemapUrl extends Model
         'onpage_data' => 'array',
         'onpage_checked_at' => 'datetime',
         'onpage_queued_at' => 'datetime',
+        'keyword_phrases' => 'array',
+        'keyword_phrases_checked_at' => 'datetime',
     ];
 
     public function domain(): BelongsTo

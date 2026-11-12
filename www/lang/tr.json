@@ -893,5 +893,10 @@
     "Öner": "Öner",
     "Sorular hazırlanıyor…": "Sorular hazırlanıyor…",
     ":provider önerdi, kullanmak için birine tıklayın.": ":provider önerdi, kullanmak için birine tıklayın.",
-    "Öneri alınamadı.": "Öneri alınamadı."
+    "Öneri alınamadı.": "Öneri alınamadı.",
+    "Site taranıyor: :scanned / :total sayfa — öneriler güncelleniyor": "Site taranıyor: :scanned / :total sayfa — öneriler güncelleniyor",
+    "Site taranıyor — öneriler güncelleniyor": "Site taranıyor — öneriler güncelleniyor",
+    "Ana sayfa ve :count site sayfasından otomatik çıkarılan anahtar kelime önerileri — eklemek için \"+\", istemiyorsanız \"×\" tıklayın:": "Ana sayfa ve :count site sayfasından otomatik çıkarılan anahtar kelime önerileri — eklemek için \"+\", istemiyorsanız \"×\" tıklayın:",
+    "En güçlü geçtiği sayfa: :url": "En güçlü geçtiği sayfa: :url",
+    ":count sayfa": ":count sayfa"
 }

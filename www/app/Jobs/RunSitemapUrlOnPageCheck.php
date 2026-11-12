@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Models\SitemapUrl;
+use App\Services\Keywords\KeywordSuggester;
 use App\Services\OnPage\OnPageSeoAnalyzer;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Bus\Queueable;
@@ -34,7 +35,7 @@ final class RunSitemapUrlOnPageCheck implements ShouldQueue
     {
     }
 
-    public function handle(OnPageSeoAnalyzer $analyzer): void
+    public function handle(OnPageSeoAnalyzer $analyzer, KeywordSuggester $suggester): void
     {
         $sitemapUrl = SitemapUrl::find($this->sitemapUrlId);
 
@@ -66,6 +67,10 @@ final class RunSitemapUrlOnPageCheck implements ShouldQueue
                 ],
                 'onpage_error' => null,
                 'onpage_checked_at' => now(),
+                // Ayni HTML'den site geneli oneri adaylari da cikarilir;
+                // CrawlSiteKeywordCandidates bu sayfayi tekrar cekmez.
+                'keyword_phrases' => CrawlSiteKeywordCandidates::phrasesFromHtml($suggester, (string) $result->html, $sitemapUrl->url),
+                'keyword_phrases_checked_at' => now(),
             ]);
         } catch (GuzzleException $e) {
             $sitemapUrl->update([

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Sitemap;
 
+use App\Jobs\CrawlSiteKeywordCandidates;
 use App\Models\Domain;
 use App\Models\SitemapUrl;
 use Illuminate\Support\Collection;
@@ -48,6 +49,31 @@ final class SharedSitemapUrlLookup
     {
         return $sibling?->onpage_checked_at !== null
             && $sibling->onpage_checked_at->greaterThanOrEqualTo(now()->subHours(self::REUSE_WINDOW_HOURS));
+    }
+
+    /**
+     * Anahtar kelime adaylari sayfa icerigine bagli ve yavas degisir; bu
+     * yuzden Lighthouse/on-page'in 6 saatlik penceresi yerine
+     * CrawlSiteKeywordCandidates'in yeniden tarama esigi kullanilir.
+     */
+    public function isKeywordPhrasesFresh(?SitemapUrl $sibling): bool
+    {
+        return $sibling?->keyword_phrases_checked_at !== null
+            && $sibling->keyword_phrases !== null
+            && $sibling->keyword_phrases_checked_at->greaterThanOrEqualTo(
+                now()->subDays(CrawlSiteKeywordCandidates::STALE_AFTER_DAYS)
+            );
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function keywordPhraseFields(SitemapUrl $sibling): array
+    {
+        return [
+            'keyword_phrases' => $sibling->keyword_phrases,
+            'keyword_phrases_checked_at' => $sibling->keyword_phrases_checked_at,
+        ];
     }
 
     /**
