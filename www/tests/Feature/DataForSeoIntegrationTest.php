@@ -20,6 +20,7 @@ use App\Services\Serp\DataForSeoSerpScraper;
 use App\Services\Serp\SerpScraper;
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
+use Illuminate\Support\Facades\Log;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -154,8 +155,13 @@ class DataForSeoIntegrationTest extends TestCase
             new Response(200, [], json_encode(['status_code' => 40200, 'status_message' => 'Payment Required.'])),
         ])));
 
+        Log::spy();
+
         $updater->refresh(collect([$keyword]));
 
+        Log::shouldHaveReceived('warning')->once()->withArgs(
+            fn (string $message, array $context) => str_contains($context['error'], 'Payment Required.') && $context['keyword_count'] === 1,
+        );
         $this->assertStringContainsString('Payment Required.', $keyword->refresh()->metrics_error);
         $this->assertNull($keyword->metrics_fetched_at);
     }

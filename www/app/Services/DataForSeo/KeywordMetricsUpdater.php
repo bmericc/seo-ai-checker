@@ -6,6 +6,7 @@ namespace App\Services\DataForSeo;
 
 use App\Models\Keyword;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Keyword kayitlarinin hacim/CPC/KD/niyet metriklerini tazeler. Arama
@@ -46,6 +47,13 @@ final class KeywordMetricsUpdater
         try {
             $metrics = $this->fetcher->fetch($targets->pluck('keyword')->all());
         } catch (DataForSeoException $e) {
+            // Job basarili biter (tekrar denenmez); hata sadece kelimeye
+            // yazilirsa gozden kacar (orn. bakiye bittiginde HTTP 402).
+            Log::warning('DataForSEO keyword metrics request failed', [
+                'error' => $e->getMessage(),
+                'keyword_count' => $targets->count(),
+            ]);
+
             foreach ($targets as $keyword) {
                 $keyword->update(['metrics_error' => $e->getMessage()]);
             }

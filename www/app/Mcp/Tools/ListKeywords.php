@@ -58,6 +58,7 @@ class ListKeywords extends SeoTool
                 'search_intent' => $keyword->search_intent,
                 'fetched_at' => self::iso($keyword->metrics_fetched_at),
             ],
+            'metrics_error' => $keyword->metrics_error,
             'ai_overview_present' => $check?->ai_overview_present,
             'ai_overview_cites_site' => $check?->ai_overview_target_cited,
             'lighthouse' => $check === null ? null : [

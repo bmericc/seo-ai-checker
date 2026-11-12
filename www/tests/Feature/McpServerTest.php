@@ -299,6 +299,9 @@ class McpServerTest extends TestCase
         Queue::assertPushed(RunDomainSiteCheck::class, fn ($job) => $job->domainId === $domain->id && $job->forceFresh);
 
         SeoCheckerServer::tool(ListKeywords::class, ['domain' => 'example.com'])->assertOk()->assertSee('koşu ayakkabısı');
+
+        $keyword->update(['metrics_error' => 'DataForSEO isteği başarısız oldu (HTTP 402).']);
+        SeoCheckerServer::tool(ListKeywords::class, ['domain' => 'example.com'])->assertOk()->assertSee('HTTP 402');
     }
 
     public function test_member_cannot_touch_someone_elses_keyword(): void
