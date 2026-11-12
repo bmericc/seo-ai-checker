@@ -14,6 +14,13 @@
                 <i class="ti ti-refresh icon"></i> {{ __('Kontrol Et') }}
             </button>
         </form>
+        <form method="post" action="{{ route('keywords.destroy', $keyword) }}" class="d-inline" onsubmit="return confirm({{ json_encode(__('Bu anahtar kelime silinsin mi?')) }});">
+            @csrf
+            @method('delete')
+            <button type="submit" class="btn btn-outline-danger">
+                <i class="ti ti-trash icon"></i> {{ __('Sil') }}
+            </button>
+        </form>
     @endif
 @endsection
 
