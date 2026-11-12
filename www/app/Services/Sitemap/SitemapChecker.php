@@ -19,6 +19,15 @@ final class SitemapChecker
 
     private const MAX_SUB_SITEMAPS = 10;
 
+    /**
+     * Bazi sitemap'ler <url><loc> icine sayfa yerine dogrudan resim dosyasi
+     * koyar; bunlar HTML sayfa degildir, Lighthouse/on-page taramaya
+     * sokulmamali.
+     */
+    private const IMAGE_EXTENSIONS = [
+        'jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'svg', 'bmp', 'ico', 'tif', 'tiff', 'heic', 'heif',
+    ];
+
     public function __construct(private readonly Client $client)
     {
     }
@@ -106,12 +115,28 @@ final class SitemapChecker
         $locs = [];
         foreach ($xml->{$entryName} as $entry) {
             $loc = trim((string) $entry->loc);
-            if ($loc !== '') {
-                $locs[] = $loc;
+            if ($loc === '') {
+                continue;
             }
+            if ($entryName === 'url' && $this->isImageUrl($loc)) {
+                continue;
+            }
+            $locs[] = $loc;
         }
 
         return $locs;
+    }
+
+    private function isImageUrl(string $url): bool
+    {
+        $path = parse_url($url, PHP_URL_PATH);
+        if (!is_string($path) || $path === '') {
+            return false;
+        }
+
+        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+        return in_array($extension, self::IMAGE_EXTENSIONS, true);
     }
 
     /**

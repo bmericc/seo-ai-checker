@@ -44,6 +44,28 @@ class SitemapCheckerTest extends TestCase
         $this->assertFalse($result->urlsTruncated);
     }
 
+    public function test_image_urls_in_sitemap_are_skipped(): void
+    {
+        $checker = $this->checkerWithBody(<<<'XML'
+            <?xml version="1.0" encoding="UTF-8"?>
+            <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+                    xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+              <url>
+                <loc>https://example.com/</loc>
+                <image:image><image:loc>https://example.com/hero.jpg</image:loc></image:image>
+              </url>
+              <url><loc>https://example.com/uploads/photo.JPG</loc></url>
+              <url><loc>https://example.com/logo.webp?v=2</loc></url>
+              <url><loc>https://example.com/about</loc></url>
+            </urlset>
+            XML);
+
+        $result = $checker->check('https://example.com/');
+
+        $this->assertSame(2, $result->urlCount);
+        $this->assertSame(['https://example.com/', 'https://example.com/about'], $result->urls);
+    }
+
     public function test_sitemap_index_is_detected_and_sub_sitemap_urls_are_collected(): void
     {
         $checker = $this->checkerWithResponses([

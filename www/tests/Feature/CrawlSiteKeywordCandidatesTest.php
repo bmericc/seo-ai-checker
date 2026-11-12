@@ -69,6 +69,28 @@ class CrawlSiteKeywordCandidatesTest extends TestCase
         Queue::assertNothingPushed();
     }
 
+    public function test_non_html_responses_produce_no_phrases(): void
+    {
+        Queue::fake();
+        $domain = $this->domainWithUrls(3);
+        $jpeg = "\xFF\xD8\xFF\xE0\x00\x10JFIF\x00\x01 CREATOR: gd-jpeg v1.0 (using IJG JPEG v62)";
+        $this->fakeClient([
+            // WordPress ek sayfasi resme yonlenmis: Content-Type image/jpeg.
+            new Response(200, ['Content-Type' => 'image/jpeg'], $jpeg),
+            // Content-Type yanlis/eksik olsa da ikili govde elenir.
+            new Response(200, ['Content-Type' => 'text/html'], $jpeg),
+            $this->page('Dernek Muhasebe Yazilimi'),
+        ]);
+
+        $this->runJob($domain);
+
+        $phrases = $domain->sitemapUrls()->orderBy('id')->pluck('keyword_phrases')->all();
+        $this->assertSame([], $phrases[0]);
+        $this->assertSame([], $phrases[1]);
+        $this->assertNotEmpty($phrases[2]);
+        $this->assertStringNotContainsString('jpeg', json_encode($domain->refresh()->site_keyword_suggestions));
+    }
+
     public function test_requeues_itself_while_pages_remain(): void
     {
         Queue::fake();

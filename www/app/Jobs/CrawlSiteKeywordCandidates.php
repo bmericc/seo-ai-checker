@@ -180,6 +180,13 @@ final class CrawlSiteKeywordCandidates implements ShouldQueue, ShouldBeUniqueUnt
             return [];
         }
 
+        // WordPress ek sayfalari (ornek: /logo-2/) cogu zaman dogrudan resim
+        // dosyasina yonlenir; redirect izlendigi icin govde JPEG/PDF olur.
+        $contentType = strtolower($response->getHeaderLine('Content-Type'));
+        if ($contentType !== '' && ! str_contains($contentType, 'html')) {
+            return [];
+        }
+
         return self::phrasesFromHtml($suggester, (string) $response->getBody(), $url->url);
     }
 
@@ -190,11 +197,30 @@ final class CrawlSiteKeywordCandidates implements ShouldQueue, ShouldBeUniqueUnt
      */
     public static function phrasesFromHtml(KeywordSuggester $suggester, string $html, string $url): array
     {
+        if (! self::looksLikeHtml($html)) {
+            return [];
+        }
+
         $suggestions = $suggester->suggestFromHtml($html, $url, limit: self::PHRASES_PER_PAGE, stripChrome: true);
 
         return array_map(
             static fn ($s) => ['phrase' => $s->phrase, 'score' => round($s->score, 4)],
             $suggestions,
         );
+    }
+
+    /**
+     * Content-Type'a guvenilemeyen yollar (OnPageSeoAnalyzer) icin govde
+     * koklamasi: NUL bayti iceren ya da hic etiket barindirmayan govde
+     * (resim, PDF vb.) HTML degildir - ikili veri "ÿøÿà jfif" gibi cop
+     * ifadeler uretir.
+     */
+    private static function looksLikeHtml(string $body): bool
+    {
+        if ($body === '' || str_contains(substr($body, 0, 4096), "\0")) {
+            return false;
+        }
+
+        return preg_match('/<(?:!doctype|html|head|body|title|meta|div|p|h[1-6])\b/i', substr($body, 0, 65536)) === 1;
     }
 }
