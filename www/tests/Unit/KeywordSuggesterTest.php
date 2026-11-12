@@ -54,6 +54,22 @@ class KeywordSuggesterTest extends TestCase
         $this->assertContains('laravel seo araci', $phrases);
     }
 
+    public function test_turkish_dotless_capital_i_lowercases_to_dotless_i_but_keeps_acronyms(): void
+    {
+        $this->assertSame('iç mimarlık', KeywordSuggester::lower('İÇ MİMARLIK', true));
+        $this->assertSame('seo ai aracı', KeywordSuggester::lower('SEO AI ARACI', true));
+        $this->assertSame('instant ai', KeywordSuggester::lower('INSTANT AI'));
+
+        $suggester = $this->suggesterWithHtml(<<<'HTML'
+            <html lang="tr"><head><title>İç Mimarlık</title></head>
+            <body><h1>İÇ MİMARLIK HİZMETLERİ</h1><p>İç mimarlık projeleri.</p></body></html>
+            HTML);
+
+        $phrases = array_map(fn ($s) => $s->phrase, $suggester->suggest('https://example.com/'));
+        $this->assertContains('iç mimarlık hizmetleri', $phrases);
+        $this->assertNotContains('iç mimarlik', $phrases);
+    }
+
     public function test_title_and_h1_phrases_rank_above_generic_body_text(): void
     {
         $suggester = $this->suggesterWithHtml(<<<'HTML'

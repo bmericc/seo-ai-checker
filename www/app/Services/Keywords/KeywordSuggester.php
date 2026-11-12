@@ -85,6 +85,8 @@ final class KeywordSuggester
         'when', 'where', 'why', 'how',
     ];
 
+    private bool $turkish = false;
+
     public function __construct(private readonly Client $client)
     {
     }
@@ -129,6 +131,7 @@ final class KeywordSuggester
         }
 
         $crawler = new Crawler($html, $url);
+        $this->turkish = $this->isTurkish($crawler);
         $this->stripNoiseElements($crawler, $stripChrome);
 
         $metaScores = $this->metaKeywordScores($crawler);
@@ -236,7 +239,7 @@ final class KeywordSuggester
 
         $scores = [];
         foreach (explode(',', $content) as $phrase) {
-            $phrase = self::lower(trim($phrase));
+            $phrase = self::lower(trim($phrase), $this->turkish);
             if ($phrase !== '') {
                 $scores[$phrase] = ($scores[$phrase] ?? 0.0) + 6.0;
             }
@@ -372,10 +375,37 @@ final class KeywordSuggester
      * olur; tokenize bu isareti ayirici sayip "için" kelimesini "i" ve
      * "çin" diye boluyordu. Once "İ" -> "i" yapilir, kalan birlesik
      * noktalar da temizlenir.
+     *
+     * $turkish acikken buyuk noktasiz "I" da "ı" olur ("MİMARLIK" ->
+     * "mimarlık", "mimarlik" degil). "AI", "SEO", "API" gibi kisaltmalar
+     * bozulmasin diye 3 harf ve alti tamamen ASCII buyuk harf kelimeler
+     * dokunulmadan birakilir (normal kucultulur).
      */
-    public static function lower(string $text): string
+    public static function lower(string $text, bool $turkish = false): string
     {
+        if ($turkish) {
+            $text = preg_replace_callback(
+                '/\p{L}+/u',
+                static fn (array $m): string => preg_match('/^[A-Z]{1,3}$/', $m[0]) ? $m[0] : str_replace('I', 'ı', $m[0]),
+                $text,
+            ) ?? $text;
+        }
+
         return str_replace("\u{0307}", '', mb_strtolower(str_replace('İ', 'i', $text)));
+    }
+
+    /**
+     * Sayfa Turkce mi: <html lang="tr..."> ya da metinde Turkceye ozgu
+     * harfler (ı, İ, ş, ğ) geciyorsa.
+     */
+    private function isTurkish(Crawler $crawler): bool
+    {
+        $lang = $crawler->filter('html')->count() > 0 ? (string) $crawler->filter('html')->attr('lang') : '';
+        if ($lang !== '') {
+            return str_starts_with(strtolower($lang), 'tr');
+        }
+
+        return (bool) preg_match('/[ıİşŞğĞ]/u', $crawler->text(''));
     }
 
     /**
@@ -383,7 +413,7 @@ final class KeywordSuggester
      */
     private function tokenize(string $text): array
     {
-        $text = self::lower($text);
+        $text = self::lower($text, $this->turkish);
         $text = preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $text) ?? '';
         $words = preg_split('/\s+/u', trim($text)) ?: [];
 
