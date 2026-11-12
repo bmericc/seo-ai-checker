@@ -151,6 +151,7 @@
                         <ul class="list-inline list-inline-dots mb-0">
                             <li class="list-inline-item"><a href="{{ route('privacy-policy') }}" class="link-secondary">{{ __('Gizlilik Politikası') }}</a></li>
                             <li class="list-inline-item"><a href="{{ route('terms-of-service') }}" class="link-secondary">{{ __('Kullanım Koşulları') }}</a></li>
+                            <li class="list-inline-item"><a href="https://github.com/bmericc/seo-ai-checker" class="link-secondary" target="_blank" rel="noopener">GitHub</a></li>
                         </ul>
                     </div>
                 </div>

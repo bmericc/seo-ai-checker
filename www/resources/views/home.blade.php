@@ -194,6 +194,7 @@
         <nav aria-label="{{ __('Yasal') }}">
             <a href="{{ route('privacy-policy') }}">{{ __('Gizlilik Politikası') }}</a>
             <a href="{{ route('terms-of-service') }}">{{ __('Kullanım Koşulları') }}</a>
+            <a href="https://github.com/bmericc/seo-ai-checker" target="_blank" rel="noopener">GitHub</a>
             <x-locale-switch class="l-footer-locale" />
         </nav>
     </div>
