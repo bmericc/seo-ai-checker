@@ -19,7 +19,7 @@ final class KeywordSuggester
 {
     private const MAX_SUGGESTIONS = 15;
 
-    private const NGRAM_SIZES = [1, 2, 3];
+    private const NGRAM_SIZES = [1, 2, 3, 4];
 
     /**
      * Coklu kelimeden olusan ifadeler genelde tek basina daha genel bir
@@ -28,7 +28,35 @@ final class KeywordSuggester
      * frekansta uzun ifadeler one cikarilsin diye hafif bir carpan
      * uygulanir.
      */
-    private const NGRAM_WEIGHT_MULTIPLIER = [1 => 1.0, 2 => 1.4, 3 => 1.6];
+    private const NGRAM_WEIGHT_MULTIPLIER = [1 => 1.0, 2 => 1.4, 3 => 1.6, 4 => 1.7];
+
+    /**
+     * Bir ifadenin agirlikli tekrarlarinin bu orandan fazlasi iki yandan da
+     * (stopword olmayan) kelimelerle sarili ise ifade daha uzun bir ifadenin
+     * ortasindan kesilmis bir parcadir: "acik kaynak dernek yazilimi"
+     * icinden "kaynak dernek" gibi. Bunlar anlamsiz oneriler uretir.
+     */
+    private const INTERIOR_RATIO_LIMIT = 0.5;
+
+    /**
+     * Metin bu karakterlerde parcalara bolunur; n-gram'lar parca sinirini
+     * asmaz ("Acik Kaynak | Dernek" -> "kaynak dernek" uretilmez).
+     */
+    private const SEGMENT_SEPARATORS = '/[.,;:!?|()\[\]{}"“”«»•·…–—\/\x5C]+|\s-\s|\R/u';
+
+    /**
+     * Govde metni okunurken bu elementlerin sinirlarina satir sonu konur;
+     * aksi halde textContent "<li>Acik kaynak</li><li>Dernek</li>" metnini
+     * "Acik kaynakDernek" diye birlestirir.
+     */
+    private const BLOCK_ELEMENTS = [
+        'address', 'article', 'aside', 'blockquote', 'br', 'button', 'caption',
+        'dd', 'div', 'dl', 'dt', 'fieldset', 'figcaption', 'figure', 'footer',
+        'form', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'header', 'hr', 'label',
+        'legend', 'li', 'main', 'nav', 'ol', 'option', 'p', 'section', 'select',
+        'summary', 'table', 'tbody', 'td', 'tfoot', 'th', 'thead', 'tr', 'ul',
+        'a', 'img', 'input', 'textarea',
+    ];
 
     private const STOPWORDS = [
         // Turkce
@@ -75,12 +103,19 @@ final class KeywordSuggester
         $crawler = new Crawler($html, $url);
         $this->stripNoiseElements($crawler);
 
-        $scores = $this->metaKeywordScores($crawler);
+        $metaScores = $this->metaKeywordScores($crawler);
 
+        /** @var array<string, array{score: float, freq: float, interior: float, n: int}> $stats */
+        $stats = [];
         foreach ($this->weightedBlocks($crawler) as [$text, $weight]) {
-            foreach ($this->scorePhrases($text, $weight) as $phrase => $score) {
-                $scores[$phrase] = ($scores[$phrase] ?? 0.0) + $score;
+            foreach ($this->segments($text) as $segment) {
+                $this->collectPhrases($this->tokenize($segment), $weight, $stats);
             }
+        }
+
+        $scores = $this->filterFragments($stats);
+        foreach ($metaScores as $phrase => $score) {
+            $scores[$phrase] = ($scores[$phrase] ?? 0.0) + $score;
         }
 
         arsort($scores);
@@ -132,19 +167,19 @@ final class KeywordSuggester
             $blocks[] = [$description, 3.0];
         }
 
-        foreach ($crawler->filter('h1')->each(static fn (Crawler $n) => trim($n->text(''))) as $h1) {
+        foreach ($crawler->filter('h1')->each(fn (Crawler $n) => trim($this->blockText($n->getNode(0)))) as $h1) {
             if ($h1 !== '') {
                 $blocks[] = [$h1, 4.0];
             }
         }
 
-        foreach ($crawler->filter('h2')->each(static fn (Crawler $n) => trim($n->text(''))) as $h2) {
+        foreach ($crawler->filter('h2')->each(fn (Crawler $n) => trim($this->blockText($n->getNode(0)))) as $h2) {
             if ($h2 !== '') {
                 $blocks[] = [$h2, 2.0];
             }
         }
 
-        $bodyText = $crawler->filter('body')->count() > 0 ? $crawler->filter('body')->text('') : '';
+        $bodyText = $crawler->filter('body')->count() > 0 ? $this->blockText($crawler->filter('body')->getNode(0)) : '';
         if (trim($bodyText) !== '') {
             $blocks[] = [$bodyText, 1.0];
         }
@@ -177,18 +212,117 @@ final class KeywordSuggester
     }
 
     /**
-     * @return array<string, float>
+     * Elementin metnini blok elementlerin sinirlarina satir sonu koyarak
+     * dondurur; boylece farkli bloklardaki kelimeler tek ifadede birlesmez.
      */
-    private function scorePhrases(string $text, float $weight): array
+    private function blockText(?\DOMNode $node): string
     {
-        $words = $this->tokenize($text);
-        $scores = [];
+        if ($node === null) {
+            return '';
+        }
+
+        if ($node instanceof \DOMText) {
+            return $node->nodeValue ?? '';
+        }
+
+        $text = '';
+        foreach ($node->childNodes as $child) {
+            $text .= $this->blockText($child);
+        }
+
+        if ($node instanceof \DOMElement && in_array(strtolower($node->nodeName), self::BLOCK_ELEMENTS, true)) {
+            return "\n".$text."\n";
+        }
+
+        return $text;
+    }
+
+    /**
+     * @return string[]
+     */
+    private function segments(string $text): array
+    {
+        $parts = preg_split(self::SEGMENT_SEPARATORS, $text) ?: [];
+
+        return array_values(array_filter($parts, static fn (string $p): bool => trim($p) !== ''));
+    }
+
+    /**
+     * Tek bir parcadaki (cumle/baslik/menu ogesi) n-gram'lari toplar. Her
+     * tekrar icin, ifadenin iki yaninda da parcanin icinde stopword olmayan
+     * bir kelime olup olmadigi ("ic" tekrar) ayrica sayilir.
+     *
+     * @param  string[]  $words
+     * @param  array<string, array{score: float, freq: float, interior: float, n: int}>  $stats
+     */
+    private function collectPhrases(array $words, float $weight, array &$stats): void
+    {
+        $count = count($words);
 
         foreach (self::NGRAM_SIZES as $n) {
-            $ngramWeight = $weight * self::NGRAM_WEIGHT_MULTIPLIER[$n];
-            foreach ($this->ngrams($words, $n) as $phrase) {
-                $scores[$phrase] = ($scores[$phrase] ?? 0.0) + $ngramWeight;
+            for ($i = 0; $i <= $count - $n; $i++) {
+                $slice = array_slice($words, $i, $n);
+
+                if ($this->isStopword($slice[0]) || $this->isStopword($slice[$n - 1])) {
+                    continue;
+                }
+
+                $phrase = implode(' ', $slice);
+                $left = $words[$i - 1] ?? null;
+                $right = $words[$i + $n] ?? null;
+                $interior = $left !== null && $right !== null
+                    && ! $this->isStopword($left) && ! $this->isStopword($right);
+
+                $stats[$phrase] ??= ['score' => 0.0, 'freq' => 0.0, 'interior' => 0.0, 'n' => $n];
+                $stats[$phrase]['score'] += $weight * self::NGRAM_WEIGHT_MULTIPLIER[$n];
+                $stats[$phrase]['freq'] += $weight;
+                if ($interior) {
+                    $stats[$phrase]['interior'] += $weight;
+                }
             }
+        }
+    }
+
+    /**
+     * Anlamsiz parcalari eler:
+     *  - Cogunlukla daha uzun bir ifadenin ortasindan kesilmis ifadeler
+     *    ("acik kaynak dernek yazilimi" -> "kaynak dernek").
+     *  - 3+ kelimelik ifadeler, kendisini iceren bir kelime uzun ifade en az
+     *    onun kadar geciyorsa (hic bagimsiz gecmiyorsa); boylece tam ifade
+     *    ile bas/son ikilileri ("acik kaynak", "dernek yazilimi") kalir,
+     *    "acik kaynak dernek" gibi yarim kalmis uclu elenir.
+     *
+     * @param  array<string, array{score: float, freq: float, interior: float, n: int}>  $stats
+     * @return array<string, float>
+     */
+    private function filterFragments(array $stats): array
+    {
+        $superFreq = [];
+        foreach ($stats as $phrase => $stat) {
+            $words = explode(' ', (string) $phrase);
+            $n = count($words);
+            if ($n < 2) {
+                continue;
+            }
+            foreach ([array_slice($words, 0, $n - 1), array_slice($words, 1)] as $sub) {
+                $key = implode(' ', $sub);
+                $superFreq[$key] = max($superFreq[$key] ?? 0.0, $stat['freq']);
+            }
+        }
+
+        $scores = [];
+        foreach ($stats as $phrase => $stat) {
+            $phrase = (string) $phrase;
+
+            if ($stat['interior'] > $stat['freq'] * self::INTERIOR_RATIO_LIMIT) {
+                continue;
+            }
+
+            if ($stat['n'] >= 3 && ($superFreq[$phrase] ?? 0.0) >= $stat['freq']) {
+                continue;
+            }
+
+            $scores[$phrase] = $stat['score'];
         }
 
         return $scores;
@@ -204,28 +338,6 @@ final class KeywordSuggester
         $words = preg_split('/\s+/u', trim($text)) ?: [];
 
         return array_values(array_filter($words, static fn (string $w): bool => mb_strlen($w) >= 2));
-    }
-
-    /**
-     * @param  string[]  $words
-     * @return string[]
-     */
-    private function ngrams(array $words, int $n): array
-    {
-        $grams = [];
-        $count = count($words);
-
-        for ($i = 0; $i <= $count - $n; $i++) {
-            $slice = array_slice($words, $i, $n);
-
-            if ($this->isStopword($slice[0]) || $this->isStopword($slice[$n - 1])) {
-                continue;
-            }
-
-            $grams[] = implode(' ', $slice);
-        }
-
-        return $grams;
     }
 
     private function isStopword(string $word): bool

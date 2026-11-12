@@ -36,6 +36,41 @@ class KeywordSuggesterTest extends TestCase
         $this->assertStringContainsString(' ', $suggestions[0]->phrase, 'top suggestion should be a multi-word phrase, not a bare generic word');
     }
 
+    public function test_fragments_cut_from_the_middle_of_a_phrase_are_not_suggested(): void
+    {
+        $suggester = $this->suggesterWithHtml(<<<'HTML'
+            <html><head><title>Açık Kaynak Dernek Yazılımı</title></head>
+            <body>
+                <h1>Açık Kaynak Dernek Yazılımı</h1>
+                <p>Ücretsiz açık kaynak dernek yazılımı ile üyelerinizi yönetin.</p>
+            </body></html>
+            HTML);
+
+        $phrases = array_map(fn ($s) => $s->phrase, $suggester->suggest('https://example.com/'));
+
+        $this->assertContains('açık kaynak dernek yazılımı', $phrases);
+        $this->assertContains('açık kaynak', $phrases);
+        $this->assertContains('dernek yazılımı', $phrases);
+        $this->assertNotContains('kaynak dernek', $phrases);
+        $this->assertNotContains('açık kaynak dernek', $phrases);
+        $this->assertNotContains('kaynak dernek yazılımı', $phrases);
+    }
+
+    public function test_phrases_do_not_cross_punctuation_or_block_boundaries(): void
+    {
+        $suggester = $this->suggesterWithHtml(<<<'HTML'
+            <html><head><title>Açık Kaynak | Dernek Yazılımı</title></head>
+            <body><ul><li>Açık kaynak</li><li>Dernek yazılımı</li></ul></body></html>
+            HTML);
+
+        $phrases = array_map(fn ($s) => $s->phrase, $suggester->suggest('https://example.com/'));
+
+        $this->assertContains('açık kaynak', $phrases);
+        $this->assertContains('dernek yazılımı', $phrases);
+        $this->assertNotContains('kaynak dernek', $phrases);
+        $this->assertNotContains('kaynakdernek', $phrases);
+    }
+
     public function test_meta_keywords_are_included_with_high_weight(): void
     {
         $suggester = $this->suggesterWithHtml(<<<'HTML'
