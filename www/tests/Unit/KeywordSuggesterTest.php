@@ -39,6 +39,21 @@ class KeywordSuggesterTest extends TestCase
         $this->assertContains('istanbul web tasarım', $phrases);
     }
 
+    public function test_single_word_phrases_are_never_suggested(): void
+    {
+        $suggester = $this->suggesterWithHtml(<<<'HTML'
+            <html><head><title>Laravel</title><meta name="keywords" content="seo, laravel seo araci"></head>
+            <body><h1>Laravel</h1><p>Laravel laravel laravel seo araci.</p></body></html>
+            HTML);
+
+        $phrases = array_map(fn ($s) => $s->phrase, $suggester->suggest('https://example.com/'));
+        $this->assertNotEmpty($phrases);
+        foreach ($phrases as $phrase) {
+            $this->assertStringContainsString(' ', $phrase);
+        }
+        $this->assertContains('laravel seo araci', $phrases);
+    }
+
     public function test_title_and_h1_phrases_rank_above_generic_body_text(): void
     {
         $suggester = $this->suggesterWithHtml(<<<'HTML'

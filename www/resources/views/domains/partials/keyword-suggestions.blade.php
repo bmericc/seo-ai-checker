@@ -12,7 +12,8 @@
     $isSiteWide = $siteSuggestions !== [];
     $suggestedKeywords = collect($isSiteWide ? $siteSuggestions : ($domain->latestDomainCheck?->suggested_keywords ?? []))
         ->reject(fn ($s) => $trackedKeywords->contains(mb_strtolower($s['phrase'])))
-        ->reject(fn ($s) => $dismissedSuggestions->contains(mb_strtolower($s['phrase'])));
+        ->reject(fn ($s) => $dismissedSuggestions->contains(mb_strtolower($s['phrase'])))
+        ->filter(fn ($s) => \App\Services\Keywords\KeywordSuggester::isMultiWord((string) $s['phrase']));
     $scan = $domain->site_keyword_scan ?? [];
     $scanRunning = ($scan['status'] ?? null) === 'running';
     $scanTotal = (int) ($scan['total'] ?? 0);

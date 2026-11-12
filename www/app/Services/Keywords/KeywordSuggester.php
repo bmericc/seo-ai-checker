@@ -19,7 +19,13 @@ final class KeywordSuggester
 {
     private const MAX_SUGGESTIONS = 15;
 
-    private const NGRAM_SIZES = [1, 2, 3, 4];
+    /**
+     * Hedef en az iki kelimelik anahtar kelimelerdir: tek kelime ("seo",
+     * "laravel") cok genel kalir ve takip edilecek bir sorgu degildir.
+     */
+    public const MIN_PHRASE_WORDS = 2;
+
+    private const NGRAM_SIZES = [2, 3, 4];
 
     /**
      * Coklu kelimeden olusan ifadeler genelde tek basina daha genel bir
@@ -146,7 +152,8 @@ final class KeywordSuggester
 
         $suggestions = [];
         foreach ($scores as $phrase => $score) {
-            if (in_array($phrase, $excludeLower, true)) {
+            $phrase = (string) $phrase;
+            if (in_array($phrase, $excludeLower, true) || ! self::isMultiWord($phrase)) {
                 continue;
             }
 
@@ -353,6 +360,11 @@ final class KeywordSuggester
         }
 
         return $scores;
+    }
+
+    public static function isMultiWord(string $phrase): bool
+    {
+        return count(preg_split('/\s+/u', trim($phrase)) ?: []) >= self::MIN_PHRASE_WORDS;
     }
 
     /**

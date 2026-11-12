@@ -93,7 +93,8 @@ final class SiteKeywordAggregator
         foreach ($stats as $phrase => $stat) {
             $phrase = (string) $phrase;
 
-            if (isset($excludeLower[$phrase])) {
+            // Eski taramalardan kalan tek kelimelik adaylar da elenir.
+            if (isset($excludeLower[$phrase]) || ! KeywordSuggester::isMultiWord($phrase)) {
                 continue;
             }
 
