@@ -44,7 +44,12 @@ return [
             'busy_timeout' => env('DB_BUSY_TIMEOUT', 10000),
             'journal_mode' => env('DB_JOURNAL_MODE', 'wal'),
             'synchronous' => env('DB_SYNCHRONOUS', 'normal'),
-            'transaction_mode' => 'DEFERRED',
+            // DEFERRED transaction okuma kilidiyle baslayip yazmaya yukseltilir;
+            // WAL'da bu yukseltme baska bir yazici varken busy_timeout'u
+            // beklemeden SQLITE_BUSY doner (queue worker'in jobs tablosundan
+            // job alirken aldigi "database is locked" hatasi). IMMEDIATE
+            // yazma kilidini en basta alir, cakismada busy_timeout beklenir.
+            'transaction_mode' => env('DB_TRANSACTION_MODE', 'IMMEDIATE'),
         ],
 
         'mysql' => [
