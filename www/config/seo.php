@@ -15,6 +15,14 @@ return [
         'request_delay_ms' => (int) env('REQUEST_DELAY_MS', 4000),
         'proxy' => env('HTTP_PROXY'),
         'user_agent' => env('SCRAPER_USER_AGENT'),
+        // auto | google | dataforseo | fallback - bkz. AppServiceProvider,
+        // FallbackSerpScraper. fallback: once ucretsiz dogrudan kazima,
+        // engellenirse ayni sorgu DataForSEO'ya gider (mobil SERP atlanir,
+        // haftalik kontrol Standard kuyruk yerine live calisir).
+        'provider' => env('SERP_PROVIDER', 'auto'),
+        // fallback modunda Google engellediginde bu sure boyunca Google hic
+        // denenmez, sorgular dogrudan DataForSEO'ya gider. 0 = kapali.
+        'fallback_cooldown_minutes' => (int) env('SERP_FALLBACK_COOLDOWN_MINUTES', 30),
     ],
 
     /*

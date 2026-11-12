@@ -24,6 +24,7 @@ use App\Services\Llms\LlmsTxtChecker;
 use App\Services\OnPage\OnPageSeoAnalyzer;
 use App\Services\Robots\RobotsTxtChecker;
 use App\Services\Serp\DataForSeoSerpScraper;
+use App\Services\Serp\FallbackSerpScraper;
 use App\Services\Serp\GoogleRequestThrottle;
 use App\Services\Security\SecurityHeadersChecker;
 use App\Services\Serp\GoogleSerpScraper;
@@ -114,12 +115,24 @@ class AppServiceProvider extends ServiceProvider
             config('seo.dataforseo.language_code'),
         ));
 
+        // SERP_PROVIDER: auto (varsayilan - DataForSEO tanimliysa o, degilse
+        // dogrudan kazima), google, dataforseo, fallback (once Google, engel
+        // olursa DataForSEO). DataForSEO kimlik bilgisi yoksa dataforseo ve
+        // fallback modlari dogrudan kazimaya duser.
         $this->app->singleton(SerpScraper::class, function ($app) {
             $dataForSeo = config('seo.dataforseo');
+            $hasDataForSeo = $dataForSeo['login'] && $dataForSeo['password'];
 
-            return ($dataForSeo['login'] && $dataForSeo['password'])
-                ? $app->make(DataForSeoSerpScraper::class)
-                : $app->make(GoogleSerpScraper::class);
+            return match ($hasDataForSeo ? config('seo.serp.provider', 'auto') : 'google') {
+                'google' => $app->make(GoogleSerpScraper::class),
+                'fallback' => new FallbackSerpScraper(
+                    $app->make(GoogleSerpScraper::class),
+                    $app->make(DataForSeoSerpScraper::class),
+                    $app->make('cache')->store(),
+                    (int) config('seo.serp.fallback_cooldown_minutes', 30),
+                ),
+                default => $app->make(DataForSeoSerpScraper::class),
+            };
         });
 
         $this->app->singleton(GoogleRequestThrottle::class, function ($app) {
