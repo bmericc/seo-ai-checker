@@ -14,8 +14,9 @@ use Illuminate\Bus\Queueable;
 
 /**
  * Anahtar kelime kontrolunu (SERP + AI Overview + on-page + Lighthouse)
- * arka planda calistirir. Arayuz kontrolu senkron yapar; MCP istegi ise
- * dakikalar surebilecek bir islemi beklememeli.
+ * arka planda calistirir. Arayuzdeki "Kontrol et" butonu ve MCP istegi
+ * dakikalar surebilecek bu islemi beklememeli: senkron calisinca
+ * nginx-proxy-manager/Cloudflare timeout'una (504) takiliyordu.
  *
  * Haftalik otomatik kontrolde $serpBatch verilir: SERP sonuclari zaten
  * DataForSEO Standard kuyrugundan toplanmistir (bkz.

@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Jobs\FetchKeywordMetrics;
 use App\Jobs\FetchLlmMentions;
+use App\Jobs\RunDomainSiteCheck;
 use App\Jobs\RunDomainWhoisLookup;
 use App\Models\Check;
 use App\Models\Domain;
@@ -15,7 +16,6 @@ use App\Services\Analytics\CompetitorAnalyzer;
 use App\Services\Analytics\LlmShareOfModel;
 use App\Services\Analytics\ScoreHistoryBuilder;
 use App\Services\DataForSeo\DataForSeoClient;
-use App\Services\DomainCheckRunner;
 use App\Services\Drift\DomainCheckDrift;
 use App\Services\Ga4\Ga4Property;
 use App\Services\Ga4\Ga4PropertyLister;
@@ -152,15 +152,16 @@ class DomainController extends Controller
         ]);
     }
 
-    public function check(Request $request, Domain $domain, DomainCheckRunner $checkRunner): RedirectResponse
+    public function check(Request $request, Domain $domain): RedirectResponse
     {
         $this->ensureCanEditDomain($request, $domain);
 
-        $checkRunner->run($domain, forceFresh: true);
+        // Site kontrolu proxy/Cloudflare timeout'unu asabildigi icin kuyruga birakilir.
+        RunDomainSiteCheck::dispatch($domain->id, forceFresh: true);
 
         return redirect()
             ->route('domains.show', $domain)
-            ->with('flash', ['type' => 'success', 'message' => __('Site kontrolü tamamlandı.')]);
+            ->with('flash', ['type' => 'success', 'message' => __('Site kontrolü kuyruğa alındı, birazdan sonuçlar güncellenecek.')]);
     }
 
     public function refreshWhois(Request $request, Domain $domain): RedirectResponse

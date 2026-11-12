@@ -898,5 +898,7 @@
     "Site taranıyor — öneriler güncelleniyor": "Scanning site — suggestions updating",
     "Ana sayfa ve :count site sayfasından otomatik çıkarılan anahtar kelime önerileri — eklemek için \"+\", istemiyorsanız \"×\" tıklayın:": "Keyword suggestions automatically extracted from the homepage and :count site pages — click \"+\" to add, \"×\" if you don't want it:",
     "En güçlü geçtiği sayfa: :url": "Strongest page: :url",
-    ":count sayfa": ":count pages"
+    ":count sayfa": ":count pages",
+    "Kontrol kuyruğa alındı, birkaç dakika içinde sonuçlar güncellenecek.": "Check queued, results will update within a few minutes.",
+    "Site kontrolü kuyruğa alındı, birazdan sonuçlar güncellenecek.": "Site check queued, results will update shortly."
 }

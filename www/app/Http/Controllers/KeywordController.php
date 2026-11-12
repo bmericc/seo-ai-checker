@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Jobs\RunKeywordCheck;
 use App\Models\Domain;
 use App\Models\Keyword;
 use App\Services\Analytics\AiOverviewVolatility;
 use App\Services\Analytics\ScoreHistoryBuilder;
-use App\Services\CheckRunner;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -62,16 +62,18 @@ class KeywordController extends Controller
         ]);
     }
 
-    public function check(Request $request, Keyword $keyword, CheckRunner $checkRunner): RedirectResponse
+    public function check(Request $request, Keyword $keyword): RedirectResponse
     {
         $keyword->load('domain');
         $this->ensureCanEditKeyword($request, $keyword);
 
-        $checkRunner->run($keyword);
+        // Kontrol (SERP + AI Overview + LLM + Lighthouse) proxy/Cloudflare
+        // timeout'unu asabildigi icin web isteginde senkron calistirilmaz.
+        RunKeywordCheck::dispatch($keyword->id);
 
         return redirect()
             ->route('keywords.show', $keyword)
-            ->with('flash', ['type' => 'success', 'message' => __('Kontrol tamamlandı.')]);
+            ->with('flash', ['type' => 'success', 'message' => __('Kontrol kuyruğa alındı, birkaç dakika içinde sonuçlar güncellenecek.')]);
     }
 
     public function destroy(Request $request, Keyword $keyword): RedirectResponse
