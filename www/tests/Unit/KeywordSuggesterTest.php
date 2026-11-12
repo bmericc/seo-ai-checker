@@ -19,6 +19,26 @@ class KeywordSuggesterTest extends TestCase
         return new KeywordSuggester($client);
     }
 
+    public function test_turkish_dotted_capital_i_is_lowercased_without_splitting_words(): void
+    {
+        $this->assertSame('için istanbul', KeywordSuggester::lower('İÇİN İstanbul'));
+
+        $suggester = $this->suggesterWithHtml(<<<'HTML'
+            <html><head><title>İstanbul Web Tasarım</title></head>
+            <body>
+                <h1>İstanbul Web Tasarım</h1>
+                <p>İçin İçin İçin İstanbul web tasarım hizmeti.</p>
+            </body></html>
+            HTML);
+
+        $phrases = array_map(fn ($s) => $s->phrase, $suggester->suggest('https://example.com/'));
+        foreach ($phrases as $phrase) {
+            $this->assertStringNotContainsString('çin', $phrase);
+            $this->assertStringNotContainsString("\u{0307}", $phrase);
+        }
+        $this->assertContains('istanbul web tasarım', $phrases);
+    }
+
     public function test_title_and_h1_phrases_rank_above_generic_body_text(): void
     {
         $suggester = $this->suggesterWithHtml(<<<'HTML'

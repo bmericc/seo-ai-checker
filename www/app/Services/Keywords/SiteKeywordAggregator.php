@@ -35,7 +35,7 @@ final class SiteKeywordAggregator
      */
     public function aggregate(array $homepage, array $pages, array $exclude = []): array
     {
-        $excludeLower = array_flip(array_map(static fn (string $k): string => mb_strtolower(trim($k)), $exclude));
+        $excludeLower = array_flip(array_map(static fn (string $k): string => KeywordSuggester::lower(trim($k)), $exclude));
 
         /** @var array<string, array{sum: float, pages: int, best: float, url: ?string}> $stats */
         $stats = [];
@@ -56,7 +56,7 @@ final class SiteKeywordAggregator
             if ($homepageMax <= 0.0) {
                 break;
             }
-            $phrase = mb_strtolower($suggestion->phrase);
+            $phrase = KeywordSuggester::lower($suggestion->phrase);
             $homepagePhrases[$phrase] = true;
             $add($phrase, $suggestion->score / $homepageMax, $suggestion->url);
         }
@@ -70,7 +70,7 @@ final class SiteKeywordAggregator
             $max = 0.0;
             $seen = [];
             foreach ($phrases as $item) {
-                $phrase = mb_strtolower(trim((string) ($item['phrase'] ?? '')));
+                $phrase = KeywordSuggester::lower(trim((string) ($item['phrase'] ?? '')));
                 $score = (float) ($item['score'] ?? 0);
                 if ($phrase === '' || $score <= 0.0) {
                     continue;

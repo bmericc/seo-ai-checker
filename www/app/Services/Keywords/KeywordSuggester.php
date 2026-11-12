@@ -142,7 +142,7 @@ final class KeywordSuggester
 
         arsort($scores);
 
-        $excludeLower = array_map(static fn (string $k): string => mb_strtolower(trim($k)), $exclude);
+        $excludeLower = array_map(static fn (string $k): string => self::lower(trim($k)), $exclude);
 
         $suggestions = [];
         foreach ($scores as $phrase => $score) {
@@ -229,7 +229,7 @@ final class KeywordSuggester
 
         $scores = [];
         foreach (explode(',', $content) as $phrase) {
-            $phrase = mb_strtolower(trim($phrase));
+            $phrase = self::lower(trim($phrase));
             if ($phrase !== '') {
                 $scores[$phrase] = ($scores[$phrase] ?? 0.0) + 6.0;
             }
@@ -356,11 +356,22 @@ final class KeywordSuggester
     }
 
     /**
+     * Turkce buyuk "İ" mb_strtolower ile "i" + U+0307 (birlesik nokta)
+     * olur; tokenize bu isareti ayirici sayip "için" kelimesini "i" ve
+     * "çin" diye boluyordu. Once "İ" -> "i" yapilir, kalan birlesik
+     * noktalar da temizlenir.
+     */
+    public static function lower(string $text): string
+    {
+        return str_replace("\u{0307}", '', mb_strtolower(str_replace('İ', 'i', $text)));
+    }
+
+    /**
      * @return string[]
      */
     private function tokenize(string $text): array
     {
-        $text = mb_strtolower($text);
+        $text = self::lower($text);
         $text = preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $text) ?? '';
         $words = preg_split('/\s+/u', trim($text)) ?: [];
 
