@@ -21,15 +21,20 @@ each user can change it later under **Settings**.
   tracked keyword (direct scraping or the DataForSEO API) and records your
   position on every check.
 - **Google AI Overview** — detects the AI Overview box, lists the cited
-  domains and tells you whether your site is one of them.
+  domains and tells you whether your site is one of them. A stability view
+  shows, over the last 10 checks, how often an AI Overview appears, how
+  persistently your site stays cited and how volatile the result is.
 - **AI assistant visibility** — asks ChatGPT, Claude, Gemini and
   Perplexity a real customer question and records who is mentioned, who is
   cited and which competitors are recommended. **Prompt Explorer** lets
-  admins ask any question across all four at once.
+  admins ask any question across all four at once. A **Share of Model**
+  matrix shows how often each assistant mentions your site versus your SERP
+  competitors.
 - **Site health** — AI bots in `robots.txt`, sitemap, `llms.txt`, HTTPS
   redirect, security headers, canonical host and WHOIS/domain age, with a
   health score and a prioritized issue list. Changes between two checks are
-  highlighted.
+  highlighted. An **llms.txt generator** builds a draft from your sitemap
+  pages, ready to review and upload.
 - **Speed and page quality** — Lighthouse scores via the PageSpeed Insights
   API (no Chrome needed on the server), real-user CrUX data, and on-page SEO
   per page: title/meta, headings, images, structured data, hreflang.
@@ -50,7 +55,9 @@ each user can change it later under **Settings**.
 
 - By default rankings use **direct HTTP scraping**; set
   `DATAFORSEO_LOGIN`/`DATAFORSEO_PASSWORD` to use the DataForSEO API
-  instead for more reliable results. With scraping, Google frequently blocks automated requests with a
+  instead for more reliable results. With `SERP_PROVIDER=fallback` the app
+  scrapes first and only sends a query to DataForSEO when Google blocks it,
+  so you pay only for blocked queries (mobile SERP is skipped in this mode). With scraping, Google frequently blocks automated requests with a
   CAPTCHA/"unusual traffic" page or a redirect requiring JavaScript
   verification (`/httpservice/retry/enablejs`). The app detects these
   cases and reports them as "blocked" — check this first if you're not

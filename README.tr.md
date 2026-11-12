@@ -23,16 +23,21 @@ sayfasından değiştirebilir.
   sitenizin sırasını kaydeder.
 - **Google AI Overview** — AI Overview kutusunu tespit eder, kaynak
   gösterilen domainleri listeler ve sitenizin aralarında olup olmadığını
-  söyler.
+  söyler. İstikrar görünümü son 10 kontrolde AI Overview'un ne sıklıkla
+  çıktığını, sitenizin kaynaklarda ne kadar kalıcı olduğunu ve sonucun ne
+  kadar dalgalandığını gösterir.
 - **Yapay zekâ asistanlarında görünürlük** — ChatGPT, Claude, Gemini ve
   Perplexity'ye gerçek bir müşteri sorusu sorar; kimin anıldığını, kimin
   kaynak gösterildiğini ve hangi rakiplerin önerildiğini kaydeder.
   Yöneticiler **Prompt Explorer** ile herhangi bir soruyu dördüne birden
-  sorabilir.
+  sorabilir. **Share of Model** matrisi her asistanın sitenizi SERP
+  rakiplerinize göre ne sıklıkla andığını gösterir.
 - **Site sağlığı** — `robots.txt`'te yapay zekâ botları, site haritası,
   `llms.txt`, HTTPS yönlendirmesi, güvenlik başlıkları, kanonik host ve
   WHOIS/domain yaşı; sağlık skoru ve öncelikli sorun listesiyle. İki kontrol
-  arasındaki değişiklikler ayrıca gösterilir.
+  arasındaki değişiklikler ayrıca gösterilir. **llms.txt oluşturucu** site
+  haritasındaki sayfalardan gözden geçirip yükleyebileceğiniz bir taslak
+  hazırlar.
 - **Hız ve sayfa kalitesi** — PageSpeed Insights API ile Lighthouse
   skorları (sunucuda Chrome gerekmez), gerçek kullanıcı CrUX verisi ve sayfa
   başına on-page SEO: title/meta, başlıklar, görseller, yapısal veri,
@@ -54,7 +59,10 @@ sayfasından değiştirebilir.
 
 - Sıralamalar varsayılan olarak **doğrudan HTTP scraping** ile alınır;
   daha güvenilir sonuç için `DATAFORSEO_LOGIN`/`DATAFORSEO_PASSWORD`
-  tanımlayıp DataForSEO API'sine geçin.
+  tanımlayıp DataForSEO API'sine geçin. `SERP_PROVIDER=fallback` ile
+  uygulama önce doğrudan scraping dener, sorguyu yalnızca Google engellerse
+  DataForSEO'ya gönderir; böylece yalnızca engellenen sorgular için ödeme
+  yaparsınız (bu modda mobil SERP alınmaz).
   Scraping kullanıldığında Google, otomatik istekleri sıkça
   CAPTCHA/"unusual traffic" sayfasıyla veya JavaScript doğrulaması isteyen
   bir yönlendirmeyle (`/httpservice/retry/enablejs`) engelleyebilir. Uygulama

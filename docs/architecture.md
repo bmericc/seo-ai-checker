@@ -138,6 +138,17 @@ collected by the services above - no new API calls or database tables.
   alongside the tracked domain (ranked by number of distinct keywords
   shared, not raw appearance count, so one frequently-rechecked keyword
   can't dominate the ranking), with their average/best position.
+- `App\Services\Analytics\AiOverviewVolatility` — AI Overview stability per
+  keyword over the last 10 *unblocked* checks: trigger rate, citation rate
+  (cited / AI Overview shown) and change rate (how often the
+  absent/present/cited state flips between consecutive checks, bucketed
+  stable/medium/volatile). Also exposed over MCP (`get_domain`,
+  `list_keywords`).
+- `App\Services\Analytics\LlmShareOfModel` — the "Share of Model" matrix:
+  from the last 90 days of stored `PromptExploration` answers, the share of
+  each assistant's answers that mention the domain, its top SERP competitors
+  and other frequently mentioned hosts (matched by domain name via
+  `Llm\LlmMentions`). Also exposed over MCP (`get_competitors`).
 
 ### SEO / SERP
 
@@ -146,6 +157,13 @@ collected by the services above - no new API calls or database tables.
   CAPTCHA/"unusual traffic" blocks. Paired with
   `Serp\GoogleRequestThrottle`, which enforces `REQUEST_DELAY_MS` between
   requests to Google.
+- `App\Services\Serp\DataForSeoSerpScraper` — the same `SerpScraper`
+  contract over the paid DataForSEO Google Organic API (live and Standard
+  queue).
+- `App\Services\Serp\FallbackSerpScraper` — `SERP_PROVIDER=fallback`:
+  tries the scraper first and sends the query to DataForSEO only when the
+  result is blocked, then skips Google for `SERP_FALLBACK_COOLDOWN_MINUTES`.
+  Which implementation is bound is decided in `AppServiceProvider`.
 - `App\Services\OnPage\OnPageSeoAnalyzer` — on-page analysis of the target
   page: title/meta description length, H1/H2 and heading-hierarchy checks,
   keyword density, image `alt` coverage, internal/external links,
@@ -159,6 +177,11 @@ collected by the services above - no new API calls or database tables.
   Google-Extended, etc.).
 - `App\Services\Llms\LlmsTxtChecker` — checks for the presence of an
   `llms.txt` file and returns a preview of its contents.
+- `App\Services\Llms\LlmsTxtGenerator` — builds an llms.txt draft
+  (llmstxt.org format) from the active `sitemap_urls`, grouped by first path
+  segment, using page-report titles/meta descriptions when available.
+  Nothing is saved; shown at `/domains/{id}/llms-txt` and over MCP
+  (`generate_llms_txt`).
 - `App\Services\Sitemap\SitemapChecker` — fetches and validates
   sitemap.xml (including sitemap index files) and counts URLs;
   `Sitemap\SitemapUrlSync` syncs the discovered URLs into the

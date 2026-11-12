@@ -38,6 +38,9 @@ authentication + admin approval is used instead of a plain password.
 | `ADMIN_EMAILS` | Emails automatically treated as admin+approved on first login (comma-separated) |
 | `PSI_API_KEY` | (optional but recommended) PageSpeed Insights API key |
 | `PSI_STRATEGY` | `mobile` or `desktop` |
+| `DATAFORSEO_LOGIN` / `DATAFORSEO_PASSWORD` | (optional) DataForSEO API credentials for SERP, keyword metrics and AI mention data |
+| `SERP_PROVIDER` | `auto` (default: DataForSEO when credentials are set, otherwise direct scraping), `google`, `dataforseo` or `fallback` (scrape first, DataForSEO only when Google blocks; no mobile SERP, weekly checks run live). In Docker, add it to `docker-compose.yml`'s `environment:` block too |
+| `SERP_FALLBACK_COOLDOWN_MINUTES` | In `fallback` mode, minutes to skip Google after a block (default `30`, `0` = off) |
 
 ## 3. Deploying to a server (without Docker)
 
