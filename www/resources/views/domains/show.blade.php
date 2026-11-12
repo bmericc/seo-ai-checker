@@ -617,6 +617,7 @@
                                         <pre class="bg-body-secondary p-2 rounded">{{ $llmsTxt['preview'] }}</pre>
                                     @endif
                                     <p class="text-secondary mb-0"><a href="{{ $llmsTxt['url'] }}" target="_blank" rel="noopener">{{ $llmsTxt['url'] }}</a></p>
+                                    @include('domains.partials.llms-txt-validation', ['validation' => $llmsTxt['validation'] ?? null])
                                 @else
                                     <p class="text-secondary mb-0">{{ __(':url bulunamadı.', ['url' => $llmsTxt['url'] ?? '']) }}</p>
                                 @endif

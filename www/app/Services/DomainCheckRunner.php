@@ -219,6 +219,7 @@ final class DomainCheckRunner
             'url' => $result->url,
             'found' => $result->found,
             'preview' => $result->preview,
+            'validation' => $result->validation,
         ];
     }
 

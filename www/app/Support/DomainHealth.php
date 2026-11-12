@@ -167,7 +167,18 @@ class DomainHealth
         // llms.txt
         $llms = $fact?->llms_txt ?? [];
         if ($llms !== []) {
-            if ($llms['found'] ?? false) {
+            $llmsErrors = collect($llms['validation']['issues'] ?? [])->where('level', 'error');
+            if (($llms['found'] ?? false) && $llmsErrors->isNotEmpty()) {
+                // Eski kayitlarda 'validation' yok - onlar "Var" kalir.
+                $checks[] = self::check('llms_txt', 'warn', __('llms.txt'), __('Hatalı'));
+                $issues[] = self::issue(
+                    'llms_txt',
+                    self::SEVERITY_LOW,
+                    __('llms.txt dosyası hatalı'),
+                    $llmsErrors->first()['message'],
+                    __('"# Site adı", "> kısa özet" ve "## Bölüm" altında "- [Başlık](URL)" satırlarından oluşan düz metin bir dosya yükleyin. Site sağlığı sekmesinden taslak oluşturabilirsiniz.'),
+                );
+            } elseif ($llms['found'] ?? false) {
                 $checks[] = self::check('llms_txt', 'ok', __('llms.txt'), __('Var'));
             } else {
                 $checks[] = self::check('llms_txt', 'warn', __('llms.txt'), __('Yok'));

@@ -30,14 +30,16 @@ sayfasından değiştirebilir.
   Perplexity'ye gerçek bir müşteri sorusu sorar; kimin anıldığını, kimin
   kaynak gösterildiğini ve hangi rakiplerin önerildiğini kaydeder.
   Yöneticiler **Prompt Explorer** ile herhangi bir soruyu dördüne birden
-  sorabilir. **Share of Model** matrisi her asistanın sitenizi SERP
+  sorabilir; anahtar kelimelerinizden marka içermeyen soru varyasyonları
+  öneren bir sihirbaz da vardır. **Share of Model** matrisi her asistanın sitenizi SERP
   rakiplerinize göre ne sıklıkla andığını gösterir.
 - **Site sağlığı** — `robots.txt`'te yapay zekâ botları, site haritası,
   `llms.txt`, HTTPS yönlendirmesi, güvenlik başlıkları, kanonik host ve
   WHOIS/domain yaşı; sağlık skoru ve öncelikli sorun listesiyle. İki kontrol
   arasındaki değişiklikler ayrıca gösterilir. **llms.txt oluşturucu** site
   haritasındaki sayfalardan gözden geçirip yükleyebileceğiniz bir taslak
-  hazırlar.
+  hazırlar; mevcut `llms.txt` dosyası da biçim hatalarına (metin yerine
+  HTML, eksik başlık/özet/link) karşı denetlenir.
 - **Hız ve sayfa kalitesi** — PageSpeed Insights API ile Lighthouse
   skorları (sunucuda Chrome gerekmez), gerçek kullanıcı CrUX verisi ve sayfa
   başına on-page SEO: title/meta, başlıklar, görseller, yapısal veri,

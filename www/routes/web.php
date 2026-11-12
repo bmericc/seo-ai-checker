@@ -87,6 +87,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/domains/{domain}/indexnow/submit', [IndexNowController::class, 'submit'])->name('domains.indexnow.submit');
 
     Route::post('/domains/{domain}/prompts', [PromptExplorerController::class, 'store'])->name('domains.prompts.store');
+    Route::post('/domains/{domain}/prompts/suggest', [PromptExplorerController::class, 'suggest'])->name('domains.prompts.suggest');
     Route::get('/domains/{domain}/prompts/{exploration}', [PromptExplorerController::class, 'show'])->name('domains.prompts.show');
 
     Route::post('/domains/{domain}/shares', [ReportShareController::class, 'store'])->name('domains.shares.store');

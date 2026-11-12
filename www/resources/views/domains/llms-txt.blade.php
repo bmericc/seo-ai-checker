@@ -28,6 +28,7 @@
             <div class="alert alert-info">
                 {{ __('Sitenizde zaten bir llms.txt var. Bu taslak onun yerine geçmek zorunda değil; eksik sayfaları görmek için karşılaştırabilirsiniz.') }}
                 <a href="{{ $domain->fact->llms_txt['url'] }}" target="_blank" rel="noopener">{{ $domain->fact->llms_txt['url'] }}</a>
+                @include('domains.partials.llms-txt-validation', ['validation' => $domain->fact->llms_txt['validation'] ?? null])
             </div>
         @endif
 

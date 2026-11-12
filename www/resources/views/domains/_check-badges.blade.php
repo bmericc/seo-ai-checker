@@ -37,7 +37,9 @@
     <span class="badge bg-warning-lt">{{ __('Sitemap yok') }}</span>
 @endif
 
-@if ($llmsTxt['found'] ?? false)
+@if (($llmsTxt['found'] ?? false) && !($llmsTxt['validation']['valid'] ?? true))
+    <span class="badge bg-warning-lt">{{ __('llms.txt hatalı') }}</span>
+@elseif ($llmsTxt['found'] ?? false)
     <span class="badge bg-success-lt">{{ __('llms.txt var') }}</span>
 @else
     <span class="badge bg-secondary-lt">{{ __('llms.txt yok') }}</span>

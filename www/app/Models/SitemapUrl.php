@@ -27,6 +27,8 @@ class SitemapUrl extends Model
         'onpage_error',
         'onpage_checked_at',
         'onpage_queued_at',
+        'keyword_phrases',
+        'keyword_phrases_checked_at',
     ];
 
     protected $casts = [

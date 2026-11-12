@@ -19,10 +19,14 @@ class Domain extends Model
         'ga4_property_id',
         'llm_visibility_enabled',
         'llm_scraper_enabled',
+        'site_keyword_suggestions',
+        'site_keyword_scan',
     ];
 
     protected $casts = [
         'dismissed_keyword_suggestions' => 'array',
+        'site_keyword_suggestions' => 'array',
+        'site_keyword_scan' => 'array',
         'llm_visibility_enabled' => 'boolean',
         'llm_scraper_enabled' => 'boolean',
         'indexnow_verified_at' => 'datetime',

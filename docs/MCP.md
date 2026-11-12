@@ -53,6 +53,7 @@ You can see the access you granted on the **Connections → AI assistants (MCP)*
 | `list_domains` | read | Domains, health score, keyword count, AI Overview citation rate |
 | `get_domain` | read | Health score, priority issues and fixes, checks, domain age |
 | `list_keywords` | read | Keywords: Google rank, AI Overview (incl. stability over the last 10 checks), Lighthouse |
+| `get_visibility_changes` | read | What got worse or better in the last N days (rankings, AI Overview citations, assistant mentions, site checks), sorted by impact |
 | `get_competitors` | read | SERP competitors and Share of Model: how often each AI assistant mentions the site and its competitors |
 | `generate_llms_txt` | read | llms.txt draft built from the sitemap pages (nothing is published) |
 | `get_indexnow_status` | read | IndexNow key file, verification status, recent submissions |

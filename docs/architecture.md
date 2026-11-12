@@ -149,6 +149,15 @@ collected by the services above - no new API calls or database tables.
   each assistant's answers that mention the domain, its top SERP competitors
   and other frequently mentioned hosts (matched by domain name via
   `Llm\LlmMentions`). Also exposed over MCP (`get_competitors`).
+- `App\Services\Analytics\VisibilityChanges` — compares each keyword's
+  latest unblocked check with the latest one before the window (default 7
+  days), assistant mention rates with the previous window, and the site
+  check / Search Console clicks; returns losses and gains sorted by impact.
+  MCP `get_visibility_changes`.
+- `App\Services\Llm\PromptSuggester` — Prompt Explorer's "suggest
+  questions" wizard: one request to the domain's first available LLM key
+  (Claude, ChatGPT, Gemini, then Perplexity) for brand-free customer
+  questions built from the selected keywords and search intent.
 
 ### SEO / SERP
 
@@ -177,6 +186,12 @@ collected by the services above - no new API calls or database tables.
   Google-Extended, etc.).
 - `App\Services\Llms\LlmsTxtChecker` — checks for the presence of an
   `llms.txt` file and returns a preview of its contents.
+- `App\Services\Llms\LlmsTxtValidator` — format check of a found
+  `llms.txt` (run by `LlmsTxtChecker`, stored under `llms_txt.validation`):
+  errors for HTML responses (SPA fallbacks), empty files or a missing
+  `# Title`; warnings for a missing `> summary`, no `- [Title](URL)` links,
+  links outside `## Section` headings, malformed list lines and mostly
+  external links. Errors show as an "llms.txt invalid" health issue.
 - `App\Services\Llms\LlmsTxtGenerator` — builds an llms.txt draft
   (llmstxt.org format) from the active `sitemap_urls`, grouped by first path
   segment, using page-report titles/meta descriptions when available.

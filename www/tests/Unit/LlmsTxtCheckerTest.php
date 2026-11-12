@@ -7,7 +7,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 
 class LlmsTxtCheckerTest extends TestCase
 {
@@ -27,6 +27,19 @@ class LlmsTxtCheckerTest extends TestCase
 
         $this->assertTrue($result->found);
         $this->assertStringContainsString('# Example', $result->preview);
+        $this->assertTrue($result->validation['valid']);
+        $this->assertSame(['no_links'], array_column($result->validation['issues'], 'code'));
+    }
+
+    public function test_spa_fallback_html_is_flagged_by_validation(): void
+    {
+        $mock = new MockHandler([new Response(200, ['Content-Type' => 'text/html'], '<!doctype html><html></html>')]);
+        $checker = new LlmsTxtChecker(new Client(['handler' => HandlerStack::create($mock)]));
+
+        $result = $checker->check('https://example.com/');
+
+        $this->assertTrue($result->found);
+        $this->assertFalse($result->validation['valid']);
     }
 
     public function test_missing_file_is_reported(): void
@@ -37,5 +50,6 @@ class LlmsTxtCheckerTest extends TestCase
 
         $this->assertFalse($result->found);
         $this->assertNull($result->preview);
+        $this->assertNull($result->validation);
     }
 }

@@ -53,6 +53,7 @@ Verdiğiniz erişimleri **Bağlantılar → Yapay zekâ asistanları (MCP)** kar
 | `list_domains` | read | Domainler, sağlık skoru, kelime sayısı, AI Overview atıf oranı |
 | `get_domain` | read | Sağlık skoru, öncelikli sorunlar ve çözümleri, kontroller, domain yaşı |
 | `list_keywords` | read | Kelimeler: Google sırası, AI Overview (son 10 kontroldeki istikrar dahil), Lighthouse |
+| `get_visibility_changes` | read | Son N günde neyin kötüleştiği veya iyileştiği (sıralama, AI Overview kaynağı, asistan anılmaları, site kontrolleri), etki sırasına göre |
 | `get_competitors` | read | SERP rakipleri ve Share of Model: her yapay zekâ asistanının siteyi ve rakipleri ne sıklıkla andığı |
 | `generate_llms_txt` | read | Sitemap sayfalarından llms.txt taslağı (hiçbir şey yayınlanmaz) |
 | `get_indexnow_status` | read | IndexNow anahtar dosyası, doğrulama durumu, son gönderimler |

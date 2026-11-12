@@ -10,6 +10,8 @@ final class LlmsTxtResult
         public readonly string $url,
         public readonly bool $found,
         public readonly ?string $preview = null,
+        /** LlmsTxtValidator::validate() ciktisi; dosya bulunamadiysa null. */
+        public readonly ?array $validation = null,
     ) {
     }
 }

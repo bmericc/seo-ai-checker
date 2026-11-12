@@ -27,14 +27,16 @@ each user can change it later under **Settings**.
 - **AI assistant visibility** — asks ChatGPT, Claude, Gemini and
   Perplexity a real customer question and records who is mentioned, who is
   cited and which competitors are recommended. **Prompt Explorer** lets
-  admins ask any question across all four at once. A **Share of Model**
+  admins ask any question across all four at once, with a wizard that
+  suggests brand-free question variations from your keywords. A **Share of Model**
   matrix shows how often each assistant mentions your site versus your SERP
   competitors.
 - **Site health** — AI bots in `robots.txt`, sitemap, `llms.txt`, HTTPS
   redirect, security headers, canonical host and WHOIS/domain age, with a
   health score and a prioritized issue list. Changes between two checks are
   highlighted. An **llms.txt generator** builds a draft from your sitemap
-  pages, ready to review and upload.
+  pages, ready to review and upload, and an existing `llms.txt` is checked
+  for format problems (HTML instead of text, missing title/summary/links).
 - **Speed and page quality** — Lighthouse scores via the PageSpeed Insights
   API (no Chrome needed on the server), real-user CrUX data, and on-page SEO
   per page: title/meta, headings, images, structured data, hreflang.

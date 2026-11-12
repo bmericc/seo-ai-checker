@@ -3,7 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\Domain;
+use App\Models\DomainFact;
 use App\Models\User;
+use App\Services\Llms\LlmsTxtValidator;
+use App\Support\DomainHealth;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -90,5 +93,25 @@ class LlmsTxtGeneratorTest extends TestCase
         $response->assertSee('rival.com');
 
         $this->actingAs($user)->get(route('keywords.show', $keyword))->assertOk()->assertSee('AI Overview istikrarı');
+    }
+
+    public function test_invalid_llms_txt_shows_as_issue_in_health(): void
+    {
+        [$user, $domain] = $this->domainWithPages();
+        DomainFact::query()->create([
+            'domain' => $domain->domain,
+            'checked_at' => now(),
+            'llms_txt' => [
+                'url' => 'https://example.com/llms.txt',
+                'found' => true,
+                'preview' => '<!doctype html>',
+                'validation' => (new LlmsTxtValidator())->validate('<!doctype html><html></html>', 'text/html', 'example.com'),
+            ],
+        ]);
+
+        $health = DomainHealth::for($domain->fresh('fact'));
+
+        $this->assertContains('llms.txt dosyası hatalı', array_column($health->issues, 'title'));
+        $this->actingAs($user)->get(route('domains.llms-txt', $domain))->assertOk()->assertSee('HTML döndürüyor');
     }
 }

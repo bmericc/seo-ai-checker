@@ -7,7 +7,10 @@ namespace App\Http\Controllers;
 use App\Models\Domain;
 use App\Models\PromptExploration;
 use App\Services\Llm\PromptExplorer;
+use App\Services\Llm\PromptSuggester;
+use App\Support\AiAssistant;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
@@ -40,6 +43,35 @@ class PromptExplorerController extends Controller
         }
 
         return redirect()->route('domains.prompts.show', [$domain, $exploration]);
+    }
+
+    /**
+     * "Soru oner" sihirbazi (bkz. PromptSuggester). Saglayiciya senkron tek
+     * istek atar; formdaki JS sonucu doldurur.
+     */
+    public function suggest(Request $request, Domain $domain, PromptSuggester $suggester): JsonResponse
+    {
+        $this->ensureCanAccessDomain($request, $domain);
+        $this->ensureIsAdmin($request);
+
+        $data = $request->validate([
+            'keyword_ids' => ['required', 'array', 'min:1', 'max:10'],
+            'keyword_ids.*' => ['integer'],
+            'intent' => ['nullable', 'string', 'in:' . implode(',', PromptSuggester::INTENTS)],
+        ]);
+
+        $keywords = $domain->keywords()->whereIn('id', $data['keyword_ids'])->get()->all();
+
+        try {
+            $result = $suggester->suggest($domain->load('llmApiKeys'), $keywords, $data['intent'] ?? null);
+        } catch (InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        return response()->json([
+            'provider' => AiAssistant::label($result['provider']),
+            'suggestions' => $result['suggestions'],
+        ]);
     }
 
     public function show(Request $request, Domain $domain, PromptExploration $exploration): View

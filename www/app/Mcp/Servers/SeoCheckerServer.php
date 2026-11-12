@@ -15,6 +15,7 @@ use App\Mcp\Tools\GetCompetitors;
 use App\Mcp\Tools\GetDomain;
 use App\Mcp\Tools\GetIndexNowStatus;
 use App\Mcp\Tools\GetPromptExploration;
+use App\Mcp\Tools\GetVisibilityChanges;
 use App\Mcp\Tools\ListAiChecks;
 use App\Mcp\Tools\ListDomains;
 use App\Mcp\Tools\ListKeywords;
@@ -34,6 +35,9 @@ use Laravel\Mcp\Server\Attributes\Version;
 
     - Start with list_domains, then get_domain for health issues and how to fix them,
       and list_keywords for rankings and AI Overview citations.
+    - get_visibility_changes lists what got worse or better over the last N days
+      (rankings, AI Overview citations, assistant mentions, site checks), sorted
+      by impact - use it for "what was our biggest loss this week?".
     - get_competitors compares the site with SERP competitors and shows how often
       each AI assistant mentions them (Share of Model).
     - generate_llms_txt returns an llms.txt draft built from the sitemap; refine
@@ -59,6 +63,7 @@ class SeoCheckerServer extends Server
         GetDomain::class,
         ListKeywords::class,
         GetCompetitors::class,
+        GetVisibilityChanges::class,
         GenerateLlmsTxt::class,
         GetIndexNowStatus::class,
         AddDomain::class,
