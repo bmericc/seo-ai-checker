@@ -23,6 +23,7 @@ use App\Services\Drift\DomainCheckDrift;
 use App\Services\Ga4\Ga4Property;
 use App\Services\Ga4\Ga4PropertyLister;
 use App\Services\Google\GoogleTokenService;
+use App\Support\BacklinkOverview;
 use App\Support\Domain as DomainHelper;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -164,6 +165,7 @@ class DomainController extends Controller
             'shareOfModel' => $shareOfModel,
             'aioStability' => AiOverviewVolatility::forKeywords($domain->keywords),
             'dataForSeoConfigured' => $dataForSeo->isConfigured(),
+            'backlinks' => BacklinkOverview::forDomain($domain),
         ]);
     }
 

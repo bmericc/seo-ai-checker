@@ -35,6 +35,17 @@ abstract class TestCase extends BaseTestCase
      */
     public function createApplication()
     {
+        // Laravel env() once $_SERVER'a bakar; Docker'in container
+        // degiskenleri (APP_ENV=local, APP_LOCALE=en, QUEUE_CONNECTION=
+        // database...) orada durdugu icin phpunit.xml'in force="true" ile
+        // $_ENV/putenv'e yazdigi test degerleri kaybediyordu (ornegin
+        // testler Ingilizce kosuyor, CSRF korumasi acik kaliyordu).
+        // phpunit.xml'in zorladigi her degeri uygulama acilmadan once
+        // $_SERVER'a da yaz.
+        foreach (self::forcedPhpunitEnv() as $key => $value) {
+            $_SERVER[$key] = $value;
+        }
+
         $app = parent::createApplication();
 
         $app['config']->set('database.connections.sqlite.database', ':memory:');
@@ -46,7 +57,31 @@ abstract class TestCase extends BaseTestCase
         // kullanan testler sahte Client ile kendi servis ornegini kurar.
         $app['config']->set('seo.dataforseo.login', null);
         $app['config']->set('seo.dataforseo.password', null);
+        // CrawlGraph'in ucretsiz kotasi ayda 15 istek; testler harcamasin.
+        $app['config']->set('seo.crawlgraph.api_key', null);
 
         return $app;
+    }
+
+    /**
+     * phpunit.xml'de force="true" ile tanimli <env> degerleri.
+     *
+     * @return array<string, string>
+     */
+    private static function forcedPhpunitEnv(): array
+    {
+        static $values = null;
+
+        if ($values === null) {
+            $values = [];
+            $xml = @simplexml_load_file(dirname(__DIR__) . '/phpunit.xml');
+            foreach ($xml?->php?->env ?? [] as $env) {
+                if ((string) $env['force'] === 'true') {
+                    $values[(string) $env['name']] = (string) $env['value'];
+                }
+            }
+        }
+
+        return $values;
     }
 }

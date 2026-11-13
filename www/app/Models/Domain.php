@@ -30,6 +30,7 @@ class Domain extends Model
         'llm_visibility_enabled' => 'boolean',
         'llm_scraper_enabled' => 'boolean',
         'indexnow_verified_at' => 'datetime',
+        'backlinks_requested_at' => 'datetime',
     ];
 
     protected $hidden = ['indexnow_key'];
@@ -47,6 +48,16 @@ class Domain extends Model
     public function competitors(): HasMany
     {
         return $this->hasMany(DomainCompetitor::class)->orderBy('competitor_domain');
+    }
+
+    public function backlinkSnapshots(): HasMany
+    {
+        return $this->hasMany(BacklinkSnapshot::class);
+    }
+
+    public function crawlGraphSnapshots(): HasMany
+    {
+        return $this->hasMany(CrawlGraphSnapshot::class);
     }
 
     public function keywords(): HasMany

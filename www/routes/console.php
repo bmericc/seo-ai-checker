@@ -20,6 +20,14 @@ Schedule::command('keywords:run-weekly-checks')
     ->weeklyOn(0, '02:00')
     ->withoutOverlapping();
 
+Schedule::command('backlinks:run-monthly-fetch')
+    ->monthlyOn(1, '04:00')
+    ->withoutOverlapping();
+
+Schedule::command('backlinks:sync-crawlgraph')
+    ->dailyAt('05:00')
+    ->withoutOverlapping();
+
 Schedule::command('keywords:collect-queued-serp')
     ->everyFiveMinutes()
     ->withoutOverlapping();

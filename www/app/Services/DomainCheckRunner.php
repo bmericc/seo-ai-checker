@@ -272,6 +272,9 @@ final class DomainCheckRunner
             'total_links' => $result->totalLinks,
             'pages_with_links' => $result->pagesWithLinks,
             'top_pages' => $result->topPages,
+            // Link veren domain'ler (GetUrlLinks); Backlink sekmesindeki
+            // birlesik listeye BING kaynagi olarak girer.
+            'referring_domains' => $result->referringDomains,
             'error' => $result->error,
         ];
     }

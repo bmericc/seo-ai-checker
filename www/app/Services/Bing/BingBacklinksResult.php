@@ -8,6 +8,7 @@ final class BingBacklinksResult
 {
     /**
      * @param  array<int, array{url: string, count: int}>  $topPages
+     * @param  list<array{domain: string, links: int, anchor: ?string, url: string, target: string}>  $referringDomains
      */
     public function __construct(
         public readonly bool $configured,
@@ -17,6 +18,7 @@ final class BingBacklinksResult
         public readonly int $pagesWithLinks = 0,
         public readonly array $topPages = [],
         public readonly ?string $error = null,
+        public readonly array $referringDomains = [],
     ) {
     }
 }

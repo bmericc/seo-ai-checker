@@ -98,6 +98,7 @@
         @endif
         <li class="nav-item" role="presentation"><a href="#tab-indexnow" class="nav-link" data-bs-toggle="tab" role="tab" aria-selected="false"><i class="ti ti-bolt me-1"></i>{{ __('Hızlı indeksleme') }}</a></li>
         <li class="nav-item" role="presentation"><a href="#tab-competitors" class="nav-link" data-bs-toggle="tab" role="tab" aria-selected="false"><i class="ti ti-users me-1"></i>{{ __('Rakipler') }}</a></li>
+        <li class="nav-item" role="presentation"><a href="#tab-backlinks" class="nav-link" data-bs-toggle="tab" role="tab" aria-selected="false"><i class="ti ti-link me-1"></i>{{ __('Backlink') }}</a></li>
         <li class="nav-item" role="presentation"><a href="#tab-history" class="nav-link" data-bs-toggle="tab" role="tab" aria-selected="false"><i class="ti ti-chart-line me-1"></i>{{ __('Geçmiş') }}</a></li>
         <li class="nav-item" role="presentation"><a href="#tab-info" class="nav-link" data-bs-toggle="tab" role="tab" aria-selected="false"><i class="ti ti-id me-1"></i>{{ __('Domain bilgisi') }}</a></li>
     </ul>
@@ -938,6 +939,9 @@
                                         {{ __('Toplam :total inbound link, :pages sayfaya dağılmış. Mülk: :siteUrl', ['total' => number_format($bingData['total_links'] ?? 0), 'pages' => number_format($bingData['pages_with_links'] ?? 0), 'siteUrl' => $bingData['site_url']]) }}
                                     </p>
                                 @endif
+                                <a href="#tab-backlinks" class="btn btn-sm btn-outline-primary mt-2" data-tab-jump="#tab-backlinks">
+                                    <i class="ti ti-link icon"></i> {{ __('Ayrıntılı backlink profili') }}
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -1124,6 +1128,10 @@
         @include('domains.partials.competitors')
 
         @include('domains.partials.share-of-model', ['shareOfModel' => $shareOfModel])
+    </div>
+
+    <div class="tab-pane" id="tab-backlinks" role="tabpanel">
+        @include('domains.partials.backlinks')
     </div>
 
     <div class="tab-pane" id="tab-history" role="tabpanel">

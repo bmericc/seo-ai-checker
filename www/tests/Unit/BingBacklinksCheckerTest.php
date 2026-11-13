@@ -6,17 +6,31 @@ use App\Services\Bing\BingBacklinksChecker;
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
 
 class BingBacklinksCheckerTest extends TestCase
 {
+    /** @var list<array<string, mixed>> */
+    private array $requests = [];
+
+    /**
+     * Verilen yanitlarin ardina bos GetUrlLinks yanitlari eklenir; boylece
+     * link verenleri test etmeyen senaryolar her sayfa icin yanit yazmak
+     * zorunda kalmaz.
+     */
     private function checkerWithResponses(array $responses): BingBacklinksChecker
     {
-        $mock = new MockHandler($responses);
-        $client = new Client(['handler' => HandlerStack::create($mock)]);
+        for ($i = 0; $i < BingBacklinksChecker::LINKING_PAGES_LIMIT; $i++) {
+            $responses[] = new Response(200, [], json_encode(['d' => ['Details' => [], 'TotalPages' => 0]]));
+        }
 
-        return new BingBacklinksChecker($client);
+        $this->requests = [];
+        $stack = HandlerStack::create(new MockHandler($responses));
+        $stack->push(Middleware::history($this->requests));
+
+        return new BingBacklinksChecker(new Client(['handler' => $stack]));
     }
 
     public function test_missing_access_token_skips_the_request_entirely(): void
@@ -142,5 +156,50 @@ class BingBacklinksCheckerTest extends TestCase
         $this->assertTrue($result->configured);
         $this->assertFalse($result->verified);
         $this->assertNotNull($result->error);
+    }
+
+    public function test_documented_links_wrapper_is_unwrapped(): void
+    {
+        $checker = $this->checkerWithResponses([
+            new Response(200, [], json_encode(['d' => [['Url' => 'https://example.com/', 'Verified' => true]]])),
+            new Response(200, [], json_encode(['d' => ['Links' => [['Url' => 'https://example.com/a', 'Count' => 14]], 'TotalPages' => 1]])),
+        ]);
+
+        $result = $checker->check('https://example.com/', 'token');
+
+        $this->assertSame(14, $result->totalLinks);
+        $this->assertSame('https://example.com/a', $result->topPages[0]['url']);
+    }
+
+    public function test_linking_urls_of_top_pages_are_grouped_by_host(): void
+    {
+        $checker = $this->checkerWithResponses([
+            new Response(200, [], json_encode(['https://example.com/'])),
+            new Response(200, [], json_encode(['d' => ['Links' => [
+                ['Url' => 'https://example.com/a', 'Count' => 10],
+                ['Url' => 'https://example.com/b', 'Count' => 30],
+            ], 'TotalPages' => 1]])),
+            // En cok linklenen /b once sorgulanir.
+            new Response(200, [], json_encode(['d' => ['Details' => [
+                ['Url' => 'https://www.blog.net/yazi-1', 'AnchorText' => 'ornek site'],
+                ['Url' => 'https://blog.net/yazi-2', 'AnchorText' => ''],
+                ['Url' => 'https://example.com/ic-link', 'AnchorText' => 'kendi'],
+                ['Url' => 'https://shop.example.com/x', 'AnchorText' => 'alt alan'],
+                ['Url' => 'javascript://evil.com/%0Aalert(1)', 'AnchorText' => 'x'],
+            ], 'TotalPages' => 1]])),
+            new Response(500, [], 'boom'),
+        ]);
+
+        $result = $checker->check('https://example.com/', 'token');
+
+        $this->assertSame([
+            ['domain' => 'blog.net', 'links' => 2, 'anchor' => 'ornek site', 'url' => 'https://www.blog.net/yazi-1', 'target' => 'https://example.com/b'],
+        ], $result->referringDomains);
+
+        $query = [];
+        parse_str($this->requests[2]['request']->getUri()->getQuery(), $query);
+        $this->assertStringEndsWith('/GetUrlLinks', $this->requests[2]['request']->getUri()->getPath());
+        $this->assertSame(['siteUrl' => 'https://example.com/', 'link' => 'https://example.com/b', 'page' => '0'], $query);
+        $this->assertCount(4, $this->requests);
     }
 }

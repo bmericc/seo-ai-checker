@@ -6,6 +6,7 @@ use App\Services\Bing\BingBacklinksChecker;
 use App\Services\Bing\BingTokenService;
 use App\Services\CanonicalHost\CanonicalHostChecker;
 use App\Services\Crux\CrUxChecker;
+use App\Services\CrawlGraph\CrawlGraphClient;
 use App\Services\DataForSeo\DataForSeoClient;
 use App\Services\DataForSeo\KeywordMetricsFetcher;
 use App\Services\DataForSeo\LlmMentionsChecker;
@@ -96,6 +97,12 @@ class AppServiceProvider extends ServiceProvider
             new Client(),
             config('seo.dataforseo.login'),
             config('seo.dataforseo.password'),
+        ));
+
+        $this->app->singleton(CrawlGraphClient::class, fn () => new CrawlGraphClient(
+            new Client(),
+            config('seo.crawlgraph.api_key'),
+            (int) config('seo.crawlgraph.limit', 1000),
         ));
 
         $this->app->singleton(KeywordMetricsFetcher::class, fn ($app) => new KeywordMetricsFetcher(

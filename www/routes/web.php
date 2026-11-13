@@ -7,6 +7,7 @@ use App\Http\Controllers\CheckController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DomainController;
 use App\Http\Controllers\Admin\CompetitorBlacklistController;
+use App\Http\Controllers\DomainBacklinkController;
 use App\Http\Controllers\DomainCompetitorController;
 use App\Http\Controllers\DomainMemberController;
 use App\Http\Controllers\IndexNowController;
@@ -84,6 +85,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/domains/{domain}/lighthouse-report/start-onpage', [LighthouseReportController::class, 'startOnPage'])->name('domains.lighthouse-report.start-onpage');
     Route::get('/domains/{domain}/llms-txt', [LlmsTxtController::class, 'show'])->name('domains.llms-txt');
     Route::get('/domains/{domain}/llms-txt/download', [LlmsTxtController::class, 'download'])->name('domains.llms-txt.download');
+    Route::post('/domains/{domain}/backlinks/refresh', [DomainBacklinkController::class, 'refresh'])->name('domains.backlinks.refresh');
 
     Route::get('/domains/{domain}/indexnow/key-file', [IndexNowController::class, 'keyFile'])->name('domains.indexnow.key-file');
     Route::post('/domains/{domain}/indexnow/regenerate', [IndexNowController::class, 'regenerate'])->name('domains.indexnow.regenerate');

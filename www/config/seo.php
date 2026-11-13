@@ -47,6 +47,15 @@ return [
         'language_code' => env('DATAFORSEO_LANGUAGE_CODE', env('GOOGLE_HL', 'tr')),
     ],
 
+    // CrawlGraph: Common Crawl hiperlink grafiginden link veren domain'ler
+    // (bkz. App\Services\CrawlGraph\CrawlGraphClient). Ucretsiz katman
+    // ayda 15 backlink istegi verir; veri uc ayda bir yenilendigi icin her
+    // domain yalnizca yeni bir arsiv ciktiginda bir kez sorgulanir.
+    'crawlgraph' => [
+        'api_key' => env('CRAWLGRAPH_API_KEY'),
+        'limit' => (int) env('CRAWLGRAPH_LIMIT', 1000),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Haftalik otomatik anahtar kelime kontrolu
