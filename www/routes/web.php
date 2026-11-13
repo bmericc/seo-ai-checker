@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\CheckController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DomainController;
+use App\Http\Controllers\Admin\CompetitorBlacklistController;
 use App\Http\Controllers\DomainCompetitorController;
 use App\Http\Controllers\DomainMemberController;
 use App\Http\Controllers\IndexNowController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\LlmsTxtController;
 use App\Http\Controllers\McpConnectionController;
 use App\Http\Controllers\PromptExplorerController;
 use App\Http\Controllers\ReportShareController;
+use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -59,7 +61,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/connections', function () {
         return view('connections');
     })->name('connections');
-    Route::view('/settings', 'settings')->name('settings');
+    Route::get('/settings', SettingsController::class)->name('settings');
     Route::delete('/connections/mcp/{client}', [McpConnectionController::class, 'destroy'])->name('connections.mcp.destroy');
 
     Route::post('/domains', [DomainController::class, 'store'])->name('domains.store');
@@ -118,4 +120,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::patch('/users/{user}/revoke', [AdminUserController::class, 'revoke'])->name('users.revoke');
     Route::patch('/users/{user}/toggle-admin', [AdminUserController::class, 'toggleAdmin'])->name('users.toggle-admin');
     Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
+    Route::post('/competitor-blacklist', [CompetitorBlacklistController::class, 'store'])->name('competitor-blacklist.store');
+    Route::delete('/competitor-blacklist/{entry}', [CompetitorBlacklistController::class, 'destroy'])->name('competitor-blacklist.destroy');
 });

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mcp\Tools;
 
+use App\Models\CompetitorBlacklist;
 use App\Models\Domain;
 use App\Models\DomainCompetitor;
 use App\Services\Analytics\CompetitorAnalyzer;
@@ -49,6 +50,9 @@ class SetCompetitor extends SeoTool
         }
         if (DomainHelper::equals($host, $domain->domain)) {
             throw new ToolError(__('Kendi domaininizi rakip olarak ekleyemezsiniz.'));
+        }
+        if (($data['status'] ?? DomainCompetitor::TRACKED) === DomainCompetitor::TRACKED && CompetitorBlacklist::matches($host)) {
+            throw new ToolError(__(':domain genel rakip kara listesinde; rakip olarak eklenemez.', ['domain' => $host]));
         }
 
         $existing = $domain->competitors()->where('competitor_domain', $host)->first();

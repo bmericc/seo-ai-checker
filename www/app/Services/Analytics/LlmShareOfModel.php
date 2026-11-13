@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Analytics;
 
+use App\Models\CompetitorBlacklist;
 use App\Models\Domain;
 use App\Models\PromptExploration;
 use App\Services\Llm\LlmMentions;
@@ -62,6 +63,7 @@ final class LlmShareOfModel
                 ->limit(self::MAX_EXPLORATIONS)
                 ->get(['id', 'results']),
             $competitors,
+            CompetitorBlacklist::domains(),
         );
     }
 
@@ -70,7 +72,7 @@ final class LlmShareOfModel
      * @param  list<string>  $competitors  Her durumda satir olarak gosterilecek rakip domainler.
      * @return array{answers: int, providers: list<string>, answered: array<string, int>, rows: list<array{domain: string, own: bool, rate: int, mentions: int, by_provider: array<string, ?int>}>}
      */
-    public static function analyze(string $ownDomain, Collection $explorations, array $competitors = []): array
+    public static function analyze(string $ownDomain, Collection $explorations, array $competitors = [], array $blacklist = []): array
     {
         $own = LlmMentions::normalizeHost($ownDomain);
 
@@ -112,6 +114,10 @@ final class LlmShareOfModel
         }
         arsort($hostTotals);
         foreach (array_keys($hostTotals) as $host) {
+            // Genel kara listedeki devler (google.com, youtube.com) cevaplardan otomatik satir olmasin.
+            if (CompetitorBlacklist::matches($host, $blacklist)) {
+                continue;
+            }
             $candidates[] = $host;
         }
         $candidates = array_slice(self::dedupe($candidates), 0, self::MAX_ROWS);

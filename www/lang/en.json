@@ -939,5 +939,16 @@
     ":domain rakip listesinden kaldırıldı.": ":domain was removed from the competitor list.",
     ":domain için anahtar kelimeler zaten çekiliyor.": "Keywords for :domain are already being fetched.",
     ":domain için anahtar kelimeler yeniden çekiliyor.": "Keywords for :domain are being fetched again.",
-    "Rakip sitesinden anahtar kelime çıkarılamadı (site erişilemiyor ya da içerik bulunamadı).": "No keywords could be extracted from the competitor's site (site unreachable or no content found)."
+    "Rakip sitesinden anahtar kelime çıkarılamadı (site erişilemiyor ya da içerik bulunamadı).": "No keywords could be extracted from the competitor's site (site unreachable or no content found).",
+    "Rakip kara listesi": "Competitor blacklist",
+    "Bu listedeki domainler (ve alt domainleri) hiçbir sitenin SERP rakip keşfinde ve yapay zekâ payı tablosunda çıkmaz, rakip olarak da eklenemez. Tüm kullanıcılar için geçerlidir.": "Domains on this list (and their subdomains) never show up in any site's SERP competitor discovery or AI share table, and cannot be added as competitors. Applies to all users.",
+    "Kara listeye eklenecek domainler": "Domains to add to the blacklist",
+    "Birden çok domaini virgül, boşluk ya da satır sonuyla ayırabilirsiniz.": "Separate multiple domains with commas, spaces or new lines.",
+    "Kara liste boş.": "The blacklist is empty.",
+    "Kara listeden çıkar": "Remove from blacklist",
+    "Yeni domain eklenmedi (zaten listede).": "No new domains added (already on the list).",
+    "Kara listeye eklendi: :domains": "Added to the blacklist: :domains",
+    "Geçersiz: :items": "Invalid: :items",
+    ":domain kara listeden çıkarıldı.": ":domain was removed from the blacklist.",
+    ":domain genel rakip kara listesinde; rakip olarak eklenemez.": ":domain is on the global competitor blacklist and cannot be added as a competitor."
 }

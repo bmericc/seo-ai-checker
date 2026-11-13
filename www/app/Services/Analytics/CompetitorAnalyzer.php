@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Analytics;
 
+use App\Models\CompetitorBlacklist;
 use App\Models\Keyword;
 use App\Support\Domain as DomainHelper;
 use Illuminate\Support\Collection;
@@ -25,9 +26,10 @@ final class CompetitorAnalyzer
     /**
      * @param  Collection<int, Keyword>  $keywords  Domain'e ait anahtar kelimeler (latestCheck eager-load edilmis olmali).
      * @param  list<string>  $ignored  Kullanicinin "rakip degil" dedigi domainler; listeye girmez.
+     * @param  list<string>  $blacklist  Genel kara liste (CompetitorBlacklist::domains()); alt domainleri de eler.
      * @return array{tracked_keyword_count: int, competitors: list<array{domain: string, keyword_count: int, average_position: float, best_position: int, keywords: list<string>}>}
      */
-    public function frequentCompetitors(string $ownDomain, Collection $keywords, array $ignored = []): array
+    public function frequentCompetitors(string $ownDomain, Collection $keywords, array $ignored = [], array $blacklist = []): array
     {
         $ignoredSet = array_flip(array_map(DomainHelper::normalize(...), $ignored));
         $trackedKeywordCount = 0;
@@ -43,7 +45,7 @@ final class CompetitorAnalyzer
 
             foreach ($check->organic_results as $result) {
                 $competitorDomain = $result['domain'] ?? null;
-                if (!is_string($competitorDomain) || $competitorDomain === '' || DomainHelper::equals($competitorDomain, $ownDomain) || isset($ignoredSet[DomainHelper::normalize($competitorDomain)])) {
+                if (!is_string($competitorDomain) || $competitorDomain === '' || DomainHelper::equals($competitorDomain, $ownDomain) || isset($ignoredSet[DomainHelper::normalize($competitorDomain)]) || CompetitorBlacklist::matches($competitorDomain, $blacklist)) {
                     continue;
                 }
 

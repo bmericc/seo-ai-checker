@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\CompetitorBlacklist;
 use App\Models\Domain;
 use App\Models\DomainCompetitor;
 use App\Services\Competitors\CompetitorManager;
@@ -36,6 +37,9 @@ class DomainCompetitorController extends Controller
         }
         if (DomainHelper::equals($host, $domain->domain)) {
             return $this->back($domain, 'error', __('Kendi domaininizi rakip olarak ekleyemezsiniz.'));
+        }
+        if (($data['status'] ?? DomainCompetitor::TRACKED) === DomainCompetitor::TRACKED && CompetitorBlacklist::matches($host)) {
+            return $this->back($domain, 'error', __(':domain genel rakip kara listesinde; rakip olarak eklenemez.', ['domain' => $host]));
         }
 
         $competitor = $manager->upsert(

@@ -9,6 +9,7 @@ use App\Jobs\FetchLlmMentions;
 use App\Jobs\RunDomainSiteCheck;
 use App\Jobs\RunDomainWhoisLookup;
 use App\Models\Check;
+use App\Models\CompetitorBlacklist;
 use App\Models\Domain;
 use App\Models\DomainCompetitor;
 use App\Models\DomainLlmApiKey;
@@ -138,6 +139,7 @@ class DomainController extends Controller
             $domain->domain,
             $domain->keywords,
             $ignoredCompetitors->pluck('competitor_domain')->all(),
+            CompetitorBlacklist::domains(),
         );
 
         $shareOfModel = LlmShareOfModel::forDomain($domain, $competitorAnalysis, $trackedCompetitors->pluck('competitor_domain')->all());

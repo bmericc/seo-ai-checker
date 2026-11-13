@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mcp\Tools;
 
+use App\Models\CompetitorBlacklist;
 use App\Models\DomainCompetitor;
 use App\Services\Analytics\CompetitorAnalyzer;
 use App\Services\Analytics\LlmShareOfModel;
@@ -38,7 +39,7 @@ class GetCompetitors extends SeoTool
         $tracked = $competitors->where('status', DomainCompetitor::TRACKED)->pluck('competitor_domain')->values()->all();
         $ignored = $competitors->where('status', DomainCompetitor::IGNORED)->pluck('competitor_domain')->values()->all();
 
-        $serp = (new CompetitorAnalyzer())->frequentCompetitors($domain->domain, $domain->keywords, $ignored);
+        $serp = (new CompetitorAnalyzer())->frequentCompetitors($domain->domain, $domain->keywords, $ignored, CompetitorBlacklist::domains());
         $share = LlmShareOfModel::forDomain($domain, $serp, $tracked);
 
         return Response::json([

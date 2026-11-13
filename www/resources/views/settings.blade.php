@@ -25,6 +25,40 @@
                     <button type="submit" class="btn btn-primary">{{ __('Kaydet') }}</button>
                 </div>
             </form>
+
+            @if ($competitorBlacklist !== null)
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h3 class="card-title">{{ __('Rakip kara listesi') }}</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-secondary small mb-3">{{ __('Bu listedeki domainler (ve alt domainleri) hiçbir sitenin SERP rakip keşfinde ve yapay zekâ payı tablosunda çıkmaz, rakip olarak da eklenemez. Tüm kullanıcılar için geçerlidir.') }}</div>
+                        <form method="post" action="{{ route('admin.competitor-blacklist.store') }}" class="mb-3">
+                            @csrf
+                            <textarea name="domains" rows="2" class="form-control mb-2" placeholder="facebook.com, instagram.com" aria-label="{{ __('Kara listeye eklenecek domainler') }}" required></textarea>
+                            <div class="d-flex justify-content-between align-items-center gap-2">
+                                <span class="text-secondary small">{{ __('Birden çok domaini virgül, boşluk ya da satır sonuyla ayırabilirsiniz.') }}</span>
+                                <button type="submit" class="btn btn-primary"><i class="ti ti-plus icon"></i> {{ __('Ekle') }}</button>
+                            </div>
+                        </form>
+                        @if ($competitorBlacklist->isEmpty())
+                            <p class="text-secondary mb-0">{{ __('Kara liste boş.') }}</p>
+                        @else
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach ($competitorBlacklist as $entry)
+                                    <form method="post" action="{{ route('admin.competitor-blacklist.destroy', $entry) }}">
+                                        @csrf
+                                        @method('delete')
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary" title="{{ __('Kara listeden çıkar') }}">
+                                            {{ $entry->domain }} <i class="ti ti-x ms-1"></i>
+                                        </button>
+                                    </form>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 @endsection
