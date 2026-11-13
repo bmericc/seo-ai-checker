@@ -35,14 +35,25 @@ final class LlmShareOfModel
     /** SERP rakip analizinden her durumda satir olarak eklenen rakip sayisi. */
     public const SERP_COMPETITORS = 5;
 
+    /** Secilmis rakiplerden matrise girecek en fazla domain. */
+    public const MAX_TRACKED_COMPETITORS = 10;
+
     /**
      * Domain'in son DAYS gunluk tamamlanmis AI cevaplarindan matris (arayuz
      * ve MCP get_competitors ayni sorguyu kullanir).
      *
+     * Kullanicinin sectigi (tracked) rakipler varsa satirlar onlardan
+     * olusur; yoksa SERP kesfinin ilk SERP_COMPETITORS domain'ine duser.
+     *
      * @param  array{competitors: list<array{domain: string}>}  $competitorAnalysis  CompetitorAnalyzer::frequentCompetitors() ciktisi.
+     * @param  list<string>  $trackedCompetitors  Secilmis rakip domainler.
      */
-    public static function forDomain(Domain $domain, array $competitorAnalysis): array
+    public static function forDomain(Domain $domain, array $competitorAnalysis, array $trackedCompetitors = []): array
     {
+        $competitors = $trackedCompetitors !== []
+            ? array_slice(array_values($trackedCompetitors), 0, self::MAX_TRACKED_COMPETITORS)
+            : array_slice(array_column($competitorAnalysis['competitors'], 'domain'), 0, self::SERP_COMPETITORS);
+
         return self::analyze(
             $domain->domain,
             $domain->promptExplorations()
@@ -50,7 +61,7 @@ final class LlmShareOfModel
                 ->where('created_at', '>=', now()->subDays(self::DAYS))
                 ->limit(self::MAX_EXPLORATIONS)
                 ->get(['id', 'results']),
-            array_slice(array_column($competitorAnalysis['competitors'], 'domain'), 0, self::SERP_COMPETITORS),
+            $competitors,
         );
     }
 

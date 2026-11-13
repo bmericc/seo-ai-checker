@@ -11,6 +11,7 @@ use App\Mcp\Tools\CreateReportLink;
 use App\Mcp\Tools\ExplorePrompt;
 use App\Mcp\Tools\GenerateLlmsTxt;
 use App\Mcp\Tools\GetAiCheckPrompts;
+use App\Mcp\Tools\GetCompetitorKeywordGap;
 use App\Mcp\Tools\GetCompetitors;
 use App\Mcp\Tools\GetDomain;
 use App\Mcp\Tools\GetIndexNowStatus;
@@ -21,6 +22,7 @@ use App\Mcp\Tools\ListDomains;
 use App\Mcp\Tools\ListKeywords;
 use App\Mcp\Tools\RunDomainCheck;
 use App\Mcp\Tools\RunKeywordCheck;
+use App\Mcp\Tools\SetCompetitor;
 use App\Mcp\Tools\SubmitIndexNow;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Attributes\Instructions;
@@ -39,7 +41,10 @@ use Laravel\Mcp\Server\Attributes\Version;
       (rankings, AI Overview citations, assistant mentions, site checks), sorted
       by impact - use it for "what was our biggest loss this week?".
     - get_competitors compares the site with SERP competitors and shows how often
-      each AI assistant mentions them (Share of Model).
+      each AI assistant mentions them (Share of Model). Not every SERP domain is a
+      real competitor: set_competitor marks one as tracked (or ignored), or adds a
+      competitor by hand; get_competitor_keyword_gap then lists keywords the
+      selected competitors rank for that the site does not track yet.
     - generate_llms_txt returns an llms.txt draft built from the sitemap; refine
       the summary and descriptions before handing it to the user.
     - Members see their own domains plus domains other members shared with them
@@ -58,16 +63,25 @@ use Laravel\Mcp\Server\Attributes\Version;
     MARKDOWN)]
 class SeoCheckerServer extends Server
 {
+    /**
+     * tools/list'in tum araclari tek sayfada donmesi icin: paketin
+     * varsayilani 15 ve bazi istemciler nextCursor'u takip etmiyor, bu
+     * yuzden listenin sonundaki araclar hic gorunmuyordu.
+     */
+    public int $defaultPaginationLength = 50;
+
     protected array $tools = [
         ListDomains::class,
         GetDomain::class,
         ListKeywords::class,
         GetCompetitors::class,
+        GetCompetitorKeywordGap::class,
         GetVisibilityChanges::class,
         GenerateLlmsTxt::class,
         GetIndexNowStatus::class,
         AddDomain::class,
         AddKeyword::class,
+        SetCompetitor::class,
         RunDomainCheck::class,
         RunKeywordCheck::class,
         SubmitIndexNow::class,

@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\CheckController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DomainController;
+use App\Http\Controllers\DomainCompetitorController;
 use App\Http\Controllers\DomainMemberController;
 use App\Http\Controllers\IndexNowController;
 use App\Http\Controllers\KeywordController;
@@ -93,6 +94,11 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/domains/{domain}/shares', [ReportShareController::class, 'store'])->name('domains.shares.store');
     Route::delete('/domains/{domain}/shares/{share}', [ReportShareController::class, 'destroy'])->name('domains.shares.destroy');
+
+    Route::post('/domains/{domain}/competitors', [DomainCompetitorController::class, 'store'])->name('domains.competitors.store');
+    Route::patch('/domains/{domain}/competitors/{competitor}', [DomainCompetitorController::class, 'update'])->name('domains.competitors.update');
+    Route::delete('/domains/{domain}/competitors/{competitor}', [DomainCompetitorController::class, 'destroy'])->name('domains.competitors.destroy');
+    Route::post('/domains/{domain}/competitors/{competitor}/refresh', [DomainCompetitorController::class, 'refresh'])->name('domains.competitors.refresh');
 
     Route::post('/domains/{domain}/members', [DomainMemberController::class, 'store'])->name('domains.members.store');
     Route::patch('/domains/{domain}/members/{member}', [DomainMemberController::class, 'update'])->name('domains.members.update');

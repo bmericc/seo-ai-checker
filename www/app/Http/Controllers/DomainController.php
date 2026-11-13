@@ -10,9 +10,11 @@ use App\Jobs\RunDomainSiteCheck;
 use App\Jobs\RunDomainWhoisLookup;
 use App\Models\Check;
 use App\Models\Domain;
+use App\Models\DomainCompetitor;
 use App\Models\DomainLlmApiKey;
 use App\Services\Analytics\AiOverviewVolatility;
 use App\Services\Analytics\CompetitorAnalyzer;
+use App\Services\Analytics\CompetitorKeywordGap;
 use App\Services\Analytics\LlmShareOfModel;
 use App\Services\Analytics\ScoreHistoryBuilder;
 use App\Services\DataForSeo\DataForSeoClient;
@@ -128,9 +130,17 @@ class DomainController extends Controller
                 ->get()
         );
 
-        $competitorAnalysis = (new CompetitorAnalyzer())->frequentCompetitors($domain->domain, $domain->keywords);
+        $competitors = $domain->competitors()->get();
+        $trackedCompetitors = $competitors->where('status', DomainCompetitor::TRACKED)->values();
+        $ignoredCompetitors = $competitors->where('status', DomainCompetitor::IGNORED)->values();
 
-        $shareOfModel = LlmShareOfModel::forDomain($domain, $competitorAnalysis);
+        $competitorAnalysis = (new CompetitorAnalyzer())->frequentCompetitors(
+            $domain->domain,
+            $domain->keywords,
+            $ignoredCompetitors->pluck('competitor_domain')->all(),
+        );
+
+        $shareOfModel = LlmShareOfModel::forDomain($domain, $competitorAnalysis, $trackedCompetitors->pluck('competitor_domain')->all());
 
         $accessLevel = $domain->accessLevelFor($request->user());
 
@@ -146,6 +156,9 @@ class DomainController extends Controller
             'scoreHistory' => $scoreHistory,
             'domainCheckHistory' => $domainCheckHistory,
             'competitorAnalysis' => $competitorAnalysis,
+            'trackedCompetitors' => $trackedCompetitors,
+            'ignoredCompetitors' => $ignoredCompetitors,
+            'competitorKeywordGap' => CompetitorKeywordGap::forDomain($domain, $trackedCompetitors),
             'shareOfModel' => $shareOfModel,
             'aioStability' => AiOverviewVolatility::forKeywords($domain->keywords),
             'dataForSeoConfigured' => $dataForSeo->isConfigured(),

@@ -44,6 +44,11 @@ class Domain extends Model
         return $this->hasMany(DomainMember::class)->orderBy('email');
     }
 
+    public function competitors(): HasMany
+    {
+        return $this->hasMany(DomainCompetitor::class)->orderBy('competitor_domain');
+    }
+
     public function keywords(): HasMany
     {
         return $this->hasMany(Keyword::class);

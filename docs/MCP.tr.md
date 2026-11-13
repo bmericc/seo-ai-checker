@@ -55,10 +55,12 @@ Verdiğiniz erişimleri **Bağlantılar → Yapay zekâ asistanları (MCP)** kar
 | `list_keywords` | read | Kelimeler: Google sırası, AI Overview (son 10 kontroldeki istikrar dahil), Lighthouse |
 | `get_visibility_changes` | read | Son N günde neyin kötüleştiği veya iyileştiği (sıralama, AI Overview kaynağı, asistan anılmaları, site kontrolleri), etki sırasına göre |
 | `get_competitors` | read | SERP rakipleri ve Share of Model: her yapay zekâ asistanının siteyi ve rakipleri ne sıklıkla andığı |
+| `get_competitor_keyword_gap` | read | Çapraz kontrol: seçili rakiplerin sıralandığı (DataForSEO) ya da sitesinde öne çıkardığı (tarama), sizin henüz takip etmediğiniz anahtar kelimeler |
 | `generate_llms_txt` | read | Sitemap sayfalarından llms.txt taslağı (hiçbir şey yayınlanmaz) |
 | `get_indexnow_status` | read | IndexNow anahtar dosyası, doğrulama durumu, son gönderimler |
 | `add_domain` | write | Domain ekler, ilk site kontrolünü arka planda başlatır |
 | `add_keyword` | write | Domaine kelime ekler |
+| `set_competitor` | write | Bir domaini gerçek rakip ya da "rakip değil" olarak işaretler veya elle rakip ekler; anahtar kelimelerini arka planda çeker |
 | `run_domain_check` | write | Site kontrolünü arka planda yeniden çalıştırır |
 | `run_keyword_check` | write | Kelime kontrolünü arka planda çalıştırır (1-3 dk) |
 | `submit_indexnow` | write | URL'leri ya da sitemap'i IndexNow'a bildirir |

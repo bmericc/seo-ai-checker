@@ -55,10 +55,12 @@ You can see the access you granted on the **Connections → AI assistants (MCP)*
 | `list_keywords` | read | Keywords: Google rank, AI Overview (incl. stability over the last 10 checks), Lighthouse |
 | `get_visibility_changes` | read | What got worse or better in the last N days (rankings, AI Overview citations, assistant mentions, site checks), sorted by impact |
 | `get_competitors` | read | SERP competitors and Share of Model: how often each AI assistant mentions the site and its competitors |
+| `get_competitor_keyword_gap` | read | Cross-check: keywords the selected competitors rank for (DataForSEO) or feature on their site (crawl) that the site does not track yet |
 | `generate_llms_txt` | read | llms.txt draft built from the sitemap pages (nothing is published) |
 | `get_indexnow_status` | read | IndexNow key file, verification status, recent submissions |
 | `add_domain` | write | Adds a domain and starts the first site check in the background |
 | `add_keyword` | write | Adds a keyword to a domain |
+| `set_competitor` | write | Marks a domain as a real competitor or "not a competitor", or adds one by hand; fetches its keywords in the background |
 | `run_domain_check` | write | Runs the site check again in the background |
 | `run_keyword_check` | write | Runs the keyword check in the background (1-3 min) |
 | `submit_indexnow` | write | Submits URLs or the sitemap to IndexNow |

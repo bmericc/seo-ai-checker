@@ -34,7 +34,7 @@ class CompetitorAnalysisTest extends TestCase
         $response = $this->actingAs($user)->get(route('domains.show', $domain));
 
         $response->assertOk();
-        $response->assertSee('Rakip Analizi');
+        $response->assertSee('Rakip Keşfi (SERP)');
         $response->assertSee('rival.com');
         // "2 / 2" - rival.com appears in both tracked keywords' latest SERP snapshot.
         $response->assertSee('2 / 2');

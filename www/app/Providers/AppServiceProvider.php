@@ -10,6 +10,7 @@ use App\Services\DataForSeo\DataForSeoClient;
 use App\Services\DataForSeo\KeywordMetricsFetcher;
 use App\Services\DataForSeo\LlmMentionsChecker;
 use App\Services\DataForSeo\LlmScraperChecker;
+use App\Services\DataForSeo\RankedKeywordsFetcher;
 use App\Services\Ga4\Ga4Checker;
 use App\Services\Ga4\Ga4PropertyLister;
 use App\Services\Google\GoogleTokenService;
@@ -98,6 +99,12 @@ class AppServiceProvider extends ServiceProvider
         ));
 
         $this->app->singleton(KeywordMetricsFetcher::class, fn ($app) => new KeywordMetricsFetcher(
+            $app->make(DataForSeoClient::class),
+            config('seo.dataforseo.location_code'),
+            config('seo.dataforseo.language_code'),
+        ));
+
+        $this->app->singleton(RankedKeywordsFetcher::class, fn ($app) => new RankedKeywordsFetcher(
             $app->make(DataForSeoClient::class),
             config('seo.dataforseo.location_code'),
             config('seo.dataforseo.language_code'),
