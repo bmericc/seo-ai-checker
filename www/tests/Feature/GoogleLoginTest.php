@@ -97,4 +97,21 @@ class GoogleLoginTest extends TestCase
 
         $this->assertSame('tr', $existing->fresh()->locale);
     }
+
+    public function test_login_started_on_another_host_moves_to_the_callback_host_first(): void
+    {
+        config(['services.google.redirect' => 'https://seo-checker.tarti.com/auth/google/callback']);
+
+        $this->get('https://seo-checker.tr/auth/google')
+            ->assertRedirect('https://seo-checker.tarti.com/auth/google');
+    }
+
+    public function test_login_on_the_callback_host_goes_straight_to_google(): void
+    {
+        config(['services.google.redirect' => 'https://seo-checker.tarti.com/auth/google/callback']);
+
+        $response = $this->get('https://seo-checker.tarti.com/auth/google');
+
+        $this->assertStringStartsWith('https://accounts.google.com/', (string) $response->headers->get('Location'));
+    }
 }

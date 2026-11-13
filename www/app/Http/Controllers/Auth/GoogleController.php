@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\DomainMember;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
@@ -32,8 +33,22 @@ class GoogleController extends Controller
         'https://www.googleapis.com/auth/analytics.readonly',
     ];
 
-    public function redirect(): RedirectResponse
+    public function redirect(Request $request): RedirectResponse
     {
+        // Uygulama birden cok host'tan aciliyor (orn. seo-checker.tarti.com
+        // ve seo-checker.tr) ama Google'a kayitli redirect URI tek host'a
+        // isaret ediyor. OAuth state'i baslatilan host'un session cookie'sine
+        // yazildigi icin baska host'tan baslayan giris, callback'te state
+        // uyusmazligiyla dusuyordu. Akisi once callback'in host'una tasiyoruz.
+        $callbackUrl = (string) config('services.google.redirect');
+        $callbackHost = parse_url($callbackUrl, PHP_URL_HOST);
+        if (is_string($callbackHost) && $callbackHost !== '' && strcasecmp($callbackHost, $request->getHost()) !== 0) {
+            $scheme = parse_url($callbackUrl, PHP_URL_SCHEME) ?: 'https';
+            $port = parse_url($callbackUrl, PHP_URL_PORT);
+
+            return redirect()->away($scheme . '://' . $callbackHost . ($port ? ':' . $port : '') . $request->getRequestUri());
+        }
+
         return Socialite::driver('google')
             ->scopes(self::GOOGLE_SCOPES)
             ->with(['access_type' => 'offline', 'prompt' => 'consent'])
