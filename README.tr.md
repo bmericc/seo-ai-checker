@@ -39,11 +39,33 @@ sayfasından değiştirebilir.
   arasındaki değişiklikler ayrıca gösterilir. **llms.txt oluşturucu** site
   haritasındaki sayfalardan gözden geçirip yükleyebileceğiniz bir taslak
   hazırlar; mevcut `llms.txt` dosyası da biçim hatalarına (metin yerine
-  HTML, eksik başlık/özet/link) karşı denetlenir.
+  HTML, eksik başlık/özet/link) karşı denetlenir; dosya yoksa sorun
+  kartından doğrudan oluşturucuya gidilir.
 - **Hız ve sayfa kalitesi** — PageSpeed Insights API ile Lighthouse
   skorları (sunucuda Chrome gerekmez), gerçek kullanıcı CrUX verisi ve sayfa
   başına on-page SEO: title/meta, başlıklar, görseller, yapısal veri,
   hreflang.
+- **Rakipler** — SERP'te bulunan domainleri takip edilen ya da yok sayılan
+  olarak işaretleyin veya elle ekleyin. Takip edilen rakipler Share of Model
+  satırlarını belirler; **anahtar kelime boşluğu** rakiplerin sıralandığı
+  ama sizin henüz takip etmediğiniz kelimeleri listeler (DataForSEO Labs
+  `ranked_keywords`, yedek olarak ücretsiz ana sayfa + site haritası
+  taraması) ve tek tıkla eklemenizi sağlar. Yöneticiler hiçbir zaman rakip
+  sayılmayacak domainler için genel bir **rakip kara listesi** (ör.
+  `google.com`, `facebook.com`) tutar.
+- **Backlink** — her domainde referring domain özeti, trend grafiği, anchor
+  metinleri ve yeni/kaybedilen referring domain'leri gösteren bir Backlink
+  sekmesi. Üç kaynak mükerrersiz tek listede birleşir, her satırda kaynağı
+  etiketlenir:
+  - **DataForSEO Backlinks API** (ücretli, çekim başına yaklaşık $0,13):
+    özet, ilk 100 referring domain, anchor'lar, yeni ve kaybedilen
+    domainler. Ayda bir ve "Şimdi yenile" ile istendiğinde çekilir.
+  - **CrawlGraph / Common Crawl** (ücretsiz katman, ayda 15 sorgu): açık
+    Common Crawl web grafiğinden link veren domainler; üç ayda bir
+    yenilenir, yalnızca yeni arşiv çıkınca sorgulanır.
+  - **Bing Webmaster Tools** (ücretsiz, kendi doğrulanmış siteleriniz): en
+    çok link alan sayfalarınıza link veren siteler (`GetUrlLinks`), her
+    site kontrolüyle toplanır.
 - **Kendi verileriniz** — Google Search Console, GA4 ve Bing Webmaster
   Tools hesaplarını kullanıcı bazında (OAuth) bağlayıp tıklama, ziyaretçi ve
   backlink verisini kontrollerin yanında görün.
@@ -55,7 +77,9 @@ sayfasından değiştirebilir.
   Google hesabınızla bağlayın; asistan yalnızca sizin domainlerinizi görür
   ve hiçbir şeyi silemez. Bkz. [MCP sunucusu](docs/MCP.tr.md).
 - **Erişim kontrolü** — davetle Google girişi, yeni kullanıcılar için
-  yönetici onayı; üyeler yalnızca kendi domainlerini görür.
+  yönetici onayı; üyeler yalnızca kendi domainlerini görür. Giriş başladığı
+  adrese döner; tek kurulum birden çok domainden yayınlanabilir (her birinin
+  `/auth/google/callback` adresini Google Console'a ekleyin).
 
 ## Önemli sınırlamalar ve yasal uyarı
 
@@ -99,8 +123,14 @@ docker compose up -d
 docker compose exec app php artisan migrate
 ```
 
-Panel varsayılan olarak `http://localhost:8080` adresinde çalışır. Google
-girişini kurmak için [Web Arayüzü](docs/web-dashboard.md) sayfasına devam edin.
+Panel varsayılan olarak `http://localhost:8080` adresinde çalışır.
+
+Derlemek istemiyor musunuz? Her sürüm için **amd64/arm64** hazır imajlar
+GHCR'de (`ghcr.io/bmericc/seo-ai-checker`) ve Docker Hub'da
+(`bmericc/seo-ai-checker`) yayınlanır; `docker-compose.release.yml` ile
+çalıştırın, bkz. [Hazır imajlar](docs/docker.md#prebuilt-images-no-build).
+
+Google girişini kurmak için [Web Arayüzü](docs/web-dashboard.md) sayfasına devam edin.
 
 ## Dokümantasyon
 

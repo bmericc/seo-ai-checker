@@ -89,6 +89,15 @@ on-page SEO) audits can also be queued per sitemap URL — see
 - `domain_checks` — the full result of every domain-level check run
   (AI crawlers, sitemap, llms.txt, security headers, canonical host, CrUX,
   GSC, GA4, Bing backlinks, suggested keywords).
+- `backlink_snapshots` — one row per DataForSEO backlink fetch (summary
+  counts, top referring domains, anchors, new/lost domains, cost, error);
+  the latest 52 per domain are kept. `domains.backlinks_requested_at` marks
+  a queued fetch.
+- `crawlgraph_snapshots` — one row per domain and Common Crawl release
+  (linking domains, authority, rank, added/removed domains vs. the previous
+  release); unique on `(domain_id, release_id)`.
+- `domain_competitors` — competitors a user marked as tracked or ignored
+  (or added by hand) for a domain.
 - `sitemap_urls` — URLs discovered in a domain's sitemap.xml (synced by
   `SitemapUrlSync`), each with its own optional queued Lighthouse/on-page
   scan results.
@@ -237,7 +246,22 @@ collected by the services above - no new API calls or database tables.
   pagination) so it can be picked from a dropdown instead of typed in.
 - `App\Services\Bing\BingTokenService` — refreshes/stores the Bing OAuth
   access token; `Bing\BingBacklinksChecker` fetches backlink counts and top
-  linked pages from Bing Webmaster Tools.
+  linked pages from Bing Webmaster Tools (`GetUserSites`, `GetLinkCounts`)
+  and the sites linking to the 5 most-linked pages (`GetUrlLinks`).
+
+### Backlinks
+
+- `App\Services\DataForSeo\BacklinksFetcher` — DataForSEO Backlinks API
+  (`summary`, `referring_domains`, `anchors` live endpoints): summary, top
+  100 referring domains, anchors and new/lost domains of the last 30 days.
+- `App\Services\CrawlGraph\CrawlGraphClient` — CrawlGraph API
+  (`GET /api/v1/releases`, free; `POST /api/v1/backlinks`, counted against
+  the free 15-a-month quota, HTTP 429 when exhausted).
+- `App\Support\BacklinkMerger` — merges the DataForSEO, CrawlGraph and
+  Bing lists into one row per registrable domain (subdomains fold into the
+  CrawlGraph domain, `www.` is stripped) and records each row's sources.
+- `App\Support\BacklinkOverview` — builds the data for the domain page's
+  Backlink tab (latest/previous snapshot, trend, merged lists).
 
 ## Background jobs
 
@@ -267,11 +291,23 @@ the domain page's "WHOIS Bilgisini Yenile" button
 (`DomainController::refreshWhois()`) — unlike "Site Kontrolü Yap", it
 never runs synchronously inside a web request.
 
+### Backlink fetches
+
+- `App\Jobs\FetchDomainBacklinks` — one DataForSEO backlink fetch per
+  domain (unique, no retries since requests are paid). Dispatched by the
+  "Refresh now" button and by `backlinks:run-monthly-fetch` (1st of the
+  month, 04:00).
+- `backlinks:sync-crawlgraph` (daily, 05:00) — checks the latest Common
+  Crawl release and queries only domains that have no row for it yet;
+  stops at the first quota error.
+
 ## Auth, access control & localization
 
 - Google OAuth: `App\Http\Controllers\Auth\GoogleController` (Socialite),
   creates/finds a `User` record for any Google account and stores its
-  refresh token for GSC/GA4 access.
+  refresh token for GSC/GA4 access. The callback URL is built from the
+  request host, so login returns to the domain it started on; every host
+  needs its `/auth/google/callback` in Google Console.
 - Bing OAuth: `App\Http\Controllers\Auth\BingController`, connected
   per-user (after Google sign-in) to enable Bing Webmaster backlink data;
   stores its own refresh token separately from the Google one.

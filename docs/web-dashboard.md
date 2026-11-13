@@ -42,6 +42,7 @@ authentication + admin approval is used instead of a plain password.
 | `PSI_STRATEGY` | `mobile` or `desktop` |
 | `DATAFORSEO_LOGIN` / `DATAFORSEO_PASSWORD` | (optional) DataForSEO API credentials for SERP, keyword metrics and AI mention data |
 | `SERP_PROVIDER` | `auto` (default: DataForSEO when credentials are set, otherwise direct scraping), `google`, `dataforseo` or `fallback` (scrape first, DataForSEO only when Google blocks; no mobile SERP, weekly checks run live). In Docker, add it to `docker-compose.yml`'s `environment:` block too |
+| `CRAWLGRAPH_API_KEY` | (optional) free CrawlGraph key for Common Crawl backlinks: `POST https://crawlgraph.com/api/v1/free-key` with `{"email": "..."}`. 15 lookups a month. In Docker it is already listed in `docker-compose.yml` |
 | `SERP_FALLBACK_COOLDOWN_MINUTES` | In `fallback` mode, minutes to skip Google after a block (default `30`, `0` = off) |
 
 ## 3. Deploying to a server (without Docker)
@@ -103,3 +104,9 @@ Notes:
    Lighthouse scores are run and saved to the database.
 4. On a keyword's detail page you can see past checks (the full result of
    every run) in chronological order.
+5. The domain page's **Backlink** tab shows the merged backlink profile.
+   The scheduler runs `backlinks:run-monthly-fetch` (DataForSEO, 1st of the
+   month 04:00) and `backlinks:sync-crawlgraph` (daily 05:00, queries only
+   domains missing the latest Common Crawl archive and stops when the free
+   quota runs out). Bing rows come with each site check for users who
+   connected Bing Webmaster Tools.

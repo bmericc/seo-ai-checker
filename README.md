@@ -36,10 +36,31 @@ each user can change it later under **Settings**.
   health score and a prioritized issue list. Changes between two checks are
   highlighted. An **llms.txt generator** builds a draft from your sitemap
   pages, ready to review and upload, and an existing `llms.txt` is checked
-  for format problems (HTML instead of text, missing title/summary/links).
+  for format problems (HTML instead of text, missing title/summary/links);
+  when it is missing, the issue card links straight to the generator.
 - **Speed and page quality** — Lighthouse scores via the PageSpeed Insights
   API (no Chrome needed on the server), real-user CrUX data, and on-page SEO
   per page: title/meta, headings, images, structured data, hreflang.
+- **Competitors** — mark the domains found in the SERP as tracked or
+  ignored, or add one by hand. Tracked competitors drive the Share of Model
+  rows, and a **keyword gap** lists the keywords they rank for that you do
+  not track yet (DataForSEO Labs `ranked_keywords`, with a free homepage +
+  sitemap crawl fallback), ready to add in one click. Admins keep a global
+  **competitor blacklist** (e.g. `google.com`, `facebook.com`) that is never
+  offered as a competitor.
+- **Backlinks** — a Backlink tab on each domain with the referring domain
+  summary, a trend chart, anchor texts and new/lost referring domains.
+  Three sources are merged into one list without duplicates, each row
+  labelled with where it came from:
+  - **DataForSEO Backlinks API** (paid, about $0.13 per fetch): summary,
+    top 100 referring domains, anchors, new and lost domains. Fetched
+    monthly and on demand with "Refresh now".
+  - **CrawlGraph / Common Crawl** (free tier, 15 lookups a month): linking
+    domains from the open Common Crawl web graph, refreshed quarterly and
+    queried only when a new archive is released.
+  - **Bing Webmaster Tools** (free, your own verified sites): the sites
+    linking to your most-linked pages (`GetUrlLinks`), collected with each
+    site check.
 - **Your own data** — connect Google Search Console, GA4 and Bing Webmaster
   Tools per user (OAuth) to see clicks, visitors and backlinks next to the
   checks.
@@ -51,7 +72,9 @@ each user can change it later under **Settings**.
   OAuth and your Google account; the assistant sees only your domains and
   cannot delete anything. See [MCP server](docs/MCP.md).
 - **Access control** — invite-only Google sign-in, admin approval of new
-  users, members see only their own domains.
+  users, members see only their own domains. Login returns to the address
+  it started on, so one install can be served from several domains (add
+  each one's `/auth/google/callback` in Google Console).
 
 ## Important limitations and legal notice
 
@@ -91,8 +114,14 @@ docker compose up -d
 docker compose exec app php artisan migrate
 ```
 
-The dashboard runs at `http://localhost:8080` by default. Continue with
-[Web dashboard](docs/web-dashboard.md) to set up Google login.
+The dashboard runs at `http://localhost:8080` by default.
+
+Prefer not to build? Prebuilt **amd64/arm64** images are published for
+every release on GHCR (`ghcr.io/bmericc/seo-ai-checker`) and Docker Hub
+(`bmericc/seo-ai-checker`); run them with `docker-compose.release.yml`, see
+[Prebuilt images](docs/docker.md#prebuilt-images-no-build).
+
+Continue with [Web dashboard](docs/web-dashboard.md) to set up Google login.
 
 ## Documentation
 

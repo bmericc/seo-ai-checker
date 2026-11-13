@@ -21,6 +21,30 @@ touch database/database.sqlite
 chown www-data:www-data database/database.sqlite
 chmod 664 database/database.sqlite
 
+# Hazir imajla (docker-compose.release.yml) SQLite dosyasi kalici bir
+# volume'de, mutlak DB_DATABASE yolunda durur (orn. storage/database/).
+# Ayni sahiplik kurallariyla orada da olustur.
+if [ "${DB_CONNECTION:-sqlite}" = "sqlite" ] && [ "${DB_DATABASE#/}" != "${DB_DATABASE:-}" ]; then
+    DB_DIR=$(dirname "$DB_DATABASE")
+    mkdir -p "$DB_DIR"
+    chown www-data:www-data "$DB_DIR"
+    touch "$DB_DATABASE"
+    chown www-data:www-data "$DB_DATABASE"
+    chmod 664 "$DB_DATABASE"
+fi
+
+# APP_KEY ortam degiskeni olarak verilip bos birakilirsa Laravel .env'deki
+# degeri okumaz ve her istekte MissingAppKeyException verir - acik bir
+# hatayla dur. (Gelistirme compose'u APP_KEY'i hic tanimlamaz.)
+# Hazir imajda kaynak kod (ve www/.env) container icinde, kalici degil:
+# otomatik uretilen anahtar her yeniden olusturmada degisir, oturumlar ve
+# sifreli OAuth token'lari okunamaz hale gelir. Orada APP_KEY zorunlu.
+if { [ -n "${APP_KEY+x}" ] || [ "${SEO_AI_CHECKER_RELEASE:-}" = "1" ]; } && [ -z "${APP_KEY:-}" ]; then
+    echo "APP_KEY ortam degiskeni bos. Bir anahtar olusturun:" >&2
+    echo "  php -r \"echo 'base64:'.base64_encode(random_bytes(32)).PHP_EOL;\"" >&2
+    exit 1
+fi
+
 # www/.env: dotenv'in "dosya yok" PHPUnit uyarisini onlemek icin bos da
 # olsa var olmasi gerekir (bkz. README). APP_KEY icin kalici depolama
 # olarak da kullanilir (asagida). ONEMLI: APP_KEY kasitli olarak
@@ -40,6 +64,14 @@ if ! grep -q '^APP_KEY=.\+' .env; then
     else
         printf 'APP_KEY=%s\n' "$KEY" >> .env
     fi
+fi
+
+# Hazir imaj: app (php-fpm) her baslangicta bekleyen migration'lari
+# uygular; ilk kurulum ve surum yukseltmesi elle adim gerektirmez.
+# RUN_MIGRATIONS=false ile kapatilir. www-data olarak calisir ki
+# storage/logs altinda root'a ait dosya olusmasin.
+if [ "${SEO_AI_CHECKER_RELEASE:-}" = "1" ] && [ "${RUN_MIGRATIONS:-true}" = "true" ] && [ "$1" = "php-fpm" ]; then
+    su -s /bin/sh www-data -c "php artisan migrate --force --no-interaction"
 fi
 
 exec docker-php-entrypoint "$@"

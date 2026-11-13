@@ -111,6 +111,47 @@ already the correct behavior for dev; but if both `.env` and `.env.prod`
 exist in the same directory, don't skip `--env-file .env.prod` on
 production commands, or it will silently run with dev settings.
 
+## Prebuilt images (no build)
+
+Every release tag (`v1.0.0`, `v1.1.0`, ...) is built by GitHub Actions
+(`.github/workflows/docker.yml`) for **linux/amd64 and linux/arm64** and
+published to both registries:
+
+| Image | GitHub Container Registry | Docker Hub |
+|---|---|---|
+| App (php-fpm, queue worker, scheduler) | `ghcr.io/bmericc/seo-ai-checker` | `bmericc/seo-ai-checker` |
+| Web (nginx + `public/`) | `ghcr.io/bmericc/seo-ai-checker-web` | `bmericc/seo-ai-checker-web` |
+
+Tags: `1.0.0`, `1.0`, `1` and `latest`.
+
+```bash
+curl -O https://raw.githubusercontent.com/bmericc/seo-ai-checker/main/docker-compose.release.yml
+curl -o .env https://raw.githubusercontent.com/bmericc/seo-ai-checker/main/.env.docker.example
+# Edit .env: add APP_KEY (required, see below), APP_URL, GOOGLE_CLIENT_ID,
+# GOOGLE_CLIENT_SECRET, ADMIN_EMAILS and the optional API keys.
+php -r "echo 'base64:'.base64_encode(random_bytes(32)).PHP_EOL;"   # or: openssl rand -base64 32
+
+docker compose -f docker-compose.release.yml up -d
+```
+
+- **`APP_KEY` is required.** The code lives inside the image, so a key
+  generated at start would change on every container recreate and make
+  sessions and stored OAuth tokens unreadable. The container refuses to
+  start without it.
+- The SQLite database and logs live in the `storage` volume
+  (`/var/www/html/storage/database/database.sqlite`); back that volume up.
+- The `app` container runs pending migrations on every start, so upgrades
+  need no extra step. Set `RUN_MIGRATIONS=false` to turn this off.
+- Pin a version with `SEO_AI_CHECKER_VERSION=1.0.0` in `.env` (default
+  `latest`). To use Docker Hub instead of GHCR, set
+  `SEO_AI_CHECKER_IMAGE=bmericc/seo-ai-checker` and
+  `SEO_AI_CHECKER_WEB_IMAGE=bmericc/seo-ai-checker-web`.
+- Upgrade: `docker compose -f docker-compose.release.yml pull && docker compose -f docker-compose.release.yml up -d`.
+
+To publish a new release, push a tag: `git tag v1.1.0 && git push origin v1.1.0`.
+The workflow needs the `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`
+repository secrets (Docker Hub personal access token with Read & Write).
+
 ## Running behind nginx-proxy-manager (or another reverse proxy)
 
 In addition to the host port, the `webserver` service also joins an
