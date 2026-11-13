@@ -143,6 +143,11 @@
                                                         <button type="submit" class="btn btn-sm">{{ __('Düzelttim, tekrar kontrol et') }}</button>
                                                     </form>
                                                 @endif
+                                                @if ($issue['key'] === 'llms_txt')
+                                                    <a href="{{ route('domains.llms-txt', $domain) }}" class="btn btn-sm btn-primary">
+                                                        <i class="ti ti-file-text icon"></i> {{ __('llms.txt taslağı oluştur') }}
+                                                    </a>
+                                                @endif
                                                 <a href="#tab-health" class="btn btn-sm btn-link" data-tab-jump="#tab-health">{{ __('Teknik ayrıntılar') }}</a>
                                             </div>
                                         </div>
