@@ -16,12 +16,14 @@ authentication + admin approval is used instead of a plain password.
 1. Create a new **OAuth client ID** on the
    [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials)
    page, type: **Web application**.
-2. Add your server's address as the **Authorized redirect URI**, e.g.:
-   `https://your-server.com/auth/google/callback`
+2. Add an **Authorized redirect URI** for every address the dashboard is
+   served from, e.g. `https://your-server.com/auth/google/callback`. Login
+   returns to the address it started on, so a second domain (e.g.
+   `https://your-server.com.tr`) needs its own
+   `https://your-server.com.tr/auth/google/callback` entry.
 3. Write the resulting **Client ID** and **Client Secret** values into the
    relevant `.env` file (Docker: `.env`/`.env.prod` at the repo root;
-   manual setup: `www/.env`) — `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`,
-   `GOOGLE_REDIRECT_URI`.
+   manual setup: `www/.env`) — `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`.
 4. Put your own Google email into `ADMIN_EMAILS`. This email(s) are
    **automatically treated as admin + approved** on first login, so you
    get access to yourself on initial setup. All subsequent user
@@ -34,7 +36,7 @@ authentication + admin approval is used instead of a plain password.
 |---|---|
 | `APP_URL` | The dashboard's public address |
 | `DB_CONNECTION`, `DB_DATABASE`/`DB_HOST`/... | SQLite (default) or MySQL/PostgreSQL |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_REDIRECT_URI` | Google OAuth app credentials |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth app credentials (the callback URL is derived from the request host) |
 | `ADMIN_EMAILS` | Emails automatically treated as admin+approved on first login (comma-separated) |
 | `PSI_API_KEY` | (optional but recommended) PageSpeed Insights API key |
 | `PSI_STRATEGY` | `mobile` or `desktop` |

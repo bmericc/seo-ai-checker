@@ -38,7 +38,9 @@ return [
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-        'redirect' => env('GOOGLE_REDIRECT_URI'),
+        // Kullanilmiyor: GoogleController callback'i istegin kendi host'undan
+        // uretir (her host'un callback'i Google Console'a eklenmeli).
+        'redirect' => null,
     ],
 
     'bing' => [

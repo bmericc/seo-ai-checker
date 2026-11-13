@@ -8,7 +8,6 @@ use App\Http\Controllers\Controller;
 use App\Models\DomainMember;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
@@ -33,23 +32,9 @@ class GoogleController extends Controller
         'https://www.googleapis.com/auth/analytics.readonly',
     ];
 
-    public function redirect(Request $request): RedirectResponse
+    public function redirect(): RedirectResponse
     {
-        // Uygulama birden cok host'tan aciliyor (orn. seo-checker.tarti.com
-        // ve seo-checker.tr) ama Google'a kayitli redirect URI tek host'a
-        // isaret ediyor. OAuth state'i baslatilan host'un session cookie'sine
-        // yazildigi icin baska host'tan baslayan giris, callback'te state
-        // uyusmazligiyla dusuyordu. Akisi once callback'in host'una tasiyoruz.
-        $callbackUrl = (string) config('services.google.redirect');
-        $callbackHost = parse_url($callbackUrl, PHP_URL_HOST);
-        if (is_string($callbackHost) && $callbackHost !== '' && strcasecmp($callbackHost, $request->getHost()) !== 0) {
-            $scheme = parse_url($callbackUrl, PHP_URL_SCHEME) ?: 'https';
-            $port = parse_url($callbackUrl, PHP_URL_PORT);
-
-            return redirect()->away($scheme . '://' . $callbackHost . ($port ? ':' . $port : '') . $request->getRequestUri());
-        }
-
-        return Socialite::driver('google')
+        return $this->driver()
             ->scopes(self::GOOGLE_SCOPES)
             ->with(['access_type' => 'offline', 'prompt' => 'consent'])
             ->redirect();
@@ -58,7 +43,7 @@ class GoogleController extends Controller
     public function callback(): RedirectResponse|Response
     {
         try {
-            $googleUser = Socialite::driver('google')->user();
+            $googleUser = $this->driver()->user();
         } catch (InvalidStateException $e) {
             return response()->view('auth.error', [
                 'message' => __('Giriş doğrulaması başarısız oldu (state uyuşmazlığı). Lütfen tekrar deneyin.'),
@@ -105,6 +90,22 @@ class GoogleController extends Controller
         request()->session()->regenerate();
 
         return redirect()->intended('/');
+    }
+
+    /**
+     * Uygulama birden cok host'tan aciliyor (orn. seo-checker.tarti.com ve
+     * seo-checker.tr). OAuth state'i baslatilan host'un session cookie'sinde
+     * durdugu icin callback de ayni host'a donmeli; bu yuzden callback
+     * istegin kendi host'undan uretilir. Her host'un
+     * callback'i Google Console'da "Authorized redirect URIs" listesinde
+     * olmali - Google kayitsiz redirect_uri'yi reddettigi icin sahte Host
+     * basligi baska bir adrese yonlendirme yapamaz.
+     *
+     * @return \Laravel\Socialite\Two\GoogleProvider
+     */
+    private function driver(): mixed
+    {
+        return Socialite::driver('google')->redirectUrl(route('google.callback'));
     }
 
     private function isBootstrapAdmin(string $email): bool

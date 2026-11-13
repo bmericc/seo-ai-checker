@@ -80,7 +80,7 @@ variables set in `.env.prod` change the behavior:
 ```bash
 cp .env.docker.example .env.prod
 # Fill .env.prod with production values (the 3 variables above, plus
-# APP_ENV=production, APP_DEBUG=false, the real APP_URL/GOOGLE_REDIRECT_URI,
+# APP_ENV=production, APP_DEBUG=false, the real APP_URL,
 # PSI_API_KEY, ADMIN_EMAILS, etc.)
 
 docker compose --env-file .env.prod build

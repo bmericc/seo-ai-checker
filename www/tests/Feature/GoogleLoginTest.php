@@ -28,7 +28,7 @@ class GoogleLoginTest extends TestCase
 
     public function test_callback_creates_a_new_user_and_stores_google_tokens(): void
     {
-        Socialite::shouldReceive('driver->user')->andReturn($this->socialiteUser('new@example.com'));
+        Socialite::shouldReceive('driver->redirectUrl->user')->andReturn($this->socialiteUser('new@example.com'));
 
         $response = $this->get(route('google.callback'));
 
@@ -49,7 +49,7 @@ class GoogleLoginTest extends TestCase
             'google_refresh_token' => 'old-refresh-token',
         ]);
 
-        Socialite::shouldReceive('driver->user')->andReturn($this->socialiteUser('user@example.com', 'google-2'));
+        Socialite::shouldReceive('driver->redirectUrl->user')->andReturn($this->socialiteUser('user@example.com', 'google-2'));
 
         $this->get(route('google.callback'));
 
@@ -59,7 +59,7 @@ class GoogleLoginTest extends TestCase
 
     public function test_new_user_gets_the_browser_language_not_the_google_profile_language(): void
     {
-        Socialite::shouldReceive('driver->user')->andReturn(
+        Socialite::shouldReceive('driver->redirectUrl->user')->andReturn(
             $this->socialiteUser('new@example.com', locale: 'en-GB'),
         );
 
@@ -71,7 +71,7 @@ class GoogleLoginTest extends TestCase
 
     public function test_new_user_with_a_non_turkish_browser_gets_english(): void
     {
-        Socialite::shouldReceive('driver->user')->andReturn(
+        Socialite::shouldReceive('driver->redirectUrl->user')->andReturn(
             $this->socialiteUser('new@example.com'),
         );
 
@@ -89,7 +89,7 @@ class GoogleLoginTest extends TestCase
             'locale' => 'tr',
         ]);
 
-        Socialite::shouldReceive('driver->user')->andReturn(
+        Socialite::shouldReceive('driver->redirectUrl->user')->andReturn(
             $this->socialiteUser('user@example.com', 'google-2', locale: 'en'),
         );
 
@@ -98,20 +98,14 @@ class GoogleLoginTest extends TestCase
         $this->assertSame('tr', $existing->fresh()->locale);
     }
 
-    public function test_login_started_on_another_host_moves_to_the_callback_host_first(): void
+    public function test_each_host_uses_its_own_callback_url(): void
     {
-        config(['services.google.redirect' => 'https://seo-checker.tarti.com/auth/google/callback']);
+        foreach (['seo-checker.tr', 'seo-checker.tarti.com'] as $host) {
+            $location = (string) $this->get("https://{$host}/auth/google")->headers->get('Location');
+            parse_str((string) parse_url($location, PHP_URL_QUERY), $query);
 
-        $this->get('https://seo-checker.tr/auth/google')
-            ->assertRedirect('https://seo-checker.tarti.com/auth/google');
-    }
-
-    public function test_login_on_the_callback_host_goes_straight_to_google(): void
-    {
-        config(['services.google.redirect' => 'https://seo-checker.tarti.com/auth/google/callback']);
-
-        $response = $this->get('https://seo-checker.tarti.com/auth/google');
-
-        $this->assertStringStartsWith('https://accounts.google.com/', (string) $response->headers->get('Location'));
+            $this->assertStringStartsWith('https://accounts.google.com/', $location);
+            $this->assertSame("https://{$host}/auth/google/callback", $query['redirect_uri']);
+        }
     }
 }
