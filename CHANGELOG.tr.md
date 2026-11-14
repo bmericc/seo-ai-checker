@@ -9,6 +9,16 @@ sürüm tag'i için Docker imajları yayınlanır (bkz.
 
 ## [Yayınlanmamış]
 
+## [1.0.1] - 2026-11-14
+
+### Güvenlik
+
+- Dependabot'un bildirdiği bilinen açıkları gidermek için bağımlılıklar
+  güncellendi: `laravel/framework` 13.42.0 (TokenGuard kimlik doğrulama
+  atlatma, kritik), `league/commonmark` 2.10.7, `guzzlehttp/guzzle` 7.16.1,
+  `symfony/http-foundation` 8.1.11, `phpseclib/phpseclib` 3.0.58,
+  `league/flysystem` 3.36.0.
+
 ### Eklenenler
 
 - Dokümantasyon: ekran görüntülü özellik rehberi, zamanlanmış görevler, tüm
@@ -57,5 +67,6 @@ sürüm tag'i için Docker imajları yayınlanır (bkz.
   ve Docker Hub'a (`bmericc/seo-ai-checker`) yayınlanır. Kuyruk işçisi ve
   zamanlayıcı aynı imajı kullanır.
 
-[Yayınlanmamış]: https://github.com/bmericc/seo-ai-checker/compare/v1.0.0...HEAD
+[Yayınlanmamış]: https://github.com/bmericc/seo-ai-checker/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/bmericc/seo-ai-checker/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/bmericc/seo-ai-checker/releases/tag/v1.0.0

@@ -8,6 +8,16 @@ every release tag (see [Docker installation steps](docs/docker-install.md)).
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-11-14
+
+### Security
+
+- Update dependencies to fix known vulnerabilities reported by Dependabot:
+  `laravel/framework` 13.42.0 (TokenGuard authentication bypass, critical),
+  `league/commonmark` 2.10.7, `guzzlehttp/guzzle` 7.16.1,
+  `symfony/http-foundation` 8.1.11, `phpseclib/phpseclib` 3.0.58,
+  `league/flysystem` 3.36.0.
+
 ### Added
 
 - Documentation: feature guide with screenshots, scheduled tasks, Docker
@@ -53,5 +63,6 @@ First public release.
   and Docker Hub (`bmericc/seo-ai-checker`); queue worker and scheduler use
   the same image.
 
-[Unreleased]: https://github.com/bmericc/seo-ai-checker/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/bmericc/seo-ai-checker/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/bmericc/seo-ai-checker/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/bmericc/seo-ai-checker/releases/tag/v1.0.0
