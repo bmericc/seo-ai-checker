@@ -66,11 +66,11 @@ if ! grep -q '^APP_KEY=.\+' .env; then
     fi
 fi
 
-# Hazir imaj: app (php-fpm) her baslangicta bekleyen migration'lari
+# Hazir imaj: app (serve = nginx + php-fpm) her baslangicta bekleyen migration'lari
 # uygular; ilk kurulum ve surum yukseltmesi elle adim gerektirmez.
 # RUN_MIGRATIONS=false ile kapatilir. www-data olarak calisir ki
 # storage/logs altinda root'a ait dosya olusmasin.
-if [ "${SEO_AI_CHECKER_RELEASE:-}" = "1" ] && [ "${RUN_MIGRATIONS:-true}" = "true" ] && [ "$1" = "php-fpm" ]; then
+if [ "${SEO_AI_CHECKER_RELEASE:-}" = "1" ] && [ "${RUN_MIGRATIONS:-true}" = "true" ] && { [ "$1" = "serve" ] || [ "$1" = "php-fpm" ]; }; then
     su -s /bin/sh www-data -c "php artisan migrate --force --no-interaction"
 fi
 

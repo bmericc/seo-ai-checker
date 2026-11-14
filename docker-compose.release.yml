@@ -1,10 +1,12 @@
-# GitHub Container Registry'deki hazir imajlarla calistirma - kaynak kodu
+# GitHub Container Registry'deki hazir imajla calistirma - kaynak kodu
 # derlemeye gerek yok. Ayrintilar: docs/docker.md "Prebuilt images".
 #
 #   cp .env.docker.example .env   # APP_KEY ve diger degerleri doldurun
 #   docker compose -f docker-compose.release.yml up -d
 #
-# app her baslangicta migration'lari kendisi uygular (RUN_MIGRATIONS=false
+# Tek imaj: app nginx + php-fpm'i birlikte calistirir (port 80), worker ve
+# scheduler ayni imaji farkli komutla kullanir. app her baslangicta
+# migration'lari kendisi uygular (RUN_MIGRATIONS=false
 # ile kapatilir).
 #
 # Surum sabitlemek icin .env'de SEO_AI_CHECKER_VERSION=1.0.0 (varsayilan: latest).
@@ -25,6 +27,8 @@ x-app: &app
 services:
   app:
     <<: *app
+    ports:
+      - "${WEB_PORT:-8080}:80"
 
   # Bos "storage" volume'unu ilk dolduran app olsun; ayni anda baslayan
   # container'lar Docker'in volume kopyalamasinda "file exists" ile duser.
@@ -39,14 +43,6 @@ services:
     depends_on:
       - app
     command: ["php", "artisan", "schedule:work"]
-
-  webserver:
-    image: ${SEO_AI_CHECKER_WEB_IMAGE:-ghcr.io/bmericc/seo-ai-checker-web}:${SEO_AI_CHECKER_VERSION:-latest}
-    restart: unless-stopped
-    ports:
-      - "${WEB_PORT:-8080}:80"
-    depends_on:
-      - app
 
 volumes:
   storage:

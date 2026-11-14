@@ -115,12 +115,13 @@ production commands, or it will silently run with dev settings.
 
 Every release tag (`v1.0.0`, `v1.1.0`, ...) is built by GitHub Actions
 (`.github/workflows/docker.yml`) for **linux/amd64 and linux/arm64** and
-published to both registries:
+published as a single image to both registries:
 
-| Image | GitHub Container Registry | Docker Hub |
-|---|---|---|
-| App (php-fpm, queue worker, scheduler) | `ghcr.io/bmericc/seo-ai-checker` | `bmericc/seo-ai-checker` |
-| Web (nginx + `public/`) | `ghcr.io/bmericc/seo-ai-checker-web` | `bmericc/seo-ai-checker-web` |
+- GitHub Container Registry: `ghcr.io/bmericc/seo-ai-checker`
+- Docker Hub: `bmericc/seo-ai-checker`
+
+The image runs nginx and php-fpm together (port 80); the queue worker and
+the scheduler use the same image with a different command.
 
 Tags: `1.0.0`, `1.0`, `1` and `latest`.
 
@@ -144,8 +145,7 @@ docker compose -f docker-compose.release.yml up -d
   need no extra step. Set `RUN_MIGRATIONS=false` to turn this off.
 - Pin a version with `SEO_AI_CHECKER_VERSION=1.0.0` in `.env` (default
   `latest`). To use Docker Hub instead of GHCR, set
-  `SEO_AI_CHECKER_IMAGE=bmericc/seo-ai-checker` and
-  `SEO_AI_CHECKER_WEB_IMAGE=bmericc/seo-ai-checker-web`.
+  `SEO_AI_CHECKER_IMAGE=bmericc/seo-ai-checker`.
 - Upgrade: `docker compose -f docker-compose.release.yml pull && docker compose -f docker-compose.release.yml up -d`.
 
 To publish a new release, push a tag: `git tag v1.1.0 && git push origin v1.1.0`.

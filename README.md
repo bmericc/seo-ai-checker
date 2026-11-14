@@ -116,7 +116,7 @@ docker compose exec app php artisan migrate
 
 The dashboard runs at `http://localhost:8080` by default.
 
-Prefer not to build? Prebuilt **amd64/arm64** images are published for
+Prefer not to build? A prebuilt **amd64/arm64** image (nginx + php-fpm) is published for
 every release on GHCR (`ghcr.io/bmericc/seo-ai-checker`) and Docker Hub
 (`bmericc/seo-ai-checker`); run them with `docker-compose.release.yml`, see
 [Prebuilt images](docs/docker.md#prebuilt-images-no-build).

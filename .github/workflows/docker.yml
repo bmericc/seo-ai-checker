@@ -1,10 +1,9 @@
 name: Docker images
 
-# v1.2.3 gibi bir tag push'lanınca app (php-fpm) ve web (nginx) imajlarini
-# linux/amd64 + linux/arm64 olarak GitHub Container Registry'ye ve Docker
-# Hub'a yayinlar:
+# v1.2.3 gibi bir tag push'lanınca tek imaji (nginx + php-fpm, Dockerfile
+# "release" hedefi) linux/amd64 + linux/arm64 olarak GitHub Container
+# Registry'ye ve Docker Hub'a yayinlar:
 #   ghcr.io/<owner>/seo-ai-checker      <dockerhub>/seo-ai-checker
-#   ghcr.io/<owner>/seo-ai-checker-web  <dockerhub>/seo-ai-checker-web
 # Etiketler: 1.2.3, 1.2, 1 ve latest.
 #
 # Docker Hub icin repo secret'lari: DOCKERHUB_USERNAME ve DOCKERHUB_TOKEN
@@ -23,20 +22,8 @@ jobs:
   image:
     runs-on: ubuntu-latest
 
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: seo-ai-checker
-            dockerfile: docker/php/Dockerfile
-            description: SEO / AI Overview Checker - Laravel app (php-fpm, queue worker, scheduler)
-          - name: seo-ai-checker-web
-            dockerfile: docker/nginx/Dockerfile
-            description: SEO / AI Overview Checker - nginx front end
-
-    name: ${{ matrix.name }}
-
     env:
+      IMAGE_NAME: seo-ai-checker
       # Secret yoksa Docker Hub adimi atlanir, GHCR yine yayinlanir.
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
 
@@ -69,8 +56,8 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ghcr.io/${{ github.repository_owner }}/${{ matrix.name }}
-            ${{ env.DOCKERHUB_USERNAME != '' && format('docker.io/{0}/{1}', env.DOCKERHUB_USERNAME, matrix.name) || '' }}
+            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
+            ${{ env.DOCKERHUB_USERNAME != '' && format('docker.io/{0}/{1}', env.DOCKERHUB_USERNAME, env.IMAGE_NAME) || '' }}
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
@@ -78,15 +65,16 @@ jobs:
             type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
             type=sha,enable=${{ !startsWith(github.ref, 'refs/tags/v') }}
           labels: |
-            org.opencontainers.image.title=${{ matrix.name }}
-            org.opencontainers.image.description=${{ matrix.description }}
+            org.opencontainers.image.title=${{ env.IMAGE_NAME }}
+            org.opencontainers.image.description=SEO / AI Overview Checker - Laravel app with nginx, queue worker and scheduler
             org.opencontainers.image.licenses=GPL-3.0-or-later
 
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ${{ matrix.dockerfile }}
+          file: docker/php/Dockerfile
+          target: release
           platforms: linux/amd64,linux/arm64
           build-args: |
             COMPOSER_INSTALL_FLAGS=--no-dev
@@ -94,5 +82,5 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           annotations: ${{ steps.meta.outputs.annotations }}
-          cache-from: type=gha,scope=${{ matrix.name }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+          cache-from: type=gha,scope=${{ env.IMAGE_NAME }}
+          cache-to: type=gha,mode=max,scope=${{ env.IMAGE_NAME }}

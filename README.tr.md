@@ -125,7 +125,7 @@ docker compose exec app php artisan migrate
 
 Panel varsayılan olarak `http://localhost:8080` adresinde çalışır.
 
-Derlemek istemiyor musunuz? Her sürüm için **amd64/arm64** hazır imajlar
+Derlemek istemiyor musunuz? Her sürüm için **amd64/arm64** tek hazır imaj (nginx + php-fpm)
 GHCR'de (`ghcr.io/bmericc/seo-ai-checker`) ve Docker Hub'da
 (`bmericc/seo-ai-checker`) yayınlanır; `docker-compose.release.yml` ile
 çalıştırın, bkz. [Hazır imajlar](docs/docker.md#prebuilt-images-no-build).

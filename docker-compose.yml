@@ -2,6 +2,7 @@ x-app-build: &app-build
   build:
     context: .
     dockerfile: docker/php/Dockerfile
+    target: app
     args:
       COMPOSER_INSTALL_FLAGS: ${COMPOSER_INSTALL_FLAGS:-}
   restart: ${RESTART_POLICY:-no}

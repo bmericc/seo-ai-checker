@@ -1,4 +1,4 @@
-FROM php:8.5-fpm-alpine
+FROM php:8.5-fpm-alpine AS app
 
 # Prod'da COMPOSER_INSTALL_FLAGS=--no-dev gecirilir (.env.prod), dev deps
 # (phpunit, pint, pail...) imaja dahil edilmez.
@@ -35,3 +35,17 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 
 ENTRYPOINT ["entrypoint.sh"]
 CMD ["php-fpm"]
+
+# Hazir imaj (GHCR / Docker Hub, bkz. .github/workflows/docker.yml): tek
+# imajda php-fpm + nginx. Gelistirme/prod compose'u "app" hedefini kullanir
+# ve nginx'i ayri webserver servisi olarak calistirir.
+FROM app AS release
+
+RUN apk add --no-cache nginx
+
+COPY docker/php/nginx-release.conf /etc/nginx/http.d/default.conf
+COPY docker/php/serve.sh /usr/local/bin/serve
+RUN chmod +x /usr/local/bin/serve
+
+EXPOSE 80
+CMD ["serve"]
