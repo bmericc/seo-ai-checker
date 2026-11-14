@@ -8,6 +8,10 @@ name: Docker images
 #
 # Docker Hub icin repo secret'lari: DOCKERHUB_USERNAME ve DOCKERHUB_TOKEN
 # (hub.docker.com > Account settings > Personal access tokens, Read & Write).
+#
+# Imaj yayinlandiktan sonra "release" job'u ayni tag icin notlari
+# CHANGELOG.md'den alinan bir GitHub Release olusturur (release zaten
+# varsa atlanir). Tag'den once CHANGELOG'a o surumun bolumunu ekleyin.
 on:
   push:
     tags:
@@ -84,3 +88,34 @@ jobs:
           annotations: ${{ steps.meta.outputs.annotations }}
           cache-from: type=gha,scope=${{ env.IMAGE_NAME }}
           cache-to: type=gha,mode=max,scope=${{ env.IMAGE_NAME }}
+
+  release:
+    needs: image
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          # Onceki tag'i bulup compare linki uretmek icin tum tag'ler lazim.
+          fetch-depth: 0
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+          IMAGE: ghcr.io/${{ github.repository_owner }}/seo-ai-checker
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists, skipping."
+            exit 0
+          fi
+          # Notlar CHANGELOG.md / CHANGELOG.tr.md'deki "## [x.y.z]" bolumunden
+          # gelir; bolum yoksa script hata verir ve release olusmaz.
+          .github/scripts/release-notes.sh "$TAG" "$IMAGE" "$GH_REPO" > notes.md
+          gh release create "$TAG" --title "$TAG" --notes-file notes.md --verify-tag
