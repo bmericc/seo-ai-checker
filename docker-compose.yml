@@ -1,10 +1,7 @@
-x-app-build: &app-build
-  build:
-    context: .
-    dockerfile: docker/php/Dockerfile
-    target: app
-    args:
-      COMPOSER_INSTALL_FLAGS: ${COMPOSER_INSTALL_FLAGS:-}
+# app, worker ve scheduler tek imaji (seo-ai-checker:local) kullanir; yalnizca
+# app build eder, digerleri ayni imaji farkli komutla calistirir.
+x-app: &app
+  image: seo-ai-checker:local
   restart: ${RESTART_POLICY:-no}
   environment: &app-environment
     APP_NAME: ${APP_NAME}
@@ -51,14 +48,21 @@ x-app-build: &app-build
 
 services:
   app:
-    <<: *app-build
+    <<: *app
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      target: app
+      args:
+        COMPOSER_INSTALL_FLAGS: ${COMPOSER_INSTALL_FLAGS:-}
 
   # Sitemap sayfalari icin toplu Lighthouse (PSI) taramasi gibi uzun suren
   # isleri arka planda isler (bkz. App\Jobs\RunSitemapUrlLighthouseCheck).
   # "app" ile ayni image/volume'leri kullanir, sadece php-fpm yerine
   # queue:work calistirir.
   worker:
-    <<: *app-build
+    <<: *app
+    pull_policy: never
     command: ["php", "artisan", "queue:work", "--tries=2", "--sleep=3", "--max-time=3600"]
 
   # Laravel'in zamanlanmis gorevlerini (bkz. routes/console.php - gunluk
@@ -67,7 +71,8 @@ services:
   # arz eden bir foreground process olarak dakikada bir zamani gelen
   # gorevleri tetikler.
   scheduler:
-    <<: *app-build
+    <<: *app
+    pull_policy: never
     command: ["php", "artisan", "schedule:work"]
 
   webserver:
