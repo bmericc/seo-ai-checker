@@ -9,6 +9,24 @@ sürüm tag'i için Docker imajları yayınlanır (bkz.
 
 ## [Yayınlanmamış]
 
+### Eklenenler
+
+- **E-posta + şifre ile giriş** — Google girişinin yanında kayıt, giriş,
+  e-posta doğrulama ve şifre sıfırlama. Yeni hesaplar yine yönetici onayı
+  bekler. Google ile kayıt olanlar "Şifremi unuttum" ile şifre
+  belirleyebilir.
+- `GOOGLE_LOGIN_ENABLED` "Google ile giriş yap" seçeneğini açar veya kapatır
+  (varsayılan açık). Giriş yapmış kullanıcılar Search Console ve GA4 için
+  Google'ı yine bağlayabilir.
+
+### Değişenler
+
+- `ADMIN_EMAILS` yükseltmesi ve bekleyen domain paylaşımları, e-posta +
+  şifreli hesapta yalnızca e-posta doğrulandıktan sonra uygulanır.
+- Giriş yapmışken Google bağlamak artık Google e-postası farklı olsa da
+  hesabı mevcut hesaba bağlar.
+- Girişsiz istekler ana sayfa yerine `/login`'e yönlenir.
+
 ## [1.0.1] - 2026-11-14
 
 ### Güvenlik

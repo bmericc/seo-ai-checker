@@ -8,12 +8,22 @@ The web dashboard stores domain/keyword records and the result of every
 "Check" run (SERP + AI Overview + on-page + Lighthouse) in the database, so
 you can view changes over time as history. For a screen-by-screen tour see [Feature guide](features.md).
 
-## 1. Create a Google OAuth application
+## 1. Sign-in methods
 
-Any Google account can sign in and create an account in the dashboard, but
-new accounts can't access the dashboard until an **admin approves** them
-(see [User management and admin panel](admin.md)) — Google-based
-authentication + admin approval is used instead of a plain password.
+People can sign up with **email + password** or with **Google**. New
+accounts can't access the dashboard until an **admin approves** them (see
+[User management and admin panel](admin.md)). Email + password accounts
+must also verify their email first, so set up mail (`MAIL_MAILER=smtp`
+and the `MAIL_*` settings). With `MAIL_MAILER=log` the verification and
+password reset links are written to `storage/logs/laravel.log` instead.
+
+Google sign-in is optional: set `GOOGLE_LOGIN_ENABLED=false` to hide the
+"Sign in with Google" button. Signed-in users can still connect a Google
+account for Search Console and GA4 data, so keep the OAuth client below if
+you want those reports. Users who signed up with Google can set a password
+with "Forgot password".
+
+### Google OAuth application
 
 1. Create a new **OAuth client ID** on the
    [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials)
@@ -26,8 +36,9 @@ authentication + admin approval is used instead of a plain password.
 3. Write the resulting **Client ID** and **Client Secret** values into the
    relevant `.env` file (Docker: `.env`/`.env.prod` at the repo root;
    manual setup: `www/.env`) — `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`.
-4. Put your own Google email into `ADMIN_EMAILS`. This email(s) are
-   **automatically treated as admin + approved** on first login, so you
+4. Put your own email into `ADMIN_EMAILS`. This email(s) are
+   **automatically treated as admin + approved** on first Google login, or
+   once the email is verified for an email + password account, so you
    get access to yourself on initial setup. All subsequent user
    approvals/admin assignments are done from the `/admin/users` panel, no
    further `.env` editing needed.
@@ -39,7 +50,9 @@ authentication + admin approval is used instead of a plain password.
 | `APP_URL` | The dashboard's public address |
 | `DB_CONNECTION`, `DB_DATABASE`/`DB_HOST`/... | SQLite (default) or MySQL/PostgreSQL |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth app credentials (the callback URL is derived from the request host) |
-| `ADMIN_EMAILS` | Emails automatically treated as admin+approved on first login (comma-separated) |
+| `GOOGLE_LOGIN_ENABLED` | `true` (default) shows "Sign in with Google"; `false` leaves only email + password sign-in |
+| `ADMIN_EMAILS` | Emails automatically treated as admin+approved after a Google login or email verification (comma-separated) |
+| `MAIL_MAILER` and `MAIL_*` | Mail for email verification and password reset (`log` writes them to the log file) |
 | `PSI_API_KEY` | (optional but recommended) PageSpeed Insights API key |
 | `PSI_STRATEGY` | `mobile` or `desktop` |
 | `DATAFORSEO_LOGIN` / `DATAFORSEO_PASSWORD` | (optional) DataForSEO API credentials for SERP, keyword metrics and AI mention data |
@@ -98,9 +111,10 @@ Notes:
 
 ## 4. Usage
 
-1. Go to `https://your-server.com/` and sign in with "Sign in with
-   Google". If you're one of the accounts in `ADMIN_EMAILS`, you land
-   directly in the dashboard; otherwise your account is created but you'll
+1. Go to `https://your-server.com/` and sign up with your email or use
+   "Sign in with Google". If you're one of the accounts in `ADMIN_EMAILS`,
+   you land in the dashboard (after verifying your email for an email +
+   password account); otherwise your account is created but you'll
    see a "pending approval" page until an admin approves you.
 2. Add a domain, then add keyword(s) for that domain (optionally
    specifying a separate target page URL for each keyword).

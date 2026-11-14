@@ -2,7 +2,10 @@
 
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Auth\BingController;
+use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\Auth\PasswordAuthController;
+use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\CheckController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DomainController;
@@ -34,6 +37,30 @@ Route::post('/locale', [LocaleController::class, 'update'])->name('locale.update
 
 Route::get('/auth/google', [GoogleController::class, 'redirect'])->name('google.redirect');
 Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name('google.callback');
+
+// E-posta + sifre ile giris/kayit (Google girisi GOOGLE_LOGIN_ENABLED ile
+// kapatilabilir, bu akis her zaman aciktir).
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [PasswordAuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [PasswordAuthController::class, 'login'])->middleware('throttle:20,1')->name('login.attempt');
+    Route::get('/register', [PasswordAuthController::class, 'showRegister'])->name('register');
+    Route::post('/register', [PasswordAuthController::class, 'register'])->middleware('throttle:10,1')->name('register.store');
+
+    Route::get('/forgot-password', [PasswordResetController::class, 'showRequest'])->name('password.request');
+    Route::post('/forgot-password', [PasswordResetController::class, 'sendLink'])->middleware('throttle:5,1')->name('password.email');
+    Route::get('/reset-password/{token}', [PasswordResetController::class, 'showReset'])->name('password.reset');
+    Route::post('/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:10,1')->name('password.update');
+});
+
+Route::middleware('auth')->group(function () {
+    Route::get('/email/verify', [EmailVerificationController::class, 'notice'])->name('verification.notice');
+    Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
+        ->middleware(['signed', 'throttle:6,1'])
+        ->name('verification.verify');
+    Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])
+        ->middleware('throttle:6,1')
+        ->name('verification.send');
+});
 
 Route::get('/auth/bing/connect', [BingController::class, 'connect'])->middleware('auth')->name('bing.connect');
 Route::get('/auth/bing/callback', [BingController::class, 'callback'])->middleware('auth')->name('bing.callback');

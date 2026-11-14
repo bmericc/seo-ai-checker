@@ -82,7 +82,9 @@ Fill in at least these values:
 | `APP_DEBUG` | `false` |
 | `WEB_PORT` | Port opened on the host (default `8080`) |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | OAuth client for Google sign-in and Search Console |
-| `ADMIN_EMAILS` | Google accounts that become admins, comma-separated |
+| `GOOGLE_LOGIN_ENABLED` | `false` hides "Sign in with Google" and leaves email + password sign-in (default `true`) |
+| `ADMIN_EMAILS` | Emails that become admins, comma-separated |
+| `MAIL_MAILER` and `MAIL_*` | Mail for email verification and password reset; `log` writes the links to `storage/logs/laravel.log` |
 | `APP_LOCALE` | `tr` or `en` |
 
 Also add the keys for the APIs you want to use (see
@@ -136,14 +138,16 @@ It should return `200`. If not, read the logs:
 docker compose -f docker-compose.release.yml logs -f app
 ```
 
-Open `APP_URL` in a browser and sign in with Google using an account from
-`ADMIN_EMAILS`.
+Open `APP_URL` in a browser and sign in with Google, or sign up with email
++ password, using an email from `ADMIN_EMAILS`. An email + password account
+becomes admin once its email is verified.
 
 ---
 
 ## Available APIs
 
-Everything except Google OAuth is optional. A feature without a key either
+Every API key is optional. Without Google OAuth, people sign in with email
++ password and Search Console/GA4 data is not available. A feature without a key either
 stays off or falls back to a free method. Add the keys to `.env` and
 restart the containers:
 
@@ -151,7 +155,7 @@ restart the containers:
 docker compose -f docker-compose.release.yml up -d
 ```
 
-### Google OAuth (required)
+### Google OAuth (sign-in and Search Console)
 
 | Variable | Where to get it |
 |---|---|

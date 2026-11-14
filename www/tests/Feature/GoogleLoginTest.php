@@ -108,4 +108,57 @@ class GoogleLoginTest extends TestCase
             $this->assertSame("https://{$host}/auth/google/callback", $query['redirect_uri']);
         }
     }
+
+    public function test_new_google_user_has_a_verified_email(): void
+    {
+        Socialite::shouldReceive('driver->redirectUrl->user')->andReturn($this->socialiteUser('new@example.com'));
+
+        $this->get(route('google.callback'));
+
+        $this->assertNotNull(User::query()->where('email', 'new@example.com')->firstOrFail()->email_verified_at);
+    }
+
+    public function test_google_login_is_hidden_and_blocked_for_guests_when_disabled(): void
+    {
+        config(['seo.google_login_enabled' => false]);
+
+        $this->get(route('google.redirect'))->assertNotFound();
+        $this->get(route('google.callback'))->assertNotFound();
+        $this->get(route('login'))->assertOk()->assertDontSee(route('google.redirect'));
+        $this->get('/')->assertOk()->assertDontSee(route('google.redirect'));
+    }
+
+    public function test_google_login_button_is_shown_when_enabled(): void
+    {
+        config(['seo.google_login_enabled' => true]);
+
+        $this->get(route('login'))->assertOk()->assertSee(route('google.redirect'));
+    }
+
+    public function test_logged_in_user_links_google_without_switching_accounts_even_when_login_is_disabled(): void
+    {
+        config(['seo.google_login_enabled' => false]);
+        $user = User::factory()->create(['email' => 'panel@example.com', 'approved_at' => now()]);
+
+        Socialite::shouldReceive('driver->redirectUrl->user')->andReturn($this->socialiteUser('other@gmail.com', 'google-9'));
+
+        $this->actingAs($user)->get(route('google.callback'))->assertRedirect(route('connections'));
+
+        $this->assertAuthenticatedAs($user);
+        $this->assertSame('google-9', $user->fresh()->google_id);
+        $this->assertSame('refresh-token', $user->fresh()->google_refresh_token);
+        $this->assertDatabaseMissing('users', ['email' => 'other@gmail.com']);
+    }
+
+    public function test_linking_a_google_account_owned_by_another_user_is_refused(): void
+    {
+        User::factory()->create(['email' => 'owner@example.com', 'google_id' => 'google-9']);
+        $user = User::factory()->create(['email' => 'panel@example.com', 'approved_at' => now()]);
+
+        Socialite::shouldReceive('driver->redirectUrl->user')->andReturn($this->socialiteUser('owner@example.com', 'google-9'));
+
+        $this->actingAs($user)->get(route('google.callback'))->assertSessionHas('flash');
+
+        $this->assertNull($user->fresh()->google_id);
+    }
 }

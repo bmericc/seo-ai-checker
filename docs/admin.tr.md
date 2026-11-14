@@ -4,12 +4,14 @@
 
 # Kullanıcı yönetimi ve yönetim paneli
 
-- Her Google hesabı giriş yapıp bir `User` kaydı oluşturabilir. `approved_at`
-  varsayılan olarak boştur (onay bekliyor) ve onaylanana kadar panele
-  erişilemez.
-- `ADMIN_EMAILS` listesindeki (`.env`/`.env.prod`) e-postalar ilk girişte
-  otomatik olarak `is_admin=true` ve onaylı olur (ilk kurulumda kendinize
-  erişim açmak için).
+- Herkes Google ile ya da e-posta + şifreyle kayıt olup bir `User` kaydı
+  oluşturabilir. `approved_at` varsayılan olarak boştur (onay bekliyor) ve
+  onaylanana kadar panele erişilemez. E-posta + şifreli hesaplar onay
+  bekleme sayfasına düşmeden önce e-postalarını doğrulamalıdır.
+- `ADMIN_EMAILS` listesindeki (`.env`/`.env.prod`) e-postalar ilk Google
+  girişinde ya da e-posta + şifreli hesap e-postasını doğrulayınca otomatik
+  olarak `is_admin=true` ve onaylı olur (ilk kurulumda kendinize erişim
+  açmak için).
 - Yöneticiler `/admin/users` sayfasından (menüdeki "Kullanıcılar" linki)
   diğer kullanıcıları onaylayabilir, onayını kaldırabilir, yönetici
   yapabilir/yöneticilikten alabilir veya silebilir. Bir yönetici bu

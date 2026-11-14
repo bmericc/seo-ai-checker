@@ -82,7 +82,9 @@ En azından şu değerleri doldurun:
 | `APP_DEBUG` | `false` |
 | `WEB_PORT` | Host'ta açılacak port (varsayılan `8080`) |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google ile giriş ve Search Console için OAuth istemcisi |
-| `ADMIN_EMAILS` | Yönetici olacak Google hesapları, virgülle ayrılmış |
+| `GOOGLE_LOGIN_ENABLED` | `false` "Google ile giriş yap" butonunu gizler, e-posta + şifreli giriş kalır (varsayılan `true`) |
+| `ADMIN_EMAILS` | Yönetici olacak e-postalar, virgülle ayrılmış |
+| `MAIL_MAILER` ve `MAIL_*` | E-posta doğrulama ve şifre sıfırlama için e-posta gönderimi; `log` bağlantıları `storage/logs/laravel.log` dosyasına yazar |
 | `APP_LOCALE` | `tr` veya `en` |
 
 Kullanmak istediğiniz API'lerin anahtarlarını da ekleyin (bkz.
@@ -138,14 +140,16 @@ curl -I http://localhost:8080/
 docker compose -f docker-compose.release.yml logs -f app
 ```
 
-Tarayıcıdan `APP_URL` adresini açıp `ADMIN_EMAILS` içindeki hesapla Google
-ile giriş yapın.
+Tarayıcıdan `APP_URL` adresini açıp `ADMIN_EMAILS` içindeki bir e-postayla
+Google ile giriş yapın ya da e-posta + şifreyle kayıt olun. E-posta + şifreli
+hesap, e-postası doğrulanınca yönetici olur.
 
 ---
 
 ## Kullanılabilecek API'ler
 
-Google OAuth dışındakilerin hepsi isteğe bağlıdır. Anahtar girilmeyen
+Tüm API anahtarları isteğe bağlıdır. Google OAuth olmadan kullanıcılar
+e-posta + şifreyle girer, Search Console/GA4 verisi gelmez. Anahtar girilmeyen
 özellik ya kapalı kalır ya da ücretsiz yönteme düşer. Anahtarları `.env`
 dosyasına ekleyip container'ları yeniden başlatın:
 
@@ -153,7 +157,7 @@ dosyasına ekleyip container'ları yeniden başlatın:
 docker compose -f docker-compose.release.yml up -d
 ```
 
-### Google OAuth (zorunlu)
+### Google OAuth (giriş ve Search Console)
 
 | Değişken | Nereden |
 |---|---|

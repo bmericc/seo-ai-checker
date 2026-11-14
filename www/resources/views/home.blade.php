@@ -23,7 +23,7 @@
             <a href="#ozellikler" class="l-nav-link">{{ __('Neleri ölçer') }}</a>
             <a href="#nasil" class="l-nav-link">{{ __('Nasıl çalışır') }}</a>
             <a href="#erisim" class="l-nav-link">{{ __('Erişim') }}</a>
-            <a href="{{ route('google.redirect') }}" class="l-btn l-btn-outline">{{ __('Giriş yap') }}</a>
+            <a href="{{ route('login') }}" class="l-btn l-btn-outline">{{ __('Giriş yap') }}</a>
         </nav>
     </div>
 </header>
@@ -43,12 +43,17 @@
             <h1>{!! __('Siteniz <span class="l-hl-blue">Google\'da</span> ve <span class="l-hl-green">yapay zekâ</span> yanıtlarında nerede duruyor?') !!}</h1>
             <p class="l-lead">{{ __("Sıralamalarınızı, Google AI Overview atıflarınızı ve ChatGPT, Claude, Gemini, Perplexity'nin sizi önerip önermediğini takip edin. Sorunları önem sırasına göre ve nasıl düzelteceğinizle birlikte görün.") }}</p>
             <div class="l-actions">
-                <a href="{{ route('google.redirect') }}" class="l-btn l-btn-primary">
-                    <i class="ti ti-brand-google" aria-hidden="true"></i>{{ __('Google ile giriş yap') }}
+                @if (config('seo.google_login_enabled'))
+                    <a href="{{ route('google.redirect') }}" class="l-btn l-btn-primary">
+                        <i class="ti ti-brand-google" aria-hidden="true"></i>{{ __('Google ile giriş yap') }}
+                    </a>
+                @endif
+                <a href="{{ route('register') }}" class="l-btn {{ config('seo.google_login_enabled') ? 'l-btn-outline' : 'l-btn-primary' }}">
+                    <i class="ti ti-mail" aria-hidden="true"></i>{{ __('E-posta ile kayıt ol') }}
                 </a>
                 <a href="#ozellikler" class="l-btn l-btn-ghost">{{ __('Neleri ölçtüğüne bak') }}</a>
             </div>
-            <p class="l-note">{{ __('Davetle çalışır: yalnızca önceden izin verilmiş Google hesapları giriş yapabilir.') }}</p>
+            <p class="l-note">{{ __('Yeni hesaplar yönetici onayından sonra açılır.') }}</p>
         </div>
 
         <div class="l-hero-visual">
@@ -167,7 +172,7 @@
             <div class="l-mcp-copy">
                 <span class="l-eyebrow">{{ __('Asistanınızla kullanın') }}</span>
                 <h2>{{ __('Claude veya ChatGPT\'ye "sitemde ne sorun var?" diye sorun') }}</h2>
-                <p>{{ __('Panel bir MCP sunucusu da sunar. Asistanınızı Google hesabınızla bağlayın; yalnızca sizin domainlerinizi görür, hiçbir şeyi silemez.') }}</p>
+                <p>{{ __('Panel bir MCP sunucusu da sunar. Asistanınızı panel hesabınızla bağlayın; yalnızca sizin domainlerinizi görür, hiçbir şeyi silemez.') }}</p>
             </div>
             <div class="l-mcp-prompts">
                 <div class="l-prompt">“{{ __('ornekmagaza.com için öncelikli düzeltme planı çıkar.') }}”</div>
@@ -180,10 +185,11 @@
     <section id="erisim" class="l-wrap l-access-outer">
         <div class="l-access">
             <h2>{{ __('Erişiminiz var mı?') }}</h2>
-            <p>{{ __('Bu panel herkese açık değildir. Yalnızca site sahibinin önceden izin verdiği Google hesaplarıyla giriş yapılabilir. Erişim için panel yöneticisine başvurun.') }}</p>
-            <a href="{{ route('google.redirect') }}" class="l-btn l-btn-primary">
-                <i class="ti ti-brand-google" aria-hidden="true"></i>{{ __('Google ile giriş yap') }}
-            </a>
+            <p>{{ __('Bu panel herkese açık değildir. Kayıt olabilirsiniz ama hesabınız panel yöneticisi onaylayana kadar açılmaz.') }}</p>
+            <div class="l-actions" style="justify-content: center">
+                <a href="{{ route('login') }}" class="l-btn l-btn-primary">{{ __('Giriş yap') }}</a>
+                <a href="{{ route('register') }}" class="l-btn l-btn-outline">{{ __('Kayıt ol') }}</a>
+            </div>
         </div>
     </section>
 </main>

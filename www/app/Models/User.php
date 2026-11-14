@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -15,7 +15,7 @@ use Laravel\Passport\HasApiTokens;
 
 #[Fillable(['name', 'email', 'password', 'is_admin', 'approved_at', 'google_id', 'google_access_token', 'google_refresh_token', 'google_token_expires_at', 'bing_access_token', 'bing_refresh_token', 'bing_token_expires_at', 'locale'])]
 #[Hidden(['password', 'remember_token', 'google_access_token', 'google_refresh_token', 'bing_access_token', 'bing_refresh_token'])]
-class User extends Authenticatable implements OAuthenticatable
+class User extends Authenticatable implements MustVerifyEmail, OAuthenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;

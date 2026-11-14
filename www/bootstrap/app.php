@@ -19,14 +19,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->appendToGroup('web', EnsureUserApproved::class);
         $middleware->alias(['admin' => EnsureUserIsAdmin::class]);
 
-        // Ayri bir /login sayfasi yok; ana sayfa (/) zaten girissiz de
-        // erisilebilir ve ayni Google ile giris CTA'sini gosteriyor.
-        // MCP istemcisinin actigi OAuth onay sayfasinda ise kullaniciyi
-        // dogrudan Google girisine gonderiyoruz: Google callback'i
-        // redirect()->intended() ile onay sayfasina geri dondurur.
-        $middleware->redirectGuestsTo(fn (Request $request) => $request->is('oauth/authorize')
+        // Girissiz istekler /login'e gider. MCP istemcisinin actigi OAuth
+        // onay sayfasinda Google girisi aciksa kullaniciyi dogrudan Google'a
+        // gonderiyoruz; iki giris yolu da redirect()->intended() ile onay
+        // sayfasina geri doner.
+        $middleware->redirectGuestsTo(fn (Request $request) => $request->is('oauth/authorize') && config('seo.google_login_enabled')
             ? route('google.redirect')
-            : '/');
+            : route('login'));
 
         // Uygulama her zaman bir reverse proxy'nin (kendi nginx servisimiz,
         // istege bagli olarak onunde nginx-proxy-manager) arkasinda calisir;

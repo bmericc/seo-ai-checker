@@ -26,10 +26,10 @@ class ExampleTest extends TestCase
      * kapali kalmali; ayri bir /login sayfasi olmadigindan ana sayfaya
      * yonlendirilmeli.
      */
-    public function test_guests_are_redirected_home_for_protected_routes(): void
+    public function test_guests_are_redirected_to_login_for_protected_routes(): void
     {
         $response = $this->get('/domains/1');
 
-        $response->assertRedirect('/');
+        $response->assertRedirect(route('login'));
     }
 }

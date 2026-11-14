@@ -8,6 +8,23 @@ every release tag (see [Docker installation steps](docs/docker-install.md)).
 
 ## [Unreleased]
 
+### Added
+
+- **Email + password sign-in** — sign-up, login, email verification and
+  password reset next to Google sign-in. New accounts still wait for admin
+  approval. Users who signed up with Google can set a password with
+  "Forgot password".
+- `GOOGLE_LOGIN_ENABLED` turns "Sign in with Google" on or off (default
+  on). Signed-in users can still connect Google for Search Console and GA4.
+
+### Changed
+
+- `ADMIN_EMAILS` promotion and pending domain shares apply to an email +
+  password account only after its email is verified.
+- Connecting Google while signed in now links it to the current account,
+  even when the Google email is different.
+- Guests are sent to `/login` instead of the home page.
+
 ## [1.0.1] - 2026-11-14
 
 ### Security

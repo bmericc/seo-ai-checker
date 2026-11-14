@@ -143,13 +143,22 @@ return [
     |--------------------------------------------------------------------------
     | Erisim kontrolu
     |--------------------------------------------------------------------------
-    | Herhangi bir Google hesabi giris yapip kayit olusturabilir, ancak yeni
+    | Herkes Google ile ya da e-posta + sifreyle kayit olabilir, ancak yeni
     | hesaplar admin onaylayana kadar panele erisemez (bkz. EnsureUserApproved
     | middleware'i ve /admin/users paneli). Buradaki e-postalar ilk giris
     | yaptiklarinda OTOMATIK olarak admin + onayli sayilir - yeni bir sunucu
     | kurulumunda kendinize erisim acmak icin kullanilir; sonrasinda kullanici
-    | yonetimi /admin/users uzerinden yapilir.
+    | yonetimi /admin/users uzerinden yapilir. Sifreyle kayit olanlar icin bu
+    | yalnizca e-posta dogrulandiktan sonra uygulanir.
     */
+    /*
+    | Giris yontemleri. E-posta + sifre ile giris/kayit her zaman aciktir;
+    | "Google ile giris yap" GOOGLE_LOGIN_ENABLED=false ile kapatilabilir.
+    | Kapaliyken de giris yapmis kullanicilar Search Console/GA4 icin Google
+    | hesaplarini baglayabilir (GOOGLE_CLIENT_ID tanimliysa).
+    */
+    'google_login_enabled' => (bool) env('GOOGLE_LOGIN_ENABLED', true),
+
     'bootstrap_admin_emails' => array_values(array_filter(array_map(
         'trim',
         explode(',', env('ADMIN_EMAILS', ''))

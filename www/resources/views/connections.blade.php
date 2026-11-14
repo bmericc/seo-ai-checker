@@ -69,7 +69,7 @@
                         <span class="avatar avatar-md bg-body-tertiary flex-shrink-0"><i class="ti ti-plug-connected fs-2"></i></span>
                         <div class="flex-fill" style="min-width: 0">
                             <div class="fw-semibold">{{ __('Yapay zekâ asistanları (MCP)') }}</div>
-                            <div class="text-secondary small">{{ __('Claude, ChatGPT veya Cursor gibi bir asistana bu adresi "özel bağlayıcı" olarak ekleyin. Bağlanırken Google hesabınızla giriş yapıp izin vermeniz istenir; asistan yalnızca sizin domainlerinizi görür.') }}</div>
+                            <div class="text-secondary small">{{ __('Claude, ChatGPT veya Cursor gibi bir asistana bu adresi "özel bağlayıcı" olarak ekleyin. Bağlanırken panel hesabınızla giriş yapıp izin vermeniz istenir; asistan yalnızca sizin domainlerinizi görür.') }}</div>
                         </div>
                     </div>
                     <div class="input-group mt-3">
