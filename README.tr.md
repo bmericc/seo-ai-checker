@@ -138,7 +138,7 @@ Detaylı dokümanlar İngilizce olarak `docs/` klasöründe tutuluyor:
 
 - [Docker ile çalıştırma](docs/docker.md) — dev, production,
   nginx-proxy-manager arkasında ve Docker olmadan manuel kurulum.
-- [Docker kurulum adımları (Türkçe)](docs/docker-kurulum.md) — hazır imajla
+- [Docker kurulum adımları (Türkçe)](docs/docker-install.tr.md) — hazır imajla
   veya kaynak koddan adım adım kurulum, güncelleme ve yedekleme.
 - [Web arayüzü](docs/web-dashboard.md) — Google OAuth kurulumu, `.env`
   referansı, Docker olmadan deploy ve günlük kullanım.

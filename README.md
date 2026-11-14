@@ -127,6 +127,9 @@ Continue with [Web dashboard](docs/web-dashboard.md) to set up Google login.
 
 - [Running with Docker](docs/docker.md) — dev, production, behind
   nginx-proxy-manager, and manual (no Docker) setup.
+- [Docker installation steps](docs/docker-install.md) — step-by-step
+  install from the prebuilt image or from source, API keys, upgrades and
+  backups.
 - [Web dashboard](docs/web-dashboard.md) — Google OAuth setup, `.env`
   reference, deploying without Docker, and day-to-day usage.
 - [Architecture](docs/architecture.md) — project structure, how AI

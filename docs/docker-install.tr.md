@@ -1,3 +1,5 @@
+🇹🇷 Türkçe | [🇬🇧 English](docker-install.md)
+
 [← README'ye dön](../README.tr.md)
 
 # Docker ile kurulum adımları
@@ -7,10 +9,10 @@ anlatır. İki yol var:
 
 - **A. Hazır imajla kurulum (önerilen).** Kaynak kod gerekmez. GHCR veya
   Docker Hub'daki `seo-ai-checker` imajı çekilir.
-- **B. Kaynak koddan kurulum.** Geliştirme yapacaksanız ya da imajı kendiniz
-  derlemek istiyorsanız.
+- **B. Docker ile, kaynak koddan derleyerek.** Geliştirme yapacaksanız ya
+  da imajı kendiniz derlemek istiyorsanız.
 
-İngilizce ayrıntılı belge: [docker.md](docker.md).
+Dev/prod ayrıntıları (İngilizce): [docker.md](docker.md).
 
 ## Gereksinimler
 
@@ -83,13 +85,12 @@ En azından şu değerleri doldurun:
 | `ADMIN_EMAILS` | Yönetici olacak Google hesapları, virgülle ayrılmış |
 | `APP_LOCALE` | `tr` veya `en` |
 
-İsteğe bağlı olanlar:
+Kullanmak istediğiniz API'lerin anahtarlarını da ekleyin (bkz.
+[Kullanılabilecek API'ler](#kullanılabilecek-apiler)). Kurulumla ilgili
+diğer ayarlar:
 
 | Değişken | Ne için |
 |---|---|
-| `PSI_API_KEY` | PageSpeed Insights / Lighthouse kotası |
-| `BING_CLIENT_ID`, `BING_CLIENT_SECRET` | Bing Webmaster Tools bağlantısı |
-| `HTTP_PROXY` | SERP isteklerini proxy üzerinden göndermek |
 | `SEO_AI_CHECKER_VERSION` | Sürüm sabitlemek, örn. `1.0.0` (varsayılan `latest`) |
 | `SEO_AI_CHECKER_IMAGE` | Docker Hub kullanmak için `bmericc/seo-ai-checker` |
 | `RUN_MIGRATIONS` | `false` yapılırsa açılışta migration çalışmaz |
@@ -142,7 +143,97 @@ ile giriş yapın.
 
 ---
 
-## B. Kaynak koddan kurulum
+## Kullanılabilecek API'ler
+
+Google OAuth dışındakilerin hepsi isteğe bağlıdır. Anahtar girilmeyen
+özellik ya kapalı kalır ya da ücretsiz yönteme düşer. Anahtarları `.env`
+dosyasına ekleyip container'ları yeniden başlatın:
+
+```bash
+docker compose -f docker-compose.release.yml up -d
+```
+
+### Google OAuth (zorunlu)
+
+| Değişken | Nereden |
+|---|---|
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | [Google Cloud Console](https://console.cloud.google.com/apis/credentials) → OAuth client ID (Web application) |
+
+Giriş ve Search Console verisi için kullanılır. Projede **Google Search
+Console API** etkin olmalı. Callback adresi: `https://ALAN-ADINIZ/auth/google/callback`.
+
+### PageSpeed Insights ve CrUX (önerilir)
+
+| Değişken | Açıklama |
+|---|---|
+| `PSI_API_KEY` | Lighthouse skorları. Anahtarsız da çalışır ama kota çok düşüktür. |
+| `PSI_STRATEGY` | `mobile` (varsayılan) veya `desktop` |
+| `CRUX_API_KEY` | Gerçek kullanıcı Core Web Vitals verisi. Boş bırakılırsa `PSI_API_KEY` kullanılır. |
+
+Google Cloud Console'da API key oluşturun; aynı projede **PageSpeed Insights
+API** ve **Chrome UX Report API**'yi etkinleştirin.
+
+### DataForSEO (SERP, anahtar kelime metrikleri, AI görünürlük)
+
+| Değişken | Açıklama |
+|---|---|
+| `DATAFORSEO_LOGIN`, `DATAFORSEO_PASSWORD` | [DataForSEO](https://app.dataforseo.com/api-access) API giriş bilgileri |
+| `DATAFORSEO_LOCATION_CODE` | Konum kodu, varsayılan `2792` (Türkiye) |
+| `DATAFORSEO_LANGUAGE_CODE` | Dil kodu, varsayılan `GOOGLE_HL` değeri |
+| `SERP_PROVIDER` | `auto` (varsayılan), `google`, `dataforseo`, `fallback` |
+| `SERP_FALLBACK_COOLDOWN_MINUTES` | `fallback` modunda Google engelleyince kaç dakika atlanacağı (varsayılan `30`) |
+
+Tanımlanmazsa SERP doğrudan Google'dan kazınır. Bu yöntem sık sık CAPTCHA'ya
+takılır. `fallback` önce ücretsiz kazımayı dener, engellenirse DataForSEO'ya
+geçer. Rakip anahtar kelimeleri, LLM Scraper ve LLM Mentions özellikleri
+DataForSEO ister.
+
+### Bing Webmaster Tools (backlink ve Bing verisi)
+
+| Değişken | Nereden |
+|---|---|
+| `BING_CLIENT_ID`, `BING_CLIENT_SECRET` | [Microsoft Entra / Azure](https://portal.azure.com/) → App registrations |
+
+Callback adresi: `https://ALAN-ADINIZ/auth/bing/callback`. Her kullanıcı
+kendi Bing hesabını uygulama içinden bağlar.
+
+### CrawlGraph (Common Crawl backlink'leri)
+
+| Değişken | Açıklama |
+|---|---|
+| `CRAWLGRAPH_API_KEY` | CrawlGraph API anahtarı. Ücretsiz katman ayda 15 istek verir. |
+| `CRAWLGRAPH_LIMIT` | İstek başına alınacak en fazla link veren domain (varsayılan `1000`) |
+
+### AI görünürlük: ChatGPT, Claude, Gemini, Perplexity
+
+Bu sağlayıcıların API anahtarları `.env`'ye **yazılmaz**. Uygulamada her
+domain'in sayfasından, domain başına girilir ve veritabanında şifreli
+saklanır. Hangi sağlayıcı için anahtar girilirse o kontrol çalışır.
+
+`.env` ile yalnızca kullanılacak model değiştirilebilir:
+
+| Değişken | Varsayılan |
+|---|---|
+| `OPENAI_VISIBILITY_MODEL` | `gpt-5.6-luna` |
+| `ANTHROPIC_VISIBILITY_MODEL` | `claude-haiku-5-5` |
+| `GEMINI_VISIBILITY_MODEL` | `gemini-3.8-flash` |
+| `PERPLEXITY_VISIBILITY_MODEL` | `sonar` |
+
+### Kazıma ve zamanlanmış kontroller
+
+| Değişken | Açıklama |
+|---|---|
+| `GOOGLE_HL`, `GOOGLE_GL` | Arama dili ve ülkesi, varsayılan `tr` |
+| `REQUEST_DELAY_MS` | İstekler arası bekleme, varsayılan `4000` |
+| `HTTP_PROXY` | SERP isteklerini proxy üzerinden göndermek |
+| `SCRAPER_USER_AGENT` | Özel User-Agent |
+| `SCHEDULED_KEYWORD_CHECKS` | Haftalık otomatik kontrol, varsayılan açık |
+| `SCHEDULED_KEYWORD_CHECKS_INCLUDE_LLM` | Haftalık kontrole AI görünürlüğü de katılsın mı (ücret doğurur), varsayılan kapalı |
+| `SCHEDULED_SERP_QUEUE_TIMEOUT_HOURS` | DataForSEO kuyruk görevi zaman aşımı, varsayılan `6` |
+
+---
+
+## B. Docker ile, kaynak koddan derleyerek
 
 ### 1. Depoyu klonlayın
 
@@ -183,6 +274,13 @@ cp .env.docker.example .env.prod
 
 `APP_KEY` burada elle üretilmez; ilk açılışta `www/.env` içine otomatik
 yazılır ve kalıcı kalır.
+
+API anahtarlarını [Kullanılabilecek API'ler](#kullanılabilecek-apiler)
+bölümüne göre ekleyin. Dikkat: `docker-compose.yml` yalnızca kendi
+`environment:` listesindeki değişkenleri container'a aktarır. Listede
+olmayanları (`CRUX_API_KEY`, `SERP_PROVIDER`, `DATAFORSEO_LANGUAGE_CODE`,
+`CRAWLGRAPH_LIMIT`, `PERPLEXITY_VISIBILITY_MODEL`, `SCHEDULED_*`,
+`SERP_FALLBACK_COOLDOWN_MINUTES`) `www/.env` dosyasına yazın.
 
 ### 4. Derleyin ve başlatın
 
@@ -298,4 +396,4 @@ dosyasıdır. `APP_KEY` değerini de yedeğe dahil edin.
 | Google girişinde `redirect_uri_mismatch` | Callback adresi Google Console'da kayıtlı değil veya `APP_URL` host'u farklı. |
 | Kontrol çalışırken 504 | Reverse proxy zaman aşımı; `proxy_read_timeout 180s;` ekleyin. |
 | Arka plan işleri (Lighthouse toplu tarama) ilerlemiyor | `worker` container'ı çalışıyor mu: `docker compose ps`. |
-| Günlük kontroller çalışmıyor | `scheduler` container'ı çalışıyor mu, loglarına bakın. |
+| Zamanlanmış kontroller çalışmıyor | `scheduler` container'ı çalışıyor mu, loglarına bakın. |
