@@ -1,3 +1,5 @@
+🇬🇧 English | [🇹🇷 Türkçe](architecture.tr.md)
+
 [← Back to README](../README.md)
 
 # Architecture
@@ -22,11 +24,14 @@
 All of the application's source code lives under `www/`; `docker-compose.yml`
 and `docker/` belong only to the runtime environment.
 
-**Important:** under Docker, Laravel does **not** read `www/.env` —
-configuration is injected as real environment variables via the
-`environment:` block in `docker-compose.yml`, sourced from the file passed
-with `--env-file` (dev: `.env`, prod: `.env.prod`). `www/.env.example` only
-applies to the "manual, without Docker" setup path (see [Docker setup](docker.md)).
+**Important:** under Docker, configuration is injected as real environment
+variables via the `environment:` block in `docker-compose.yml`, sourced
+from the file passed with `--env-file` (dev: `.env`, prod: `.env.prod`).
+These always win over `www/.env`. Laravel still loads `www/.env` for
+variables that are not set in the container: the entrypoint stores
+`APP_KEY` there, and variables missing from the `environment:` list can be
+added there too. `www/.env.example` only applies to the "manual, without
+Docker" setup path (see [Docker setup](docker.md)).
 
 Because dev and prod are **not expected to run on the same machine at the
 same time**, `docker-compose.yml` is a single file and volume/service names
@@ -265,6 +270,8 @@ collected by the services above - no new API calls or database tables.
 
 ## Background jobs
 
+For all scheduled tasks see [Scheduled tasks](scheduled-tasks.md).
+
 ### Sitemap URL queue jobs
 
 Running Lighthouse (15-40s) or a full on-page fetch synchronously for every
@@ -317,7 +324,8 @@ never runs synchronously inside a web request.
   users who aren't `is_admin` (aliased as the `admin` middleware).
 - `App\Http\Middleware\SetLocale` — applies the signed-in user's stored
   `locale` (or the Google account's language on first login) to the
-  request; translation strings live under `www/lang/en` and `www/lang/tr`.
+  request; translation strings live in `www/lang/en.json`, `www/lang/tr.json` and
+  the `www/lang/en` / `www/lang/tr` folders.
 
 Both middleware are registered on the whole `web` group in
 `bootstrap/app.php`, so they run on every request, before route-specific

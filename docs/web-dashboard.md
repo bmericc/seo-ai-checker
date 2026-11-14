@@ -1,10 +1,12 @@
+🇬🇧 English | [🇹🇷 Türkçe](web-dashboard.tr.md)
+
 [← Back to README](../README.md)
 
 # Web dashboard
 
 The web dashboard stores domain/keyword records and the result of every
 "Check" run (SERP + AI Overview + on-page + Lighthouse) in the database, so
-you can view changes over time as history.
+you can view changes over time as history. For a screen-by-screen tour see [Feature guide](features.md).
 
 ## 1. Create a Google OAuth application
 
@@ -41,9 +43,11 @@ authentication + admin approval is used instead of a plain password.
 | `PSI_API_KEY` | (optional but recommended) PageSpeed Insights API key |
 | `PSI_STRATEGY` | `mobile` or `desktop` |
 | `DATAFORSEO_LOGIN` / `DATAFORSEO_PASSWORD` | (optional) DataForSEO API credentials for SERP, keyword metrics and AI mention data |
-| `SERP_PROVIDER` | `auto` (default: DataForSEO when credentials are set, otherwise direct scraping), `google`, `dataforseo` or `fallback` (scrape first, DataForSEO only when Google blocks; no mobile SERP, weekly checks run live). In Docker, add it to `docker-compose.yml`'s `environment:` block too |
+| `SERP_PROVIDER` | `auto` (default: DataForSEO when credentials are set, otherwise direct scraping), `google`, `dataforseo` or `fallback` (scrape first, DataForSEO only when Google blocks; no mobile SERP, weekly checks run live). In Docker, if it is not in `docker-compose.yml`'s `environment:` block, add it to `www/.env` |
 | `CRAWLGRAPH_API_KEY` | (optional) free CrawlGraph key for Common Crawl backlinks: `POST https://crawlgraph.com/api/v1/free-key` with `{"email": "..."}`. 15 lookups a month. In Docker it is already listed in `docker-compose.yml` |
 | `SERP_FALLBACK_COOLDOWN_MINUTES` | In `fallback` mode, minutes to skip Google after a block (default `30`, `0` = off) |
+
+All API keys: [Docker installation steps → Available APIs](docker-install.md#available-apis).
 
 ## 3. Deploying to a server (without Docker)
 
@@ -110,3 +114,4 @@ Notes:
    domains missing the latest Common Crawl archive and stops when the free
    quota runs out). Bing rows come with each site check for users who
    connected Bing Webmaster Tools.
+   All scheduled tasks: [Scheduled tasks](scheduled-tasks.md).

@@ -15,6 +15,10 @@ The interface is available in **English and Turkish**. It follows the
 browser language (Turkish browsers get Turkish, all others English), and
 each user can change it later under **Settings**.
 
+![Domain overview](docs/images/screenshots/en-domain-overview.png)
+
+More screenshots: [Feature guide](docs/features.md).
+
 ## Features
 
 - **Google rankings** — fetches the top ~20 organic results for each
@@ -125,20 +129,29 @@ Continue with [Web dashboard](docs/web-dashboard.md) to set up Google login.
 
 ## Documentation
 
-- [Running with Docker](docs/docker.md) — dev, production, behind
-  nginx-proxy-manager, and manual (no Docker) setup.
+- [Feature guide](docs/features.md) — a screen-by-screen tour with
+  screenshots: what each part shows and which API it needs.
 - [Docker installation steps](docs/docker-install.md) — step-by-step
-  install from the prebuilt image or from source, API keys, upgrades and
-  backups.
+  install from the prebuilt image or from source, all API keys, upgrades
+  and backups.
+- [Running with Docker](docs/docker.md) — dev, production, prebuilt images,
+  behind nginx-proxy-manager, and manual (no Docker) setup.
+- [Scheduled tasks](docs/scheduled-tasks.md) — what runs automatically,
+  when, and what it costs.
 - [Web dashboard](docs/web-dashboard.md) — Google OAuth setup, `.env`
   reference, deploying without Docker, and day-to-day usage.
-- [Architecture](docs/architecture.md) — project structure, how AI
-  Overview detection and the Lighthouse integration work, database
-  schema, and key services.
 - [User management and admin panel](docs/admin.md) — approving users,
   admin roles.
 - [MCP server](docs/MCP.md) — connecting AI assistants, scopes and tools.
+- [Architecture](docs/architecture.md) — project structure, how AI
+  Overview detection and the Lighthouse integration work, database
+  schema, and key services.
 - [Development](docs/development.md) — local setup and running tests.
+- [Changelog](CHANGELOG.md) — what changed in each release.
+- [Contributing](CONTRIBUTING.md) — reporting bugs and sending changes.
+- [Security policy](SECURITY.md) — reporting vulnerabilities privately.
+
+Every document is also available in Turkish.
 
 ## License
 

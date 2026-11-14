@@ -1,6 +1,11 @@
+🇬🇧 English | [🇹🇷 Türkçe](docker.tr.md)
+
 [← Back to README](../README.md)
 
 # Running with Docker
+
+For step-by-step installation see [Docker installation steps](docker-install.md).
+This page covers the dev and production setups in detail.
 
 ## Dev (recommended)
 
@@ -52,12 +57,18 @@ The dashboard runs at `http://localhost:8080` by default (change via
 
 Services:
 
-- `app` — PHP 8.4-FPM (Composer dependencies are installed during the
-  image build; the locked Symfony 8.x packages in `composer.lock` require
-  PHP 8.4+).
+- `app` — PHP 8.5-FPM (Composer dependencies are installed during the
+  image build; the app requires PHP 8.4+).
+- `worker` — queue worker (`queue:work`); runs background jobs such as
+  bulk Lighthouse scans, WHOIS and backlink fetches.
+- `scheduler` — runs the scheduled tasks (`schedule:work`), see
+  [Scheduled tasks](scheduled-tasks.md).
 - `webserver` — Nginx, serves `www/public` as the document root via
   `docker/nginx/default.conf`, forwards PHP requests to the `app` service
   over fastcgi.
+
+`app`, `worker` and `scheduler` share one local image
+(`seo-ai-checker:local`); only `app` builds it.
 
 The `www/` folder is bind-mounted into the container for code changes; PHP
 file changes don't require a rebuild. Rebuild the image

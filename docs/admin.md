@@ -1,3 +1,5 @@
+🇬🇧 English | [🇹🇷 Türkçe](admin.tr.md)
+
 [← Back to README](../README.md)
 
 # User management and admin panel
@@ -14,3 +16,5 @@
   account (to prevent accidentally locking themselves out); this isn't an
   issue for an `ADMIN_EMAILS` account anyway, since it's automatically
   reset to admin+approved on every login.
+
+![User management](images/screenshots/en-admin-users.png)

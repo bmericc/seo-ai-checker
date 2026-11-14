@@ -1,3 +1,5 @@
+🇬🇧 English | [🇹🇷 Türkçe](development.tr.md)
+
 [← Back to README](../README.md)
 
 # Development
@@ -24,3 +26,5 @@ composer test
 # or via Docker:
 docker compose exec app php artisan test
 ```
+
+For contribution rules see [Contributing](../CONTRIBUTING.md).

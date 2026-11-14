@@ -16,6 +16,10 @@ Arayüz **Türkçe ve İngilizce** kullanılabilir. Tarayıcı dili Türkçe ise
 Türkçe, değilse İngilizce açılır; her kullanıcı dili sonradan **Ayarlar**
 sayfasından değiştirebilir.
 
+![Domain genel bakış](docs/images/screenshots/tr-domain-overview.png)
+
+Daha fazla ekran görüntüsü: [Özellik rehberi](docs/features.tr.md).
+
 ## Özellikler
 
 - **Google sıralaması** — takip edilen her kelime için ilk ~20 organik
@@ -114,7 +118,7 @@ sayfasından değiştirebilir.
 ## Hızlı başlangıç (Docker)
 
 ```bash
-docker network create npm_proxy   # tek seferlik, bkz. docs/docker.md
+docker network create npm_proxy   # tek seferlik, bkz. docs/docker.tr.md
 cp .env.docker.example .env
 
 docker compose build
@@ -128,29 +132,39 @@ Panel varsayılan olarak `http://localhost:8080` adresinde çalışır.
 Derlemek istemiyor musunuz? Her sürüm için **amd64/arm64** tek hazır imaj (nginx + php-fpm)
 GHCR'de (`ghcr.io/bmericc/seo-ai-checker`) ve Docker Hub'da
 (`bmericc/seo-ai-checker`) yayınlanır; `docker-compose.release.yml` ile
-çalıştırın, bkz. [Hazır imajlar](docs/docker.md#prebuilt-images-no-build).
+çalıştırın, bkz. [Hazır imajlar](docs/docker.tr.md#hazır-imajlar-derleme-yok).
 
 Google girişini kurmak için [Web Arayüzü](docs/web-dashboard.md) sayfasına devam edin.
 
 ## Dokümantasyon
 
-Detaylı dokümanlar İngilizce olarak `docs/` klasöründe tutuluyor:
-
-- [Docker ile çalıştırma](docs/docker.md) — dev, production,
-  nginx-proxy-manager arkasında ve Docker olmadan manuel kurulum.
-- [Docker kurulum adımları (Türkçe)](docs/docker-install.tr.md) — hazır imajla
-  veya kaynak koddan adım adım kurulum, güncelleme ve yedekleme.
-- [Web arayüzü](docs/web-dashboard.md) — Google OAuth kurulumu, `.env`
-  referansı, Docker olmadan deploy ve günlük kullanım.
-- [Mimari](docs/architecture.md) — proje yapısı, AI Overview tespiti ve
+- [Özellik rehberi](docs/features.tr.md) — ekran görüntüleriyle ekran ekran
+  anlatım: her bölüm ne gösterir, hangi API'yi ister.
+- [Docker kurulum adımları](docs/docker-install.tr.md) — hazır imajla veya
+  kaynak koddan adım adım kurulum, tüm API anahtarları, güncelleme ve
+  yedekleme.
+- [Docker ile çalıştırma](docs/docker.tr.md) — dev, production, hazır
+  imajlar, nginx-proxy-manager arkasında ve Docker olmadan elle kurulum.
+- [Zamanlanmış görevler](docs/scheduled-tasks.tr.md) — neyin otomatik, ne
+  zaman çalıştığı ve maliyeti.
+- [Web paneli](docs/web-dashboard.tr.md) — Google OAuth kurulumu, `.env`
+  referansı, Docker olmadan kurulum ve günlük kullanım.
+- [Kullanıcı yönetimi ve yönetim paneli](docs/admin.tr.md) — kullanıcı
+  onayı, yönetici rolleri.
+- [MCP sunucusu](docs/MCP.tr.md) — yapay zekâ asistanlarını bağlama,
+  izinler ve araçlar.
+- [Mimari](docs/architecture.tr.md) — proje yapısı, AI Overview tespiti ve
   Lighthouse entegrasyonunun nasıl çalıştığı, veritabanı şeması ve temel
   servisler.
-- [Kullanıcı yönetimi ve admin paneli](docs/admin.md) — kullanıcı onayı,
-  admin rolleri.
-- [MCP sunucusu](docs/MCP.tr.md) — yapay zekâ asistanlarını bağlama, izinler
-  ve araçlar (Türkçe).
-- [Geliştirme](docs/development.md) — yerel kurulum ve testlerin
+- [Geliştirme](docs/development.tr.md) — yerel kurulum ve testlerin
   çalıştırılması.
+- [Değişiklik günlüğü](CHANGELOG.tr.md) — her sürümde neyin değiştiği.
+- [Katkıda bulunma](CONTRIBUTING.tr.md) — hata bildirme ve değişiklik
+  gönderme.
+- [Güvenlik politikası](SECURITY.tr.md) — güvenlik açıklarını gizli
+  bildirme.
+
+Tüm belgelerin İngilizcesi de var.
 
 ## Lisans
 
