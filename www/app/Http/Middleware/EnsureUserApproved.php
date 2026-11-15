@@ -25,7 +25,9 @@ class EnsureUserApproved
     {
         $user = Auth::user();
 
-        if ($user === null || $request->routeIs('logout')) {
+        // Mobil giris kodu onaysiz/dogrulanmamis kullaniciya da verilir;
+        // uygulama ilgili bekleme sayfasini kendi WebView'inda gosterir.
+        if ($user === null || $request->routeIs('logout', 'mobile.auth.start')) {
             return $next($request);
         }
 

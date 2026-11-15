@@ -1044,5 +1044,6 @@
     "Şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş. Yeni bir bağlantı isteyin.": "This password reset link is invalid or has expired. Request a new one.",
     "Şifremi unuttum": "Forgot password",
     "Şifreniz güncellendi. Yeni şifrenizle giriş yapabilirsiniz.": "Your password is updated. You can sign in with your new password.",
-    "Şifreyi kaydet": "Save password"
+    "Şifreyi kaydet": "Save password",
+    "Uygulama giriş bağlantısının süresi dolmuş. Uygulamadan tekrar giriş yapın.": "The app sign-in link has expired. Sign in again from the app."
 }

@@ -19,6 +19,7 @@ use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\LighthouseReportController;
 use App\Http\Controllers\LlmsTxtController;
 use App\Http\Controllers\McpConnectionController;
+use App\Http\Controllers\Mobile\MobileAuthController;
 use App\Http\Controllers\PromptExplorerController;
 use App\Http\Controllers\ReportShareController;
 use App\Http\Controllers\SettingsController;
@@ -61,6 +62,11 @@ Route::middleware('auth')->group(function () {
         ->middleware('throttle:6,1')
         ->name('verification.send');
 });
+
+// Android/iOS kabuk uygulamasi (bkz. MobileAuthController ve mobile/).
+Route::get('/mobile/meta', [MobileAuthController::class, 'meta'])->middleware('throttle:60,1')->name('mobile.meta');
+Route::get('/mobile/auth/start', [MobileAuthController::class, 'start'])->middleware(['auth', 'throttle:20,1'])->name('mobile.auth.start');
+Route::get('/mobile/session', [MobileAuthController::class, 'session'])->middleware('throttle:20,1')->name('mobile.session');
 
 Route::get('/auth/bing/connect', [BingController::class, 'connect'])->middleware('auth')->name('bing.connect');
 Route::get('/auth/bing/callback', [BingController::class, 'callback'])->middleware('auth')->name('bing.callback');

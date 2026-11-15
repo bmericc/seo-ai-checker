@@ -16,6 +16,13 @@ every release tag (see [Docker installation steps](docs/docker-install.md)).
   "Forgot password".
 - `GOOGLE_LOGIN_ENABLED` turns "Sign in with Google" on or off (default
   on). Signed-in users can still connect Google for Search Console and GA4.
+- **Mobile app support** — server endpoints for the "Seo Checker" Android
+  and iOS app (separate repository): `/mobile/meta`, `/mobile/auth/start`
+  and `/mobile/session`. The app asks for the server address and signs in
+  on the site in the system browser (Google sign-in also finishes there).
+  It then opens the dashboard with a one-time code that is valid for
+  2 minutes. The session is remembered, so the app does not ask to sign in
+  on every launch.
 
 ### Changed
 

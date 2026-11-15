@@ -18,6 +18,12 @@ sürüm tag'i için Docker imajları yayınlanır (bkz.
 - `GOOGLE_LOGIN_ENABLED` "Google ile giriş yap" seçeneğini açar veya kapatır
   (varsayılan açık). Giriş yapmış kullanıcılar Search Console ve GA4 için
   Google'ı yine bağlayabilir.
+- **Mobil uygulama desteği** — "Seo Checker" Android ve iOS uygulaması
+  (ayrı repo) için sunucu uç noktaları: `/mobile/meta`, `/mobile/auth/start`
+  ve `/mobile/session`. Uygulama sunucu adresini sorar ve sitede sistem
+  tarayıcısıyla giriş yaptırır (Google girişi de orada biter). Ardından
+  paneli 2 dakika geçerli tek kullanımlık bir kodla açar. Oturum hatırlanır;
+  uygulama her açılışta giriş istemez.
 
 ### Değişenler
 
