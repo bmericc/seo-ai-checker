@@ -21,8 +21,12 @@ use Illuminate\Support\Facades\Auth;
  *    WebView'da girise izin vermedigi icin bu adim tarayicida olmali.
  * 2. Tek kullanimlik, 2 dakikalik bir kod uretilir ve uygulamaya
  *    seoaichecker://auth/callback?code=...&state=... ile donulur.
- * 3. Uygulama WebView'da /mobile/session?code=... acar; kod harcanir ve
- *    WebView'in kendi cerezlerinde oturum acilir.
+ * 3. Uygulama kodu POST /api/v1/auth/token ile bir API token'ina cevirir
+ *    (native ekranlar bu token'la calisir). Eski surumler kodu WebView'da
+ *    /mobile/session?code=... ile harcayip dogrudan oturum acar.
+ * 4. Native ekrandaki "Web'de aç" baglantilari /mobile/web?to=... adresini
+ *    Authorization basligiyla WebView'da acar; token'in kullanicisi icin
+ *    WebView'da web oturumu acilir ve istenen sayfaya gidilir.
  */
 class MobileAuthController extends Controller
 {
@@ -38,7 +42,8 @@ class MobileAuthController extends Controller
         return response()->json([
             'app' => 'seo-ai-checker',
             'name' => config('app.name'),
-            'mobile_api' => 1,
+            // 1: WebView kabugu, 2: /api/v1 token'i ve native ekranlar.
+            'mobile_api' => 2,
             'google_login' => (bool) config('seo.google_login_enabled'),
         ]);
     }
@@ -76,5 +81,28 @@ class MobileAuthController extends Controller
         $request->session()->regenerate();
 
         return redirect('/');
+    }
+
+    public function web(Request $request): RedirectResponse
+    {
+        $user = $request->user('api');
+        $to = (string) $request->query('to', '/');
+
+        // Yalnizca bu sitedeki bir yola gidilir (//baska-site.com degil).
+        if (preg_match('#^/(?![/\\\\])#', $to) !== 1) {
+            $to = '/';
+        }
+
+        $web = Auth::guard('web');
+        if ($web->check() && $web->id() !== $user->id) {
+            $web->logout();
+        }
+
+        if (!$web->check()) {
+            $web->login($user, remember: true);
+            $request->session()->regenerate();
+        }
+
+        return redirect($to);
     }
 }

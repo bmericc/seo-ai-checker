@@ -29,7 +29,7 @@ class MobileAuthTest extends TestCase
 
         $this->getJson(route('mobile.meta'))
             ->assertOk()
-            ->assertJson(['app' => 'seo-ai-checker', 'mobile_api' => 1, 'google_login' => false]);
+            ->assertJson(['app' => 'seo-ai-checker', 'mobile_api' => 2, 'google_login' => false]);
     }
 
     public function test_guest_starting_mobile_login_is_sent_to_login_and_returns_after_password_login(): void

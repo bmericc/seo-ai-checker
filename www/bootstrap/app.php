@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureMobileApiUser;
 use App\Http\Middleware\EnsureUserApproved;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\SetLocale;
@@ -11,13 +12,17 @@ use Illuminate\Http\Request;
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
+        api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->appendToGroup('web', SetLocale::class);
         $middleware->appendToGroup('web', EnsureUserApproved::class);
-        $middleware->alias(['admin' => EnsureUserIsAdmin::class]);
+        $middleware->alias([
+            'admin' => EnsureUserIsAdmin::class,
+            'mobile.api' => EnsureMobileApiUser::class,
+        ]);
 
         // Girissiz istekler /login'e gider. MCP istemcisinin actigi OAuth
         // onay sayfasinda Google girisi aciksa kullaniciyi dogrudan Google'a

@@ -67,6 +67,7 @@ Route::middleware('auth')->group(function () {
 Route::get('/mobile/meta', [MobileAuthController::class, 'meta'])->middleware('throttle:60,1')->name('mobile.meta');
 Route::get('/mobile/auth/start', [MobileAuthController::class, 'start'])->middleware(['auth', 'throttle:20,1'])->name('mobile.auth.start');
 Route::get('/mobile/session', [MobileAuthController::class, 'session'])->middleware('throttle:20,1')->name('mobile.session');
+Route::get('/mobile/web', [MobileAuthController::class, 'web'])->middleware(['auth:api', 'throttle:60,1'])->name('mobile.web');
 
 Route::get('/auth/bing/connect', [BingController::class, 'connect'])->middleware('auth')->name('bing.connect');
 Route::get('/auth/bing/callback', [BingController::class, 'callback'])->middleware('auth')->name('bing.callback');
