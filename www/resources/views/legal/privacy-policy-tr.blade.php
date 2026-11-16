@@ -154,9 +154,9 @@
     Hesap ve kayıt verileri, siz veya bir admin silene kadar saklanır.
     Bir domain veya anahtar kelime kaydı silindiğinde ona bağlı tüm
     kontrol geçmişi de kalıcı olarak silinir. Hesabınızın onayı
-    kaldırılırsa panele erişiminiz anında sonlandırılır. Hesabınızın ve
-    tüm verilerinizin silinmesini 8. bölümdeki yolla talep
-    edebilirsiniz.
+    kaldırılırsa panele erişiminiz anında sonlandırılır. Hesabınızı ve
+    tüm verilerinizi 8. bölümde anlatıldığı gibi istediğiniz zaman
+    kendiniz silebilirsiniz.
 </p>
 
 <h2>6. Veri güvenliği</h2>
@@ -204,8 +204,18 @@
     6698 sayılı KVKK'nın 11. maddesi ve (uygulanabildiği ölçüde)
     GDPR kapsamında; verilerinize erişme, düzeltilmesini, silinmesini
     veya işlenmesinin kısıtlanmasını isteme ve itiraz etme haklarına
-    sahipsiniz. Hesabınızın ve tüm verilerinizin silinmesi dahil her
-    türlü talep için 1. bölümdeki iletişim adresine, hesabınızın
+    sahipsiniz.
+</p>
+<p>
+    <strong>Hesap silme:</strong> Web panelinde <em>Ayarlar → Hesabımı sil</em>
+    (onay bekleyen hesaplarda bekleme sayfasındaki <em>Hesabımı sil</em>
+    bağlantısı) veya mobil uygulamada <em>Ayarlar → Hesabımı sil</em> ile
+    hesabınızı kalıcı olarak silebilirsiniz. Silme işlemi hesabınızı,
+    sahibi olduğunuz tüm domain'leri ve kontrol geçmişini, bağlı hesap
+    ve erişim anahtarlarını hemen ve geri alınamaz şekilde siler.
+</p>
+<p>
+    Diğer talepleriniz için 1. bölümdeki iletişim adresine, hesabınızın
     e-posta adresinden yazabilirsiniz. Talepler en geç 30 gün içinde
     yanıtlanır.
 </p>

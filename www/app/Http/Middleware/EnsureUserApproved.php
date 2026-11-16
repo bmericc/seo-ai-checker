@@ -27,7 +27,8 @@ class EnsureUserApproved
 
         // Mobil giris kodu onaysiz/dogrulanmamis kullaniciya da verilir;
         // uygulama ilgili bekleme sayfasini kendi WebView'inda gosterir.
-        if ($user === null || $request->routeIs('logout', 'mobile.auth.start')) {
+        // Hesap silme de her durumda erisilebilir olmali.
+        if ($user === null || $request->routeIs('logout', 'mobile.auth.start', 'account.delete', 'account.destroy')) {
             return $next($request);
         }
 

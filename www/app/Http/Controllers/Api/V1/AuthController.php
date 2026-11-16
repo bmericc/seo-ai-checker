@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Mcp\McpScopes;
 use App\Models\MobileLoginToken;
 use App\Models\User;
+use App\Services\Auth\AccountDeleter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -50,6 +51,43 @@ class AuthController extends Controller
     public function destroy(Request $request): Response
     {
         $request->user()->token()?->revoke();
+
+        return response()->noContent();
+    }
+
+    /**
+     * Hesabi kalici olarak siler (App Store / Google Play zorunlulugu).
+     * Yalnizca mobil uygulamanin kendi token'i ile yapilabilir; MCP ile
+     * yetkilendirilmis AI asistanlari hesap silemez. Yanlislikla cagriyi
+     * onlemek icin hesabin e-posta adresi gonderilmelidir.
+     */
+    public function destroyAccount(Request $request, AccountDeleter $deleter): JsonResponse|Response
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        if ($user->token()?->name !== self::TOKEN_NAME) {
+            return response()->json([
+                'error' => 'insufficient_scope',
+                'message' => __('Bu işlem için yetkiniz yok.'),
+            ], 403);
+        }
+
+        if (!$deleter->canDelete($user)) {
+            return response()->json([
+                'error' => 'last_admin',
+                'message' => __('Tek admin olduğunuz için hesabınızı silemezsiniz. Önce başka bir kullanıcıyı admin yapın.'),
+            ], 409);
+        }
+
+        if (strtolower(trim((string) $request->input('email'))) !== strtolower((string) $user->email)) {
+            return response()->json([
+                'error' => 'confirmation_required',
+                'message' => __('Onaylamak için hesabınızın e-posta adresini yazın.'),
+            ], 422);
+        }
+
+        $deleter->delete($user);
 
         return response()->noContent();
     }

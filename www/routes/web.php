@@ -22,6 +22,7 @@ use App\Http\Controllers\McpConnectionController;
 use App\Http\Controllers\Mobile\MobileAuthController;
 use App\Http\Controllers\PromptExplorerController;
 use App\Http\Controllers\ReportShareController;
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -91,6 +92,13 @@ Route::get('/r/{token}', [ReportShareController::class, 'show'])
 Route::get('/pending-approval', function () {
     return view('pending-approval');
 })->middleware('auth')->name('pending-approval');
+
+// Kendi hesabini silme: onay bekleyen / dogrulanmamis kullanicilar da
+// erisebilir (bkz. EnsureUserApproved).
+Route::middleware('auth')->group(function () {
+    Route::get('/account/delete', [AccountController::class, 'confirmDelete'])->name('account.delete');
+    Route::delete('/account', [AccountController::class, 'destroy'])->middleware('throttle:10,1')->name('account.destroy');
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/connections', function () {

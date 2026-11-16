@@ -43,8 +43,9 @@
         silebilir; bu durumda erişim anında sonlandırılır.
     </li>
     <li>
-        Hesabınızın silinmesini istediğiniz zaman talep edebilirsiniz
-        (bkz. Gizlilik Politikası, 8. bölüm).
+        Hesabınızı istediğiniz zaman web panelinden veya mobil
+        uygulamadan kendiniz silebilirsiniz (bkz. Gizlilik Politikası,
+        8. bölüm).
     </li>
 </ul>
 

@@ -1143,5 +1143,20 @@
     "Kayıt tarihi": "Registered",
     "WHOIS kontrolü": "WHOIS check",
     "WHOIS": "WHOIS",
-    "Paylaşılan kişiler": "Shared with"
+    "Paylaşılan kişiler": "Shared with",
+    "Hesabı sil": "Delete account",
+    "Hesabınızı silin": "Delete your account",
+    "Hesabımı sil": "Delete my account",
+    "Hesabımı kalıcı olarak sil": "Permanently delete my account",
+    "Vazgeç": "Cancel",
+    "Bu işlem geri alınamaz. Şunlar kalıcı olarak silinir:": "This cannot be undone. The following are permanently deleted:",
+    "Hesabınız ve giriş bilgileriniz": "Your account and sign-in details",
+    "Sahibi olduğunuz tüm domain'ler, anahtar kelimeler ve kontrol geçmişi": "All domains you own, their keywords and check history",
+    "Bağlı Google / Bing hesapları, mobil uygulama ve AI asistanı erişimleri": "Connected Google / Bing accounts, mobile app and AI assistant access",
+    "Size paylaşılan domain'lere erişiminiz": "Your access to domains shared with you",
+    "Onaylamak için e-posta adresinizi yazın: :email": "Type your email address to confirm: :email",
+    "Onaylamak için hesabınızın e-posta adresini yazın.": "Type your account's email address to confirm.",
+    "Tek admin olduğunuz için hesabınızı silemezsiniz. Önce başka bir kullanıcıyı admin yapın.": "You are the only admin, so you cannot delete your account. Make another user an admin first.",
+    "Hesabınız ve tüm verileriniz silindi.": "Your account and all of your data have been deleted.",
+    "Hesabınız ve sahibi olduğunuz tüm domain'ler kalıcı olarak silinir.": "Your account and all domains you own are permanently deleted."
 }

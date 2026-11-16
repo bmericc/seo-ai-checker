@@ -59,6 +59,18 @@
                     </div>
                 </div>
             @endif
+
+            <div class="card mt-4">
+                <div class="card-body d-flex flex-wrap align-items-center gap-3">
+                    <div class="flex-fill">
+                        <div class="fw-semibold mb-1">{{ __('Hesabı sil') }}</div>
+                        <div class="text-secondary small">{{ __('Hesabınız ve sahibi olduğunuz tüm domain\'ler kalıcı olarak silinir.') }}</div>
+                    </div>
+                    <a href="{{ route('account.delete') }}" class="btn btn-outline-danger">
+                        <i class="ti ti-trash icon me-1"></i>{{ __('Hesabımı sil') }}
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 @endsection

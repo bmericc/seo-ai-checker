@@ -42,8 +42,9 @@ class MobileAuthController extends Controller
         return response()->json([
             'app' => 'seo-ai-checker',
             'name' => config('app.name'),
-            // 1: WebView kabugu, 2: /api/v1 token'i ve native ekranlar.
-            'mobile_api' => 2,
+            // 1: WebView kabugu, 2: /api/v1 token'i ve native ekranlar,
+            // 3: DELETE /api/v1/me ile uygulama icinden hesap silme.
+            'mobile_api' => 3,
             'google_login' => (bool) config('seo.google_login_enabled'),
         ]);
     }

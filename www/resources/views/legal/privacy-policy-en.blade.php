@@ -145,8 +145,8 @@
     Account and record data is kept until you or an admin deletes it.
     When a domain or keyword is deleted, all of its check history is
     permanently deleted as well. If your approval is revoked, your
-    access ends immediately. You can request deletion of your account
-    and all of your data as described in section 8.
+    access ends immediately. You can delete your account and all of
+    your data yourself at any time, as described in section 8.
 </p>
 
 <h2>6. Security</h2>
@@ -192,9 +192,19 @@
     Under the Turkish Personal Data Protection Law (KVKK, Art. 11) and,
     where applicable, the GDPR, you have the right to access, correct
     and delete your data, to restrict its processing and to object.
-    For any request, including deletion of your account and all of your
-    data, write to the contact address in section 1 from your
-    account's email address. Requests are answered within 30 days.
+</p>
+<p>
+    <strong>Account deletion:</strong> You can permanently delete your
+    account in the web panel under <em>Settings → Delete my account</em>
+    (for accounts pending approval, via the <em>Delete my account</em>
+    link on the waiting page) or in the mobile app under
+    <em>Settings → Delete my account</em>. Deletion immediately and
+    irreversibly removes your account, all domains you own and their
+    check history, and your connected accounts and access tokens.
+</p>
+<p>
+    For other requests, write to the contact address in section 1 from
+    your account's email address. Requests are answered within 30 days.
 </p>
 
 <h2>9. Children</h2>

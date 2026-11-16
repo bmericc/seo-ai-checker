@@ -26,4 +26,7 @@
             </div>
         </div>
     </div>
+    <div class="text-center mt-3">
+        <a href="{{ route('account.delete') }}" class="link-secondary small">{{ __('Hesabımı sil') }}</a>
+    </div>
 @endsection

@@ -43,8 +43,8 @@
         it; access then ends immediately.
     </li>
     <li>
-        You can request deletion of your account at any time (see the
-        Privacy Policy, section 8).
+        You can delete your account yourself at any time from the web
+        panel or the mobile app (see the Privacy Policy, section 8).
     </li>
 </ul>
 
