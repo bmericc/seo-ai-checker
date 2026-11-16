@@ -107,6 +107,10 @@ class AccountDeletionTest extends TestCase
         $domain = Domain::query()->create(['domain' => 'mine.com', 'user_id' => $user->id]);
         $token = $this->mobileToken($user);
 
+        for ($request = 0; $request < 10; $request++) {
+            $this->withToken($token)->getJson(route('api.v1.me'))->assertOk();
+        }
+
         $this->withToken($token)->deleteJson(route('api.v1.me.destroy'), ['email' => 'wrong@example.test'])
             ->assertStatus(422)
             ->assertJsonPath('error', 'confirmation_required');
