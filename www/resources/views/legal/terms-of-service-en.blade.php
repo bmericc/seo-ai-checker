@@ -1,106 +1,144 @@
-<p class="text-secondary updated-at">Last updated: July 16, 2026</p>
+<p class="text-secondary updated-at">Last updated: November 16, 2026</p>
 
 <p>
     These Terms of Service govern the use of the
-    <strong>{{ config('app.name') }}</strong> panel ("the service"). By
-    accessing the panel or signing in with your Google account, you are
-    deemed to have accepted these terms.
+    <strong>{{ config('app.name') }}</strong> web panel and the
+    <strong>SEO Checker</strong> mobile app ("the service"). By
+    registering, signing in or using the mobile app, you agree to these
+    terms and to the
+    <a href="{{ route('privacy-policy') }}">Privacy Policy</a>.
 </p>
 
 <h2>1. Description of the service</h2>
-<p>The panel offers the following checks:</p>
+<p>The service offers the following checks and tools:</p>
 <ul>
     <li>Ranking tracking in Google search results (SERP).</li>
-    <li>Visibility detection in the Google AI Overview box.</li>
-    <li>Basic on-page SEO analysis (title, meta, headings, links, etc.).</li>
-    <li>Google PageSpeed Insights (Lighthouse) performance/SEO/accessibility scores.</li>
+    <li>Visibility detection in the Google AI Overview box and in AI assistants (ChatGPT, Claude, Gemini, Perplexity, etc.).</li>
+    <li>On-page SEO, technical SEO, security, WHOIS and sitemap analysis.</li>
+    <li>Google PageSpeed Insights (Lighthouse) and Chrome UX Report performance metrics.</li>
+    <li>Optional Google Search Console, Google Analytics and Bing Webmaster Tools integrations.</li>
+    <li>Competitor analysis, report sharing, llms.txt drafts and IndexNow submission.</li>
 </ul>
-
-<h2>2. Access</h2>
 <p>
-    Any Google account can sign in and create an account; however, new
-    accounts cannot access the panel's features until an admin
-    approves them. An admin may revoke an account's approval or delete
-    an account at any time and without stating a reason, in which case
-    that account's access is terminated immediately.
+    The mobile app is a client for viewing the data of the panel you
+    connect to; it requires a reachable panel server and an approved
+    account.
 </p>
 
-<h2>3. Acceptable use</h2>
-<p>By using the panel, you agree that:</p>
+<h2>2. Accounts and access</h2>
 <ul>
     <li>
-        You will only scan domains/pages that you own or have
-        permission to check.
+        You can register with a Google account or with an email address
+        and password. New accounts cannot use the panel's features until
+        an admin approves them.
     </li>
     <li>
-        You will not perform intensive/mass querying in a way that
-        violates Google's terms of service, robots.txt rules, or
+        You are responsible for keeping your account information
+        accurate and your password and access tokens (mobile app, MCP
+        tokens) confidential.
+    </li>
+    <li>
+        An admin may revoke an account's approval or delete it when
+        these terms are violated or the security of the service requires
+        it; access then ends immediately.
+    </li>
+    <li>
+        You can request deletion of your account at any time (see the
+        Privacy Policy, section 8).
+    </li>
+</ul>
+
+<h2>3. Acceptable use</h2>
+<p>When using the service, you agree to:</p>
+<ul>
+    <li>
+        Only scan domains/pages that you own or are permitted to
+        analyze.
+    </li>
+    <li>
+        Not run heavy or bulk queries that violate the terms of service
+        of search engines or AI providers, robots.txt rules or
         applicable law.
     </li>
     <li>
-        You will not use the service in a way that harms other
-        systems, abuses them, or attempts to bypass their security.
+        Not use the service to harm, abuse or attempt to bypass the
+        security of other systems.
+    </li>
+    <li>
+        Take responsibility for the read/write access you grant to
+        members you share domains with, and for the public report links
+        you create.
+    </li>
+    <li>
+        Settle the use and fees of third-party API keys you enter
+        directly with the respective provider.
     </li>
 </ul>
 
 <h2>4. Nature of results and disclaimer</h2>
 <p>
-    The panel fetches Google's search results page (SERP) directly
-    over HTTP (not an official SERP API); therefore:
+    Search results and AI answers vary by account, location, device and
+    time, and search engines may occasionally block automated requests.
+    Therefore:
 </p>
 <ul>
     <li>
-        Google may occasionally block automated requests
-        (CAPTCHA/"unusual traffic"), in which case results may not be
-        obtained.
+        Ranking, AI Overview and AI assistant visibility detection is
+        <strong>best-effort</strong>; a result shown in the service may
+        differ from a live search, and some checks may return no result.
     </li>
     <li>
-        The AI Overview box is typically rendered client-side (via
-        JavaScript) and varies by account/location/device, so its
-        detection is <strong>best-effort</strong> in nature; an AI
-        Overview that is actually visible may not be captured by the
-        panel, or a result shown in the panel may differ from a
-        real-time search.
-    </li>
-    <li>
-        Because Google's page structure changes frequently, the
-        parsing logic may become outdated over time.
+        As search engines change their page structure and APIs, some
+        analyses may temporarily stop working.
     </li>
 </ul>
 <p>
-    The service is provided "as-is"; no guarantee of accuracy,
-    uninterrupted operation, or fitness for a particular purpose is
-    given. The site owner cannot be held liable for the consequences
-    of business/marketing decisions made based on the panel's results.
+    The service is provided "as is", without any warranty of accuracy,
+    availability or fitness for a particular purpose. Neither the
+    operator of the service nor the publisher of the mobile app is
+    liable for the consequences of business or marketing decisions made
+    based on its results.
 </p>
 
 <h2>5. Dependency on third-party services</h2>
 <p>
-    The service depends on Google OAuth, Google Search, and the Google
-    PageSpeed Insights API. Outages, changes, or quota restrictions in
-    these services (e.g., the low PSI quota when used without an API
-    key) may affect the panel's functionality.
+    The service depends on third-party services such as Google,
+    Microsoft, DataForSEO, AI providers and Firebase. Outages, changes
+    or quota limits of these services may affect its functionality.
 </p>
 
-<h2>6. Modification or termination of the service</h2>
+<h2>6. Intellectual property</h2>
 <p>
-    The site owner may modify, temporarily suspend, or permanently
-    terminate the panel without prior notice.
+    The panel's source code is published under an open-source license.
+    The content you add and your check results belong to you.
 </p>
 
-<h2>7. Changes</h2>
+<h2>7. Changes to or termination of the service</h2>
+<p>
+    The operator may change, suspend or permanently discontinue the
+    panel, and the publisher may do the same for the mobile app,
+    without prior notice.
+</p>
+
+<h2>8. Governing law</h2>
+<p>
+    These terms are governed by the laws of the Republic of Türkiye.
+    Your mandatory rights under consumer protection law are not
+    affected.
+</p>
+
+<h2>9. Changes</h2>
 <p>
     These terms may be updated from time to time; the current version
-    is always published on this page.
+    and its last-updated date are always published on this page.
 </p>
 
-<h2>8. Contact</h2>
+<h2>10. Contact</h2>
 <p>
-    For questions about these terms, you can contact
+    For questions about these terms, contact
     @if (config('mail.from.address') && config('mail.from.address') !== 'hello@example.com')
-        <a href="mailto:{{ config('mail.from.address') }}">{{ config('mail.from.address') }}</a>
+        <a href="mailto:{{ config('mail.from.address') }}">{{ config('mail.from.address') }}</a>.
     @else
-        the panel administrator
+        the panel administrator.
     @endif
-    .
 </p>

@@ -1,101 +1,140 @@
-<p class="text-secondary updated-at">Son güncelleme: 16 Temmuz 2026</p>
+<p class="text-secondary updated-at">Son güncelleme: 16 Kasım 2026</p>
 
 <p>
     Bu Kullanım Koşulları, <strong>{{ config('app.name') }}</strong>
-    panelinin ("hizmet") kullanımını düzenler. Panele erişerek veya
-    Google hesabınızla giriş yaparak bu koşulları kabul etmiş
-    sayılırsınız.
+    web panelinin ve <strong>SEO Checker</strong> mobil uygulamasının
+    ("hizmet") kullanımını düzenler. Hizmete kayıt olarak, giriş
+    yaparak veya mobil uygulamayı kullanarak bu koşulları ve
+    <a href="{{ route('privacy-policy') }}">Gizlilik Politikası</a>'nı
+    kabul etmiş sayılırsınız.
 </p>
 
 <h2>1. Hizmetin tanımı</h2>
-<p>Panel şu kontrolleri sunar:</p>
+<p>Hizmet şu kontrolleri ve araçları sunar:</p>
 <ul>
     <li>Google arama sonuçlarında (SERP) sıralama takibi.</li>
-    <li>Google AI Overview kutusunda görünürlük tespiti.</li>
-    <li>Temel on-page SEO analizi (title, meta, başlıklar, linkler, vb.).</li>
-    <li>Google PageSpeed Insights (Lighthouse) performans/SEO/erişilebilirlik skorları.</li>
+    <li>Google AI Overview kutusunda ve AI asistanlarında (ChatGPT, Claude, Gemini, Perplexity vb.) görünürlük tespiti.</li>
+    <li>On-page SEO, teknik SEO, güvenlik, WHOIS ve site haritası analizleri.</li>
+    <li>Google PageSpeed Insights (Lighthouse) ve Chrome UX Report performans ölçümleri.</li>
+    <li>İsteğe bağlı Google Search Console, Google Analytics ve Bing Webmaster Tools entegrasyonları.</li>
+    <li>Rakip analizi, rapor paylaşımı, llms.txt taslağı ve IndexNow gönderimi.</li>
 </ul>
-
-<h2>2. Erişim</h2>
 <p>
-    Herhangi bir Google hesabı giriş yapıp bir hesap oluşturabilir;
-    ancak yeni hesaplar bir admin onaylayana kadar panelin
-    işlevlerine erişemez. Bir admin, herhangi bir zamanda ve
-    gerekçe belirtmeksizin bir hesabın onayını kaldırabilir veya
-    hesabı silebilir; bu durumda ilgili hesabın erişimi anında
-    sonlandırılır.
+    Mobil uygulama, bağlandığınız panelin verilerini görüntülemek için
+    bir istemcidir; çalışması için erişilebilir bir panel sunucusu ve
+    onaylı bir hesap gerekir.
 </p>
 
-<h2>3. Kabul edilebilir kullanım</h2>
-<p>Paneli kullanırken şunları kabul edersiniz:</p>
+<h2>2. Hesap ve erişim</h2>
 <ul>
     <li>
-        Yalnızca kendi sahip olduğunuz veya kontrol etme izniniz
-        bulunan domain/sayfaları taratacaksınız.
+        Google hesabınızla veya e-posta ve şifreyle kayıt olabilirsiniz.
+        Yeni hesaplar bir admin onaylayana kadar panelin işlevlerine
+        erişemez.
     </li>
     <li>
-        Google'ın hizmet şartlarını, robots.txt kurallarını ve
-        geçerli mevzuatı ihlal edecek şekilde yoğun/toplu (mass)
-        sorgulama yapmayacaksınız.
+        Hesap bilgilerinizin doğru olmasından, şifrenizin ve erişim
+        anahtarlarınızın (mobil uygulama, MCP token'ları) gizli
+        tutulmasından siz sorumlusunuz.
     </li>
     <li>
-        Hizmeti başka sistemlere zarar verecek, kötüye kullanacak
-        veya güvenliğini aşmaya çalışacak şekilde kullanmayacaksınız.
+        Bir admin, bu koşulların ihlali veya hizmetin güvenliği
+        gerektirdiğinde bir hesabın onayını kaldırabilir veya hesabı
+        silebilir; bu durumda erişim anında sonlandırılır.
+    </li>
+    <li>
+        Hesabınızın silinmesini istediğiniz zaman talep edebilirsiniz
+        (bkz. Gizlilik Politikası, 8. bölüm).
+    </li>
+</ul>
+
+<h2>3. Kabul edilebilir kullanım</h2>
+<p>Hizmeti kullanırken şunları kabul edersiniz:</p>
+<ul>
+    <li>
+        Yalnızca kendi sahip olduğunuz veya analiz etme izniniz bulunan
+        domain/sayfaları taratacaksınız.
+    </li>
+    <li>
+        Arama motorlarının ve AI sağlayıcılarının hizmet şartlarını,
+        robots.txt kurallarını ve geçerli mevzuatı ihlal edecek şekilde
+        yoğun veya toplu sorgulama yapmayacaksınız.
+    </li>
+    <li>
+        Hizmeti başka sistemlere zarar verecek, kötüye kullanacak veya
+        güvenliğini aşmaya çalışacak şekilde kullanmayacaksınız.
+    </li>
+    <li>
+        Domain'leri paylaştığınız üyelere verdiğiniz okuma/yazma
+        yetkisinden ve oluşturduğunuz herkese açık rapor
+        bağlantılarından siz sorumlusunuz.
+    </li>
+    <li>
+        Kendi girdiğiniz üçüncü taraf API anahtarlarının kullanımı ve
+        ücretleri ilgili sağlayıcı ile aranızdadır.
     </li>
 </ul>
 
 <h2>4. Sonuçların niteliği ve sorumluluk reddi</h2>
 <p>
-    Panel, Google'ın arama sonucu sayfasını (SERP) doğrudan HTTP ile
-    çeker (resmi bir SERP API'si değil); bu nedenle:
+    Arama sonuçları ve AI yanıtları hesaba, konuma, cihaza ve zamana
+    göre değişir; ayrıca arama motorları otomatik istekleri zaman
+    zaman engelleyebilir. Bu nedenle:
 </p>
 <ul>
     <li>
-        Google, otomatik istekleri zaman zaman engelleyebilir
-        (CAPTCHA/"unusual traffic"); bu durumda sonuç alınamayabilir.
+        Sıralama, AI Overview ve AI asistanı görünürlük tespiti
+        <strong>en iyi çaba (best-effort)</strong> niteliğindedir;
+        hizmette görünen sonuç, gerçek zamanlı bir aramadan farklı
+        olabilir veya bazı kontroller sonuç vermeyebilir.
     </li>
     <li>
-        AI Overview kutusu genellikle istemci tarafında (JavaScript
-        ile) render edildiğinden ve hesap/konum/cihaza göre
-        değiştiğinden, tespiti <strong>en iyi çaba
-        (best-effort)</strong> niteliğindedir; gerçekte görünen bir AI
-        Overview panelde yakalanamayabilir veya panelde görünen bir
-        sonuç gerçek zamanlı aramada farklılık gösterebilir.
-    </li>
-    <li>
-        Google'ın sayfa yapısı sık değiştiği için ayrıştırma mantığı
-        zamanla güncelliğini yitirebilir.
+        Arama motorlarının sayfa yapısı ve API'leri değiştikçe bazı
+        analizler geçici olarak çalışmayabilir.
     </li>
 </ul>
 <p>
-    Hizmet "olduğu gibi" (as-is) sunulur; herhangi bir doğruluk,
-    kesintisizlik veya belirli bir amaca uygunluk garantisi
-    verilmez. Panel sonuçlarına dayanarak alınan iş/pazarlama
-    kararlarından doğacak sonuçlardan site sahibi sorumlu tutulamaz.
+    Hizmet "olduğu gibi" (as-is) sunulur; doğruluk, kesintisizlik veya
+    belirli bir amaca uygunluk garantisi verilmez. Hizmetin
+    sonuçlarına dayanarak alınan iş ve pazarlama kararlarından doğacak
+    sonuçlardan hizmetin işleteni veya mobil uygulamanın yayıncısı
+    sorumlu tutulamaz.
 </p>
 
 <h2>5. Üçüncü taraf hizmetlere bağımlılık</h2>
 <p>
-    Hizmet, Google OAuth, Google Arama ve Google PageSpeed Insights
-    API'sine bağımlıdır. Bu hizmetlerdeki kesinti, değişiklik veya
-    kota kısıtlamaları (ör. API anahtarsız kullanımda düşük PSI
-    kotası) panelin işlevselliğini etkileyebilir.
+    Hizmet; Google, Microsoft, DataForSEO, AI sağlayıcıları ve
+    Firebase gibi üçüncü taraf hizmetlere bağımlıdır. Bu hizmetlerdeki
+    kesinti, değişiklik veya kota kısıtlamaları hizmetin işlevselliğini
+    etkileyebilir.
 </p>
 
-<h2>6. Hizmetin değiştirilmesi veya sonlandırılması</h2>
+<h2>6. Fikri mülkiyet</h2>
 <p>
-    Site sahibi, paneli önceden bildirimde bulunmaksızın
-    değiştirebilir, geçici olarak durdurabilir veya kalıcı olarak
-    sonlandırabilir.
+    Panelin kaynak kodu açık kaynak lisansı altında yayınlanır. Hizmete
+    eklediğiniz içerikler ve kontrol sonuçları size aittir.
 </p>
 
-<h2>7. Değişiklikler</h2>
+<h2>7. Hizmetin değiştirilmesi veya sonlandırılması</h2>
 <p>
-    Bu koşullar zaman zaman güncellenebilir; güncel sürüm her zaman
-    bu sayfada yayınlanır.
+    Hizmetin işleteni paneli, mobil uygulamanın yayıncısı da uygulamayı
+    önceden bildirimde bulunmaksızın değiştirebilir, geçici olarak
+    durdurabilir veya kalıcı olarak sonlandırabilir.
 </p>
 
-<h2>8. İletişim</h2>
+<h2>8. Uygulanacak hukuk</h2>
+<p>
+    Bu koşullar Türkiye Cumhuriyeti hukukuna tabidir. Tüketici
+    mevzuatından doğan zorunlu haklarınız saklıdır.
+</p>
+
+<h2>9. Değişiklikler</h2>
+<p>
+    Bu koşullar zaman zaman güncellenebilir; güncel sürüm ve son
+    güncelleme tarihi her zaman bu sayfada yayınlanır.
+</p>
+
+<h2>10. İletişim</h2>
 <p>
     Bu koşullarla ilgili sorularınız için
     @if (config('mail.from.address') && config('mail.from.address') !== 'hello@example.com')
