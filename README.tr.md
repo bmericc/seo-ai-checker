@@ -4,6 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/bmericc/seo-ai-checker/actions/workflows/tests.yml"><img src="https://github.com/bmericc/seo-ai-checker/actions/workflows/tests.yml/badge.svg" alt="tests"></a>
+  <a href="https://scorecard.dev/viewer/?uri=github.com/bmericc/seo-ai-checker"><img src="https://api.scorecard.dev/projects/github.com/bmericc/seo-ai-checker/badge" alt="OpenSSF Scorecard"></a>
   <a href="https://github.com/bmericc/seo-ai-checker/actions/workflows/docker.yml"><img src="https://img.shields.io/github/actions/workflow/status/bmericc/seo-ai-checker/docker.yml?label=docker&logo=docker&logoColor=white" alt="Docker image"></a>
   <a href="https://github.com/bmericc/seo-ai-checker/releases/latest"><img src="https://img.shields.io/github/v/release/bmericc/seo-ai-checker" alt="Latest release"></a>
   <a href="https://github.com/bmericc/seo-ai-checker/actions/workflows/tests.yml"><img src="https://img.shields.io/badge/PHP-8.4%20%7C%208.5%20tested-777BB4?logo=php&logoColor=white" alt="PHP 8.4 and 8.5 tested in CI"></a>
