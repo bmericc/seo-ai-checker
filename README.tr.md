@@ -2,7 +2,17 @@
 
 # SEO / AI Overview Checker
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+<p align="center">
+  <a href="https://github.com/bmericc/seo-ai-checker/actions/workflows/tests.yml"><img src="https://github.com/bmericc/seo-ai-checker/actions/workflows/tests.yml/badge.svg" alt="tests"></a>
+  <a href="https://scorecard.dev/viewer/?uri=github.com/bmericc/seo-ai-checker"><img src="https://api.scorecard.dev/projects/github.com/bmericc/seo-ai-checker/badge" alt="OpenSSF Scorecard"></a>
+  <a href="https://github.com/bmericc/seo-ai-checker/actions/workflows/docker.yml"><img src="https://img.shields.io/github/actions/workflow/status/bmericc/seo-ai-checker/docker.yml?label=docker&logo=docker&logoColor=white" alt="Docker image"></a>
+  <a href="https://github.com/bmericc/seo-ai-checker/releases/latest"><img src="https://img.shields.io/github/v/release/bmericc/seo-ai-checker" alt="Latest release"></a>
+  <a href="https://github.com/bmericc/seo-ai-checker/actions/workflows/tests.yml"><img src="https://img.shields.io/badge/PHP-8.4%20%7C%208.5%20tested-777BB4?logo=php&logoColor=white" alt="PHP 8.4 and 8.5 tested in CI"></a>
+  <a href="https://laravel.com"><img src="https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel&logoColor=white" alt="Laravel 13"></a>
+  <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-server-6E56CF" alt="Model Context Protocol server"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-blue" alt="GPL-3.0"></a>
+  <a href="https://github.com/sponsors/bmericc"><img src="https://img.shields.io/badge/sponsor-%E2%9D%A4-ea4aaa?logo=githubsponsors" alt="Sponsor"></a>
+</p>
 
 Bir sitenin **klasik Google aramasında** ve **yapay zekâ yanıtlarında**
 nerede durduğunu gösteren bir **Laravel** paneli: Google sıralaması, Google
