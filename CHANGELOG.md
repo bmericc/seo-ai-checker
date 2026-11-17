@@ -8,6 +8,8 @@ every release tag (see [Docker installation steps](docs/docker-install.md)).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-17
+
 ### Added
 
 - **Email + password sign-in** — sign-up, login, email verification and
@@ -23,6 +25,21 @@ every release tag (see [Docker installation steps](docs/docker-install.md)).
   It then opens the dashboard with a one-time code that is valid for
   2 minutes. The session is remembered, so the app does not ask to sign in
   on every launch.
+- **Native mobile screens** — a read-only API for the app:
+  `POST /api/v1/auth/token` exchanges the one-time code for a token with the
+  `read` scope (`DELETE` revokes it), and `/api/v1/domains`,
+  `/api/v1/domains/{id}/screen` and `/api/v1/changes` return the domain
+  list, every domain detail tab and recent changes. "Open in web" links go
+  through `/mobile/web`. `/mobile/meta` reports `mobile_api` 3.
+- **Account deletion** — users can delete their own account from Settings
+  (and from the pending and verification pages); the app uses
+  `DELETE /api/v1/me`. It removes the user's domains and their history,
+  pending invites, tokens and sessions. The only admin cannot delete
+  themselves.
+- A GitHub Release is created for each version tag, with the notes from
+  this changelog.
+- Dependabot keeps GitHub Actions, Composer, npm and the Docker base image
+  up to date; a CodeQL workflow and OpenSSF Scorecard run in CI.
 
 ### Changed
 
@@ -31,6 +48,13 @@ every release tag (see [Docker installation steps](docs/docker-install.md)).
 - Connecting Google while signed in now links it to the current account,
   even when the Google email is different.
 - Guests are sent to `/login` instead of the home page.
+- Privacy policy and terms cover email + password sign-in, sharing,
+  connected accounts, AI providers and other third-party services, the
+  mobile app (Firebase Crashlytics/Analytics without the advertising ID)
+  and account deletion, and list KVKK/GDPR rights.
+- The Docker image is built on a `php:8.5-fpm-alpine` base pinned by
+  digest; GitHub Actions are pinned to commit SHAs.
+- The MCP server reports version 1.1.0.
 
 ## [1.0.1] - 2026-11-14
 
@@ -87,6 +111,7 @@ First public release.
   and Docker Hub (`bmericc/seo-ai-checker`); queue worker and scheduler use
   the same image.
 
-[Unreleased]: https://github.com/bmericc/seo-ai-checker/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/bmericc/seo-ai-checker/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/bmericc/seo-ai-checker/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/bmericc/seo-ai-checker/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/bmericc/seo-ai-checker/releases/tag/v1.0.0

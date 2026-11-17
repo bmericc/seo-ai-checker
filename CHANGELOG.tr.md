@@ -9,6 +9,8 @@ sürüm tag'i için Docker imajları yayınlanır (bkz.
 
 ## [Yayınlanmamış]
 
+## [1.1.0] - 2026-11-17
+
 ### Eklenenler
 
 - **E-posta + şifre ile giriş** — Google girişinin yanında kayıt, giriş,
@@ -24,6 +26,21 @@ sürüm tag'i için Docker imajları yayınlanır (bkz.
   tarayıcısıyla giriş yaptırır (Google girişi de orada biter). Ardından
   paneli 2 dakika geçerli tek kullanımlık bir kodla açar. Oturum hatırlanır;
   uygulama her açılışta giriş istemez.
+- **Yerel mobil ekranlar** — uygulama için salt okunur API:
+  `POST /api/v1/auth/token` tek kullanımlık kodu `read` yetkili bir
+  token'la değiştirir (`DELETE` iptal eder); `/api/v1/domains`,
+  `/api/v1/domains/{id}/screen` ve `/api/v1/changes` domain listesini, her
+  domain detay sekmesini ve son değişiklikleri döndürür. "Web'de aç"
+  bağlantıları `/mobile/web` üzerinden açılır. `/mobile/meta` artık
+  `mobile_api` 3 bildirir.
+- **Hesap silme** — kullanıcılar hesaplarını Ayarlar'dan (ve onay/doğrulama
+  bekleme sayfalarından) silebilir; uygulama `DELETE /api/v1/me` kullanır.
+  Kullanıcının domainleri ve geçmişleri, bekleyen davetleri, token'ları ve
+  oturumları silinir. Tek yönetici kendini silemez.
+- Her sürüm tag'i için notları bu dosyadan alınan bir GitHub Release
+  oluşturulur.
+- Dependabot GitHub Actions, Composer, npm ve Docker taban imajını güncel
+  tutar; CI'da CodeQL ve OpenSSF Scorecard çalışır.
 
 ### Değişenler
 
@@ -32,6 +49,13 @@ sürüm tag'i için Docker imajları yayınlanır (bkz.
 - Giriş yapmışken Google bağlamak artık Google e-postası farklı olsa da
   hesabı mevcut hesaba bağlar.
 - Girişsiz istekler ana sayfa yerine `/login`'e yönlenir.
+- Gizlilik politikası ve kullanım koşulları e-posta + şifreyle girişi,
+  paylaşımı, bağlı hesapları, yapay zekâ sağlayıcılarını ve diğer üçüncü
+  taraf servisleri, mobil uygulamayı (reklam kimliği olmadan Firebase
+  Crashlytics/Analytics) ve hesap silmeyi kapsar; KVKK/GDPR hakları eklendi.
+- Docker imajı digest ile sabitlenmiş `php:8.5-fpm-alpine` tabanı üzerine
+  kurulur; GitHub Actions commit SHA'larına sabitlendi.
+- MCP sunucusu sürüm olarak 1.1.0 bildirir.
 
 ## [1.0.1] - 2026-11-14
 
@@ -91,6 +115,7 @@ sürüm tag'i için Docker imajları yayınlanır (bkz.
   ve Docker Hub'a (`bmericc/seo-ai-checker`) yayınlanır. Kuyruk işçisi ve
   zamanlayıcı aynı imajı kullanır.
 
-[Yayınlanmamış]: https://github.com/bmericc/seo-ai-checker/compare/v1.0.1...HEAD
+[Yayınlanmamış]: https://github.com/bmericc/seo-ai-checker/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/bmericc/seo-ai-checker/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/bmericc/seo-ai-checker/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/bmericc/seo-ai-checker/releases/tag/v1.0.0
