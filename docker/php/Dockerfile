@@ -1,4 +1,4 @@
-FROM php:8.5-fpm-alpine AS app
+FROM php:8.5-fpm-alpine@sha256:951fb5b1780219b81d5daffa4cebef8e0077c537f3893d9790a5dfcd66ca334d AS app
 
 # Prod'da COMPOSER_INSTALL_FLAGS=--no-dev gecirilir (.env.prod), dev deps
 # (phpunit, pint, pail...) imaja dahil edilmez.
