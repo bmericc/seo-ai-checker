@@ -196,7 +196,7 @@
 
 <footer class="l-footer">
     <div class="l-wrap">
-        <span>{{ config('app.name') }}</span>
+        <x-app-version />
         <nav aria-label="{{ __('Yasal') }}">
             <a href="{{ route('privacy-policy') }}">{{ __('Gizlilik Politikası') }}</a>
             <a href="{{ route('terms-of-service') }}">{{ __('Kullanım Koşulları') }}</a>

@@ -1,5 +1,7 @@
 <?php
 
+use App\Support\AppVersion;
+
 return [
 
     /*
@@ -14,6 +16,9 @@ return [
     */
 
     'name' => env('APP_NAME', 'Laravel'),
+
+    // Footer ve MCP sunucusunda gosterilen surum (bkz. App\Support\AppVersion).
+    'version' => AppVersion::VERSION,
 
     /*
     |--------------------------------------------------------------------------

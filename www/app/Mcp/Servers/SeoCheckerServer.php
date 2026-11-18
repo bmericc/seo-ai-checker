@@ -24,13 +24,14 @@ use App\Mcp\Tools\RunDomainCheck;
 use App\Mcp\Tools\RunKeywordCheck;
 use App\Mcp\Tools\SetCompetitor;
 use App\Mcp\Tools\SubmitIndexNow;
+use App\Support\AppVersion;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Attributes\Instructions;
 use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Attributes\Version;
 
 #[Name('SEO AI Checker')]
-#[Version('1.1.1')]
+#[Version(AppVersion::VERSION)]
 #[Instructions(<<<'MARKDOWN'
     SEO AI Checker tracks websites' classic SEO and their visibility in AI search
     (Google AI Overviews, ChatGPT, Claude, Gemini, Perplexity).

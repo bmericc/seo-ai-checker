@@ -1158,5 +1158,6 @@
     "Onaylamak için hesabınızın e-posta adresini yazın.": "Type your account's email address to confirm.",
     "Tek admin olduğunuz için hesabınızı silemezsiniz. Önce başka bir kullanıcıyı admin yapın.": "You are the only admin, so you cannot delete your account. Make another user an admin first.",
     "Hesabınız ve tüm verileriniz silindi.": "Your account and all of your data have been deleted.",
-    "Hesabınız ve sahibi olduğunuz tüm domain'ler kalıcı olarak silinir.": "Your account and all domains you own are permanently deleted."
+    "Hesabınız ve sahibi olduğunuz tüm domain'ler kalıcı olarak silinir.": "Your account and all domains you own are permanently deleted.",
+    "Sürüm notları": "Release notes"
 }

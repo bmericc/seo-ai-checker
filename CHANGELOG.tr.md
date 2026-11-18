@@ -9,6 +9,12 @@ sürüm tag'i için Docker imajları yayınlanır (bkz.
 
 ## [Yayınlanmamış]
 
+### Eklenenler
+
+- Footer'da uygulama adının yanında sürüm numarası görünür ve sürüm
+  notlarına bağlanır. Sürüm tek yerde (`App\Support\AppVersion`) tutulur,
+  MCP sunucusu da buradan okur.
+
 ## [1.1.1] - 2026-11-18
 
 ### Değişenler

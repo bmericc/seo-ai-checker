@@ -8,6 +8,12 @@ every release tag (see [Docker installation steps](docs/docker-install.md)).
 
 ## [Unreleased]
 
+### Added
+
+- The footer shows the app version next to its name, linked to the release
+  notes. The version lives in one place (`App\Support\AppVersion`), which
+  the MCP server also reads.
+
 ## [1.1.1] - 2026-11-18
 
 ### Changed

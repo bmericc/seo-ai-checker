@@ -149,6 +149,7 @@
                 <div class="row text-center align-items-center flex-row-reverse">
                     <div class="col-lg-auto ms-lg-auto">
                         <ul class="list-inline list-inline-dots mb-0">
+                            <li class="list-inline-item text-secondary"><x-app-version link-class="link-secondary" /></li>
                             <li class="list-inline-item"><a href="{{ route('privacy-policy') }}" class="link-secondary">{{ __('Gizlilik Politikası') }}</a></li>
                             <li class="list-inline-item"><a href="{{ route('terms-of-service') }}" class="link-secondary">{{ __('Kullanım Koşulları') }}</a></li>
                             <li class="list-inline-item"><a href="https://github.com/bmericc/seo-ai-checker" class="link-secondary" target="_blank" rel="noopener">GitHub</a></li>
