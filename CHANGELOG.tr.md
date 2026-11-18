@@ -9,11 +9,14 @@ sürüm tag'i için Docker imajları yayınlanır (bkz.
 
 ## [Yayınlanmamış]
 
-### Eklenenler
+## [1.1.2] - 2026-11-18
+
+### Değişenler
 
 - Footer'da uygulama adının yanında sürüm numarası görünür ve sürüm
   notlarına bağlanır. Sürüm tek yerde (`App\Support\AppVersion`) tutulur,
   MCP sunucusu da buradan okur.
+- MCP sunucusu 1.1.2 sürümünü bildirir.
 
 ## [1.1.1] - 2026-11-18
 
@@ -134,7 +137,8 @@ sürüm tag'i için Docker imajları yayınlanır (bkz.
   ve Docker Hub'a (`bmericc/seo-ai-checker`) yayınlanır. Kuyruk işçisi ve
   zamanlayıcı aynı imajı kullanır.
 
-[Yayınlanmamış]: https://github.com/bmericc/seo-ai-checker/compare/v1.1.1...HEAD
+[Yayınlanmamış]: https://github.com/bmericc/seo-ai-checker/compare/v1.1.2...HEAD
+[1.1.2]: https://github.com/bmericc/seo-ai-checker/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/bmericc/seo-ai-checker/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/bmericc/seo-ai-checker/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/bmericc/seo-ai-checker/compare/v1.0.0...v1.0.1

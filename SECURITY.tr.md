@@ -9,7 +9,7 @@ etiketini veya `main` dalını kullanın.
 
 | Sürüm | Destekleniyor |
 |---|---|
-| 1.1.x (son: 1.1.1) | evet |
+| 1.1.x (son: 1.1.2) | evet |
 | < 1.1 | hayır |
 
 ## Güvenlik açığı bildirmek

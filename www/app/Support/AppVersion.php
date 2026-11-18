@@ -10,7 +10,7 @@ namespace App\Support;
  */
 final class AppVersion
 {
-    public const VERSION = '1.1.1';
+    public const VERSION = '1.1.2';
 
     public const RELEASES_URL = 'https://github.com/bmericc/seo-ai-checker/releases/tag/v';
 

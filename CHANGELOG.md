@@ -8,11 +8,14 @@ every release tag (see [Docker installation steps](docs/docker-install.md)).
 
 ## [Unreleased]
 
-### Added
+## [1.1.2] - 2026-11-18
+
+### Changed
 
 - The footer shows the app version next to its name, linked to the release
   notes. The version lives in one place (`App\Support\AppVersion`), which
   the MCP server also reads.
+- The MCP server reports version 1.1.2.
 
 ## [1.1.1] - 2026-11-18
 
@@ -129,7 +132,8 @@ First public release.
   and Docker Hub (`bmericc/seo-ai-checker`); queue worker and scheduler use
   the same image.
 
-[Unreleased]: https://github.com/bmericc/seo-ai-checker/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/bmericc/seo-ai-checker/compare/v1.1.2...HEAD
+[1.1.2]: https://github.com/bmericc/seo-ai-checker/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/bmericc/seo-ai-checker/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/bmericc/seo-ai-checker/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/bmericc/seo-ai-checker/compare/v1.0.0...v1.0.1
