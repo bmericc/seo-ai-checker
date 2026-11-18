@@ -8,6 +8,18 @@ every release tag (see [Docker installation steps](docs/docker-install.md)).
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-11-18
+
+### Changed
+
+- Dependency updates: `laravel/mcp` 1.2.0, `symfony/dom-crawler` 8.1.10,
+  `laravel/pao` 1.1.5; development tools `phpunit/phpunit` 13.4,
+  `laravel/pint` 1.32.3 and `concurrently` 10.
+- GitHub Actions updated: `actions/checkout` v7, `docker/setup-qemu-action`
+  v4, `docker/setup-buildx-action` v4, `docker/login-action` v4,
+  `docker/metadata-action` v6 and `docker/build-push-action` v7.
+- The MCP server reports version 1.1.1.
+
 ## [1.1.0] - 2026-11-17
 
 ### Added
@@ -111,7 +123,8 @@ First public release.
   and Docker Hub (`bmericc/seo-ai-checker`); queue worker and scheduler use
   the same image.
 
-[Unreleased]: https://github.com/bmericc/seo-ai-checker/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/bmericc/seo-ai-checker/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/bmericc/seo-ai-checker/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/bmericc/seo-ai-checker/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/bmericc/seo-ai-checker/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/bmericc/seo-ai-checker/releases/tag/v1.0.0

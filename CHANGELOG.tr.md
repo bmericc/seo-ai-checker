@@ -9,6 +9,19 @@ sürüm tag'i için Docker imajları yayınlanır (bkz.
 
 ## [Yayınlanmamış]
 
+## [1.1.1] - 2026-11-18
+
+### Değişenler
+
+- Bağımlılık güncellemeleri: `laravel/mcp` 1.2.0, `symfony/dom-crawler`
+  8.1.10, `laravel/pao` 1.1.5; geliştirme araçları `phpunit/phpunit` 13.4,
+  `laravel/pint` 1.32.3 ve `concurrently` 10.
+- GitHub Actions güncellendi: `actions/checkout` v7,
+  `docker/setup-qemu-action` v4, `docker/setup-buildx-action` v4,
+  `docker/login-action` v4, `docker/metadata-action` v6 ve
+  `docker/build-push-action` v7.
+- MCP sunucusu 1.1.1 sürümünü bildirir.
+
 ## [1.1.0] - 2026-11-17
 
 ### Eklenenler
@@ -115,7 +128,8 @@ sürüm tag'i için Docker imajları yayınlanır (bkz.
   ve Docker Hub'a (`bmericc/seo-ai-checker`) yayınlanır. Kuyruk işçisi ve
   zamanlayıcı aynı imajı kullanır.
 
-[Yayınlanmamış]: https://github.com/bmericc/seo-ai-checker/compare/v1.1.0...HEAD
+[Yayınlanmamış]: https://github.com/bmericc/seo-ai-checker/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/bmericc/seo-ai-checker/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/bmericc/seo-ai-checker/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/bmericc/seo-ai-checker/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/bmericc/seo-ai-checker/releases/tag/v1.0.0

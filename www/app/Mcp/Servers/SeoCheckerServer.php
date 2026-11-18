@@ -30,7 +30,7 @@ use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Attributes\Version;
 
 #[Name('SEO AI Checker')]
-#[Version('1.1.0')]
+#[Version('1.1.1')]
 #[Instructions(<<<'MARKDOWN'
     SEO AI Checker tracks websites' classic SEO and their visibility in AI search
     (Google AI Overviews, ChatGPT, Claude, Gemini, Perplexity).
