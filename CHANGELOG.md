@@ -8,6 +8,18 @@ every release tag (see [Docker installation steps](docs/docker-install.md)).
 
 ## [Unreleased]
 
+## [1.1.3] - 2026-11-26
+
+### Changed
+
+- Dependency updates: `laravel/mcp` 1.2.1; development tools
+  `laravel/pail` 1.3.0, `laravel/tinker` 3.2.0, `mockery/mockery` 1.6.15
+  and `phpunit/phpunit` 13.4.8.
+- The Docker image uses the latest `php:8.5-fpm-alpine` base image.
+- GitHub Actions updated: `github/codeql-action` v4.39.4 and
+  `ossf/scorecard-action` v2.6.0.
+- The MCP server reports version 1.1.3.
+
 ## [1.1.2] - 2026-11-18
 
 ### Changed
@@ -132,7 +144,8 @@ First public release.
   and Docker Hub (`bmericc/seo-ai-checker`); queue worker and scheduler use
   the same image.
 
-[Unreleased]: https://github.com/bmericc/seo-ai-checker/compare/v1.1.2...HEAD
+[Unreleased]: https://github.com/bmericc/seo-ai-checker/compare/v1.1.3...HEAD
+[1.1.3]: https://github.com/bmericc/seo-ai-checker/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/bmericc/seo-ai-checker/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/bmericc/seo-ai-checker/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/bmericc/seo-ai-checker/compare/v1.0.1...v1.1.0

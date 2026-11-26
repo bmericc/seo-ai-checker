@@ -9,6 +9,18 @@ sürüm tag'i için Docker imajları yayınlanır (bkz.
 
 ## [Yayınlanmamış]
 
+## [1.1.3] - 2026-11-26
+
+### Değişenler
+
+- Bağımlılık güncellemeleri: `laravel/mcp` 1.2.1; geliştirme araçları
+  `laravel/pail` 1.3.0, `laravel/tinker` 3.2.0, `mockery/mockery` 1.6.15
+  ve `phpunit/phpunit` 13.4.8.
+- Docker imajı en güncel `php:8.5-fpm-alpine` taban imajını kullanır.
+- GitHub Actions güncellendi: `github/codeql-action` v4.39.4 ve
+  `ossf/scorecard-action` v2.6.0.
+- MCP sunucusu 1.1.3 sürümünü bildirir.
+
 ## [1.1.2] - 2026-11-18
 
 ### Değişenler
@@ -137,7 +149,8 @@ sürüm tag'i için Docker imajları yayınlanır (bkz.
   ve Docker Hub'a (`bmericc/seo-ai-checker`) yayınlanır. Kuyruk işçisi ve
   zamanlayıcı aynı imajı kullanır.
 
-[Yayınlanmamış]: https://github.com/bmericc/seo-ai-checker/compare/v1.1.2...HEAD
+[Yayınlanmamış]: https://github.com/bmericc/seo-ai-checker/compare/v1.1.3...HEAD
+[1.1.3]: https://github.com/bmericc/seo-ai-checker/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/bmericc/seo-ai-checker/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/bmericc/seo-ai-checker/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/bmericc/seo-ai-checker/compare/v1.0.1...v1.1.0

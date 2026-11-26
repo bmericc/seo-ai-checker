@@ -9,7 +9,7 @@ tag or the `main` branch.
 
 | Version | Supported |
 |---|---|
-| 1.1.x (latest 1.1.2) | yes |
+| 1.1.x (latest 1.1.3) | yes |
 | < 1.1 | no |
 
 ## Reporting a vulnerability
